@@ -33,8 +33,8 @@ function toLessonSummary(row: LessonRow): LessonSummary {
     position: row.position,
     required: row.required,
     completionPolicy: row.completion_policy,
-    ...(row.type === "interactive" && typeof config.entryUrl === "string"
-      ? { entryUrl: config.entryUrl }
+    ...(row.type === "interactive" && typeof config.activityId === "string"
+      ? { activityId: config.activityId }
       : {}),
   };
 }

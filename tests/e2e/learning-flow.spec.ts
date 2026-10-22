@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 import {
+  api,
   createTestStudent,
   deleteTestStudent,
   getCourseBySlug,
@@ -51,22 +52,30 @@ test.describe("学生完整学习闭环（SQL 注入课程）", () => {
       await page.getByRole("button", { name: /标记本章完成/ }).click();
       await expect(page.getByRole("button", { name: "本章已完成" })).toBeVisible({ timeout: 20_000 });
 
-      // Interactive lab in an isolated iframe
+      // Interactive activity runs natively in the course page
       await page.getByRole("link", { name: /实验：审计一条登录查询/ }).click();
-      const lab = page.frameLocator('iframe[title^="交互实验"]');
-      await expect(lab.getByRole("heading", { name: "登录查询审计台" })).toBeVisible({
-        timeout: 30_000,
-      });
+      const activity = page.getByTestId("sql-activity");
+      await expect(activity).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator("iframe")).toHaveCount(0);
 
-      await lab
-        .locator("label.defence", { hasText: "使用参数化查询" })
-        .locator('input[type="checkbox"]')
+      await activity
+        .getByRole("checkbox", { name: /使用参数化查询/ })
         .check();
-      await lab.getByRole("button", { name: "运行安全审计" }).click();
-      await lab.getByRole("button", { name: "提交审计结论" }).click();
-      await expect(lab.getByText("登录查询已阻止全部注入载荷", { exact: false })).toBeVisible({
-        timeout: 20_000,
-      });
+      await activity.getByRole("button", { name: "运行安全审计" }).click();
+      await expect(activity.getByText("实验状态已保存")).toBeVisible({ timeout: 20_000 });
+
+      await page.reload();
+      const restored = page.getByTestId("sql-activity");
+      await expect(restored).toBeVisible({ timeout: 20_000 });
+      await expect(
+        restored.getByRole("checkbox", { name: /使用参数化查询/ }),
+      ).toBeChecked();
+      await expect(restored.getByText("已阻止", { exact: false }).first()).toBeVisible();
+
+      await restored.getByRole("button", { name: "提交审计结论" }).click();
+      await expect(
+        activity.getByText("登录查询已阻止全部注入载荷", { exact: false }),
+      ).toBeVisible({ timeout: 20_000 });
 
       await page.waitForTimeout(400);
       const enrollment = (await getEnrollments(student.id))[0];
@@ -112,6 +121,19 @@ test.describe("学生完整学习闭环（SQL 注入课程）", () => {
       });
       await expect(adminPage.getByRole("dialog").getByText("已完成").first()).toBeVisible();
 
+      const detail = await api<{
+        recentEvents: { type: string; payload: Record<string, unknown> }[];
+      }>(adminPage, `/api/admin/students/${student.id}`);
+      expect(detail.status).toBe(200);
+      expect(
+        detail.body?.data?.recentEvents.some(
+          (event) =>
+            event.type === "audit_run" &&
+            Array.isArray(event.payload.defences) &&
+            event.payload.defences.includes("parameterize"),
+        ),
+      ).toBe(true);
+
       await adminPage.goto(`/admin/courses/${course.id}`);
       const row = adminPage.getByRole("row", { name: new RegExp(student.name) });
       await expect(row).toBeVisible({ timeout: 20_000 });
@@ -153,19 +175,18 @@ test.describe("学生完整学习闭环（重试与幂等课程）", () => {
       });
 
       await page.getByRole("link", { name: /实验：让支付恰好发生一次/ }).click();
-      const lab = page.frameLocator('iframe[title^="交互实验"]');
-      await expect(lab.getByRole("heading", { name: "恰好一次支付" })).toBeVisible({
-        timeout: 30_000,
-      });
+      const activity = page.getByTestId("idempotency-activity");
+      await expect(activity).toBeVisible({ timeout: 20_000 });
+      await expect(page.locator("iframe")).toHaveCount(0);
 
-      await lab.getByRole("radio", { name: /^按业务操作生成稳定键/ }).check();
-      await lab.getByRole("radio", { name: /^重试复用同一个键/ }).check();
-      await lab.locator("#dedupe").check();
-      await lab.locator("#max-retries").fill("3");
-      await lab.getByRole("button", { name: "运行支付重试模拟" }).click();
-      await lab.getByRole("button", { name: "提交策略" }).click();
-      await expect(lab.getByText("重试全部复用同一个幂等键")).toBeVisible({ timeout: 20_000 });
-      await expect(lab.getByText("✓ 服务端已验证")).toBeVisible();
+      await activity.getByRole("radio", { name: /^按业务操作生成稳定键/ }).check();
+      await activity.getByRole("radio", { name: /^重试复用同一个键/ }).check();
+      await activity.getByRole("checkbox", { name: /启用服务端键去重表/ }).check();
+      await activity.getByLabel("重试预算").fill("3");
+      await activity.getByRole("button", { name: "运行支付重试模拟" }).click();
+      await activity.getByRole("button", { name: "提交策略" }).click();
+      await expect(activity.getByText("重试全部复用同一个幂等键")).toBeVisible({ timeout: 20_000 });
+      await expect(activity.getByText("服务端验证通过")).toBeVisible();
 
       await page.getByRole("link", { name: /最终测验/ }).click();
       await expect(page.getByRole("heading", { name: "最终测验" })).toBeVisible();

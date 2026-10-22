@@ -16,7 +16,6 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"],
-      "@learnos/sdk": ["./packages/learning-sdk/src/index.ts"]
     }
   },
   "include": [
@@ -28,5 +27,5 @@
     "packages/**/*.ts",
     "tests/**/*.ts"
   ],
-  "exclude": ["node_modules", "packages/learning-sdk/dist", "apps/labs"]
+  "exclude": ["node_modules"]
 }

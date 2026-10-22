@@ -7,7 +7,8 @@
 ```text
 浏览器（学生 / 管理员）
   ├── Next.js App Router 页面（Server Components）
-  ├── 客户端组件：播放器交互、笔记、实验桥、管理端抽屉
+  ├── 客户端组件：播放器、原生互动活动、笔记、管理端抽屉
+  ├── LearningProvider + LearningClient（同源 SDK）
   └── 同源 fetch → /api/** Route Handlers
                          │
                          ├── requireUser / requireApiStudent / requireApiAdmin
@@ -18,13 +19,10 @@
                                 PostgreSQL + RLS
                                       ▲
                                 Supabase Auth（Cookie 会话）
-
-独立域名静态实验（localhost:4310 / labs.example.net）
-  └── Learning SDK —— postMessage —— 父窗口实验桥 —— 同源 /api
 ```
 
-- 单 Next.js 项目同时承担页面与 REST API；没有独立后端、消息队列、Redis 或 WebSocket。
-- 实验站点与主站**不同源**，由 `scripts/serve-labs.mjs` 或任意静态主机托管。
+- 只有一个 Next.js 应用、一个域名和现有 Supabase 服务；没有独立 Labs 站点、静态实验服务器、iframe 或 postMessage。
+- 互动实验是仓库内经过审核的 React 组件，通过 `activityId` 在 `components/activities/registry.tsx` 显式注册与按需加载。
 - Supabase Auth 是唯一身份源；`profiles` 保存角色与停用状态。
 
 ## 2. 请求生命周期
@@ -134,31 +132,31 @@ content/courses/<slug>/course.json
   ├── quiz.server.json         → 仅服务端读取；API 去除 answer/explanation
   └── validators.ts            → 静态注册到 lib/content/validators.server.ts
 
-pnpm courses:validate → 结构/资源/题库/validator/entryUrl 校验
-pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结构
+pnpm courses:validate → 结构/资源/题库/activityId/validator 校验
+pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结构、题库与验证器
 ```
 
-- 数据库保存 `content_ref`（文件相对路径）与 `config`（entryUrl/validatorId/passScore/finalExam）。
+- 数据库保存 `content_ref`（文件相对路径）与 `config`（activityId/validatorId/validatorHash/passScore/finalExam/quizHash）。
 - 测验题目在请求时从服务端文件读取并评分；答案不进入数据库、API 响应或客户端 bundle。
-- 实验 `entryUrl` 在同步时解析 `${LABS_ORIGIN}` 占位符并写入数据库；部署换域名后需重新同步。
+- 题库内容与 validator 源码哈希在首次同步时冻结；已有报名后变更会被拒绝，结构性升级使用新 course slug。
 
-## 8. iframe 与 Learning SDK 协议
+## 8. 原生活动与 Learning SDK
 
-1. 父窗口从服务端读取实验状态，渲染 `iframe`（`sandbox="allow-scripts allow-same-origin"`，不同源）。
-2. SDK 读取 `parentOrigin` 查询参数，向父窗口发送 `READY`。
-3. 父窗口校验 `origin`、`source`、协议、schema 后，创建随机 nonce 并发送 `INIT`（lessonId、主题、恢复状态、`readOnly`）。**不发送登录令牌、管理员凭据或答案。**
-4. SDK 方法映射：
+1. 服务端学习页按 `lesson.config.activityId` 渲染 `ActivityHost`，并传入当前 enrollment、lesson 与服务端读取的初始状态/版本。
+2. `LearningProvider` 创建 `LearningClient`，自动绑定 lesson/enrollment；组件不能选择学生身份，API 仍逐请求校验归属。
+3. SDK 直接使用同源认证 API：
 
-| SDK | 父窗口动作 |
+| SDK | 动作 |
 | --- | --- |
-| `start()` | `TRACK session_start`（会话内去重） |
-| `track()` | `POST /api/learning/events`，客户端事件 UUID 幂等 |
-| `saveState()` | 600ms 防抖 → `PUT /api/learning/states/:lessonId`，版本冲突回传错误 |
+| `start()` | `POST /api/learning/events`，`session_start` 按会话 ID 去重 |
+| `track()` | `POST /api/learning/events`，事件 UUID 幂等，payload 完整持久化 |
+| `saveState()` | 600ms 防抖 → `PUT /api/learning/states/:lessonId`，`expectedVersion` 乐观锁；冲突回传 409 |
 | `complete()` | `POST /api/lessons/:id/complete`；`server_validated` 返回 `recorded:false` |
 | `submit()` | `POST /api/learning/submissions`，服务端验证器判定 |
-| `onRestore()` | 使用 `INIT` 中的持久化状态 |
+| `refreshState()` | 重新读取服务端状态/版本，用于冲突恢复 |
 
-5. 所有子窗口消息必须包含 `protocol: learnos/1`、nonce、UUID requestId；父窗口维护已处理 requestId 集合防重放，并使用具体 `targetOrigin`（从不使用 `*`）。
+4. 组件从 `initialState` 恢复；状态变化经 SDK 串行保存；`pagehide` 以 `keepalive` 尽力保存最后一次状态。
+5. 互动组件与主应用同源，只通过 `/api/learning/**` 读写；禁止任意模块导入、`eval` 或执行用户输入脚本。客户端事件仅是学习遥测，不是不可伪造的过关证明。
 
 ## 9. 安全控制
 
@@ -169,7 +167,7 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 - **输入**：Zod 限制 UUID、长度、枚举、JSON 大小；事件 8KB、状态/提交 64KB、笔记 64KB；事件限速 120 次/分钟/ enrollment。
 - **XSS**：MDX 仅来自可信仓库；笔记使用 `markdown-it({ html: false })` 转义原始 HTML。
 - **密钥**：service role key 只在服务端模块；`pnpm security:scan` 扫描 `.next/static`。
-- **iframe**：独立源、最小 sandbox、严格 postMessage 校验、具体 targetOrigin。
+- **活动组件**：只允许 Registry 中经过审核的组件；Supabase 会话 Cookie 设置 `httpOnly`；活动只能调用受认证的同源 API。
 - **响应**：统一错误码，不返回数据库堆栈；测验响应不含答案/解析。
 
 ## 10. 报表与轮询
@@ -183,6 +181,6 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 ## 11. 部署
 
 - 应用：`pnpm build` + `pnpm start`（或容器镜像），配置服务端环境变量；迁移通过 Supabase CLI/CI 执行。
-- 实验：`apps/labs` 作为静态站点部署到独立域名，SDK 由 `pnpm labs:build` 生成。
+- 互动组件随主应用构建产物发布，不需要额外静态站点或域名。
 - 数据库：Supabase 托管或本地 Docker；所有迁移可重复执行。
-- 生产需配置 SMTP、Cookie 安全属性、反向代理与独立实验域名；本仓库未执行云端部署。
+- 生产需配置 SMTP、Cookie 安全属性与反向代理；本仓库未执行云端部署。

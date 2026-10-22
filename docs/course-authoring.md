@@ -1,4 +1,4 @@
-# 课程制作与实验接入
+# 课程制作与互动组件接入
 
 LearnOS 采用**内容即代码**：课程结构、MDX、题库与服务端验证器都在仓库中，经脚本校验后同步到数据库。管理员 UI 只管理发布状态与标题/简介，不编辑章节内容。
 
@@ -10,14 +10,10 @@ content/courses/<course-slug>/
   01-intro.mdx             # 图文章节
   02-principle.mdx
   quiz.server.json         # 测验题库（含答案，仅服务端读取）
-  validators.ts            # 互动实验服务端验证器
+  validators.ts            # 互动组件服务端验证器
 
-apps/labs/<lab-name>/      # 独立静态实验（不同源部署）
-  index.html
-  app.js
-  styles.css
-
-packages/learning-sdk/     # 浏览器 SDK 源码
+components/activities/     # activityId registry 与原生 React 组件
+lib/activities/            # 纯模拟/校验逻辑与活动目录
 ```
 
 `<course-slug>` 必须与 `course.json` 的 `slug` 一致，且匹配 `^[a-z0-9]+(-[a-z0-9]+)*$`。
@@ -43,9 +39,8 @@ packages/learning-sdk/     # 浏览器 SDK 源码
       "slug": "query-audit-lab",
       "title": "实验：审计一条登录查询",
       "type": "interactive",
-      "entryUrl": "${LABS_ORIGIN}/sql-injection-lab/",
+      "activityId": "sql-injection-lab",
       "completionPolicy": "server_validated",
-      "validatorId": "sql-injection-lab",
       "required": true
     },
     {
@@ -71,8 +66,7 @@ packages/learning-sdk/     # 浏览器 SDK 源码
 | `type` | 是 | `article` / `interactive` / `quiz` |
 | `completionPolicy` | 依类型 | article: `manual`；interactive: `reported` / `server_validated`；quiz: `server_validated` |
 | `source` | article/quiz | 课程目录内相对路径；禁止 `..`、绝对路径 |
-| `entryUrl` | interactive | 绝对 http(s) URL；可用 `${LABS_ORIGIN}` 占位符；origin 必须在 `LABS_ALLOWED_ORIGINS` 中 |
-| `validatorId` | interactive | 必须已注册到 `lib/content/validators.server.ts` |
+| `activityId` | interactive | 必须已注册到 `lib/activities/catalog.ts` 与 `components/activities/registry.tsx` |
 | `finalExam` | quiz | **必须且只能有一个**，且必须是最后一个章节 |
 
 ### 结构规则（`pnpm courses:validate` 强制）
@@ -81,8 +75,7 @@ packages/learning-sdk/     # 浏览器 SDK 源码
 - 至少一个必修章节。
 - 恰好一个 `finalExam: true` 的测验，且位于最后。
 - 图文章节不能声明 `server_validated`；交互章节不能使用 `manual`。
-- 每个交互章节的 `validatorId` 必须注册。
-- `entryUrl` 解析后必须是 http(s)，且 origin 在允许列表。
+- 每个交互章节的 `activityId` 必须在活动目录中注册，且对应服务端 validator 可用。
 
 ## 3. MDX 图文
 
@@ -177,67 +170,82 @@ const VALIDATORS = {
 - 验证器只返回 `passed` 与可展示的 `feedback`；不要返回答案或密钥。
 - `server_validated` 章节只有验证器通过才会完成并发 10 分；失败可再次提交。
 
-## 6. 独立实验与 Learning SDK
+## 6. 原生互动组件与 Learning SDK
 
-实验可以是任意前端技术（纯 JS / React / Vue / Canvas / Three.js），构建为静态站点并部署到**与主站不同源**的域名。
+互动实验是主应用内的 React 组件，与主站同源，不使用 iframe、postMessage 或独立静态站点。
 
-页面末尾按顺序加载 SDK 与实验代码：
+### 6.1 目录
 
-```html
-<script src="/sdk/learning-sdk.js"></script>
-<script src="./app.js"></script>
+```text
+lib/activities/
+  catalog.ts                 # activityId → validatorId（服务端可安全导入）
+  sql-injection.ts           # 纯 TypeScript 模拟与校验
+  idempotency.ts
+components/activities/
+  registry.tsx               # activityId → 动态 React 组件（唯一注册点）
+  activity-host.tsx          # 绑定 lesson/enrollment/initial state
+  sql-injection/index.tsx
+  idempotency/index.tsx
 ```
 
-开发时把 `learning-sdk.js` 放在实验站点的 `/sdk/` 路径（`pnpm labs:dev` 已自动映射）。
+- `catalog.ts` 是 manifest 校验、同步和服务端验证器的唯一活动清单。
+- `registry.tsx` 必须显式列出每个 `activityId` 对应的组件；禁止根据路径或用户输入动态 import。
+- 模拟计算放在纯函数模块，便于单元测试，并与服务端 validator 共用，避免客户端/服务端判定漂移。
 
-```js
-const sdk = window.LearningSDK;
+### 6.2 组件契约
 
-sdk.onRestore((state) => {
-  if (state) {
-    // 恢复上次保存的步骤/输入
-  }
-  sdk.start(); // 会话内去重
-});
+```tsx
+"use client";
 
-// 用户操作
-sdk.track("step_interacted", { variant: "parameterized" }, "step-2");
+import { useLearning } from "@/lib/learning/context";
+import { useActivityState } from "@/lib/learning/hooks";
 
-// 自动保存（SDK 内部 600ms 防抖）
-await sdk.saveState({ step: 2, answer: "parameterize" });
+export function MyActivity({ readOnly }: { readOnly: boolean }) {
+  const { sdk } = useLearning();
+  const { state, setState, status, error, conflict, reload } = useActivityState(
+    initialState,
+    normalize,
+  );
 
-// 提交服务端验证器
-const { passed, feedback } = await sdk.submit({ defences: ["parameterize"] });
-if (passed) {
-  await sdk.complete("audit"); // server_validated 时返回 { recorded: false }，由 submit 决定完成
+  // 用户操作
+  sdk.track("step_completed", { variant: "parameterized" }, "step-2");
+
+  // 提交服务端 validator
+  const result = await sdk.submit({ steps: state.steps });
+  if (result.passed) await sdk.complete("audit");
 }
 ```
 
-SDK API：
+- 服务端学习页渲染 `ActivityHost`，传入 `activityId`、`lessonId`、`enrollmentId`、初始状态/版本与 `readOnly`。
+- `LearningProvider` 自动绑定当前 enrollment 与 lesson；组件不能选择学生身份。
+- 状态保存、防抖、串行化、版本冲突和重开恢复由 SDK/`useActivityState` 统一处理。
+- 组件可以自由使用 SVG、Canvas、动画、表单、状态机；不得使用 `eval` 或执行用户输入脚本。
+
+### 6.3 SDK API
 
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
-| `start()` | `void` | 记录会话开始；可重复调用，按会话去重 |
-| `track(type, payload?, stepId?)` | `void` | 遥测；类型限小写，payload ≤8KB |
-| `saveState(state)` | `Promise<{version}>` | 600ms 防抖；版本由父窗口维护 |
-| `complete(stepId?)` | `Promise<{recorded}>` | 仅 manual/reported 章节会记录完成 |
-| `submit(submission)` | `Promise<{passed, feedback}>` | 服务端验证器判定 |
-| `onRestore(handler)` | `void` | INIT 到达后回调持久化状态或 `null` |
+| `start()` | `void` | 记录 `session_start`；可重复调用 |
+| `track(type, payload?, stepId?)` | `void` | 事件遥测；payload 完整持久化到 `activity_events` |
+| `saveState(state)` | `Promise<{version}>` | 600ms 防抖 + 版本乐观锁；冲突返回 409 |
+| `complete(stepId?)` | `Promise<{recorded}>` | `server_validated` 返回 `recorded:false`，完成由 submit 决定 |
+| `submit(submission)` | `Promise<{passed, feedback}>` | 服务端 validator 重新判定 |
+| `refreshState()` | `Promise<snapshot>` | 冲突后重新读取服务端状态 |
 
-协议与安全（父窗口实现）：
+- 事件 payload 会上报 `type`、`payload`、`stepId`、时间、student/course 关联；客户端事件只是遥测，不是可靠的过关证明。
+- `saveState` 的 `version` 由服务端维护；多标签或快速操作发生冲突时，UI 必须提示并可重新加载。
+- 页面卸载时 SDK 使用 `keepalive` 尽力保存最后一次状态。
 
-- `protocol: "learnos/1"`，消息含 `nonce` 与 UUID `requestId`。
-- 父窗口校验 `event.origin`、`event.source === iframe.contentWindow`、协议、nonce、schema、当前 lesson/enrollment；使用具体 `targetOrigin`，禁止 `*`。
-- iframe 不持有 Supabase Token，不直接调用业务 API；所有请求经父窗口桥接。
-- 实验不可信：`complete`/事件只是客户端声明；通过/积分只由服务端判定。
+## 7. 新增互动组件的步骤
 
-## 7. 实验部署
-
-1. `pnpm labs:build` 生成 `packages/learning-sdk/dist/learning-sdk.js`。
-2. 将 `apps/labs/<lab>` 与 SDK 部署到独立域名（例如 `https://labs.example.net/sql-injection-lab/`）。
-3. 更新 `.env` 的 `NEXT_PUBLIC_LABS_ORIGIN` / `LABS_ALLOWED_ORIGINS`。
-4. 将 manifest 的 `entryUrl` 改为 `${LABS_ORIGIN}/...` 或实际 URL，执行 `pnpm courses:sync`。
-5. 确认跨域响应允许被主站 iframe（不要在实验站点发送 `X-Frame-Options: DENY`；使用 `frame-ancestors <主站 origin>`）。
+1. 在 `lib/activities/` 编写纯模拟/校验逻辑，并补单元测试。
+2. 在 `content/courses/<slug>/validators.ts` 调用该纯函数，返回 `passed` 与 `feedback`。
+3. 在 `lib/content/validators.server.ts` 注册 `validatorId`。
+4. 在 `lib/activities/catalog.ts` 增加 `activityId` 与 `validatorId` 映射。
+5. 在 `components/activities/<name>/index.tsx` 实现 React 组件，使用 `useLearning`/`useActivityState`。
+6. 在 `components/activities/registry.tsx` 显式注册组件。
+7. 在 `course.json` 的 interactive 章节填写 `activityId`。
+8. 执行 `pnpm courses:validate`、`pnpm typecheck`、`pnpm test`、`pnpm build` 和 E2E。
 
 ## 8. 校验、同步与发布
 

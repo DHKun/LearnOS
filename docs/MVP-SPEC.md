@@ -9,8 +9,8 @@
 - 角色：`student`、`admin`；MVP 不开发讲师角色。
 - 课程：不限时间、无截止日期；学生同时最多一条 `active` enrollment；允许主动退出课程，进度保留，重新参加同一课程时继续原进度；完成的课程可以复习。
 - 内容类型：`article`（MDX）、`interactive`（独立 HTML/JS 应用）、`quiz`（服务端判分）。每个 Lesson 选择一种类型。
-- 课程制作：MVP 采用 **内容即代码（content-as-code）**，开发者添加 `course.json`、MDX、互动静态包、题库与校验器；执行同步脚本入库。管理员 UI 负责查看、发布/下架、编辑标题描述与管理学生；完整所见即所得编辑器延期。
-- 互动包单独部署到独立来源的静态站点，通过 iframe 加载；通过 Learning SDK 传递学习事件和状态；**所有带积分或通过状态的权威判定都由服务器执行**。
+- 课程制作：MVP 采用 **内容即代码（content-as-code）**，开发者添加 `course.json`、MDX、原生互动组件、题库与校验器；执行同步脚本入库。管理员 UI 负责查看、发布/下架、编辑标题描述与管理学生；完整所见即所得编辑器延期。
+- 互动组件由主应用内的 React Registry 加载；通过同源 Learning SDK 传递学习事件和状态；**所有带积分或通过状态的权威判定都由服务器执行**。
 - 管理员进度监测按 30 秒轮询；学生学习页在可见且活动时约 60 秒发送心跳；不引入 WebSocket、Redis、队列和微服务。
 - 评分：完成 Lesson 首次发放 10 分（参与性积分，仅一次）；通过课程最终测验额外发放 50 分（服务端验证，仅一次）。自报告互动完成存在可伪造风险，最终通过必须有服务端校验的测验。未来可切换为仅对验证性活动奖励。
 - 统一错误码、Zod 校验、事务、幂等、RLS；所有记录时间用 UTC，前端以用户本地时间显示。
@@ -21,7 +21,7 @@
 - Tailwind CSS + shadcn/ui：学生与管理员组件，支持 light/dark；ASCII 主题可单独加入，不能影响业务。
 - Supabase：Auth、PostgreSQL、Storage（图片/附件；不托管可执行 HTML）。
 - MDX：由项目本地可信源代码编译，不运行不可信用户上传的任意 MDX。
-- 独立互动应用：可用纯 JS、React、Vue、Canvas、Three.js 等，构建为静态资源，部署到与主站不同源的域名，例如 `labs.example.net`。
+- 原生互动组件：主应用内经过审核的 React/TypeScript 组件，可使用 SVG、Canvas、Three.js 等；通过 `activityId` 显式注册，不使用 iframe、postMessage 或独立 Labs 站点。
 - 使用 `@supabase/ssr` 建立 Next.js 浏览器和服务端客户端；服务端校验身份、角色与资源归属；所有对外可访问表启用 RLS。
 - UI 层不得持有 Supabase Secret Key 或评分答案。
 
@@ -30,8 +30,8 @@
 ```
 Next.js (student / admin)
   ├─ Auth guard + role guard
-  ├─ Course player (MDX / iframe / quiz)
-  ├─ Learning SDK iframe bridge
+  ├─ Course player (MDX / native activity / quiz)
+  ├─ Learning SDK (same-origin)
   └─ /api/** Route Handlers
        ├─ enrollment-service
        ├─ progress-service
@@ -42,8 +42,8 @@ Next.js (student / admin)
                 ↓
          Supabase PostgreSQL
 
-External Labs (isolated origin)
-  └─ bundled learning SDK → window.postMessage ↔ Course player
+Activity Registry (same-origin React)
+  └─ LearningClient → authenticated /api/learning/**
 ```
 
 ## 2. 功能模块（准确范围）
@@ -53,7 +53,7 @@ External Labs (isolated origin)
 | M01 | 账号与权限 | 登录、登出、查看个人资料 | 创建、停用学生账号、重置登录凭据 | 角色由服务端判定；禁用账号拒绝业务接口 |
 | M02 | 课程 | 查看已发布课程、查看详情、参加 | 课程列表、编辑元数据、发布/下架 | 下架后禁止新参加；在学学生保留原记录，由管理员决定是否继续访问 |
 | M03 | 学习引擎 | 单课程占用、章节导航、进度保存、退出与恢复 | 查看学生/课程进度 | 每人仅 1 条 active；退出不删历史；无自动超时结课 |
-| M04 | 互动实验 | 打开独立实验、交互、步骤反馈、保存/恢复状态 | 查看最新步骤和关键事件 | iframe 隔离；事件不可自行发放积分 |
+| M04 | 互动实验 | 打开原生互动组件、交互、步骤反馈、保存/恢复状态 | 查看最新步骤和关键事件 | 服务端 validator 判定；事件不可自行发放积分 |
 | M05 | 测验 | 获取题目、提交、查看结果、重试 | 查看最高分与通过情况 | 题目答案仅在服务端；达标才完成；幂等提交 |
 | M06 | 章节笔记 | 查看、编辑、自动保存自己的 Markdown 笔记 | 默认不读取学生私人笔记 | 每学生每章节一份，限制体积 |
 | M07 | 积分 | 总积分、积分流水 | 查看学生积分 | ledger 唯一事件键；只能服务端写入 |
@@ -251,12 +251,12 @@ Content-Type: application/json
 
 服务器返回 `version:4`。若别的标签页先保存导致版本不匹配则返回 `409 STATE_VERSION_CONFLICT`，前端重新获取并提示冲突或按照规则合并。
 
-## 6. Learning SDK 与 iframe 协议
+## 6. Learning SDK 与原生活动
 
 ### 6.1 内容实现方式
 
 - `article`：受信任的仓库内 MDX，使用项目组件渲染。
-- `interactive`：构建好的独立静态 Web 应用，部署在与主应用不同的 origin；课程 manifest 只保存 `entryUrl`（必须匹配允许的静态课程域）。
+- `interactive`：主应用内经过审核的 React/TypeScript 组件，manifest 只保存 `activityId`；组件通过显式 Registry 映射，不根据用户输入构造模块路径。
 - `quiz`：题目客户端可见；正确答案与评分器留在服务端源码或数据库受限表中。
 
 ### 6.2 SDK 对课程开发者的接口
@@ -267,28 +267,25 @@ export interface LearningSDK {
   track(type: string, payload?: Record<string, unknown>, stepId?: string): void;
   saveState(state: Record<string, unknown>): Promise<{ version: number }>;
   complete(stepId?: string): Promise<{ recorded: boolean }>;
-  submit(submission: Record<string, unknown>): Promise<{ passed: boolean; feedback?: string }>;
-  onRestore(handler: (state: Record<string, unknown> | null) => void): void;
+  submit(submission: Record<string, unknown>): Promise<{ passed: boolean; feedback?: Record<string, unknown> }>;
 }
 ```
 
 含义：
 - `start`：记录模块开始；可重复调用但按会话去重。
-- `track`：上报交互遥测数据，限制事件类型和 payload 大小、节流；不得直接控制通过/积分。
-- `saveState`：保存学生当前交互状态；防抖 0.5–1.0 秒，页面卸载时 best-effort flush。
+- `track`：上报交互遥测数据，限制事件类型和 payload 大小、节流；payload 完整持久化，但不得直接控制通过/积分。
+- `saveState`：保存学生当前交互状态；防抖 0.5–1.0 秒，版本冲突返回 409，页面卸载时 best-effort flush。
 - `complete`：报告完成步骤。对 `reported` 策略仅标记「自报告」；对 `server_validated` 策略不能绕过验证。
 - `submit`：将互动结论提交服务端 validator，得到可验证的 pass/fail。
-- `onRestore`：课程恢复时接收持久化状态。
+- 状态恢复通过 React Context/Hook 提供（服务端初始状态 + `refreshState`）；SDK 不依赖 iframe 握手。
 
-### 6.3 协议
+### 6.3 同源安全边界
 
-- `iframe` 使用受限 `sandbox` 权限，最小设置应允许 JS 运行；为了得到稳定 origin，`allow-scripts allow-same-origin` 仅用于隔离域名的可信课程静态资源；不能与主站同源。
-- 父窗口创建随机 `sessionNonce`，经 `postMessage` 下发 `INIT`（lessonId、主题、恢复状态、SDK 协议版本）；子窗口只向预先配置的父窗口 origin 发消息。
-- 子窗口发消息为 `{protocol:'learnos/1',nonce,requestId,type,payload}`；父窗口响应 `{protocol:'learnos/1',nonce,requestId,type:'RESULT',payload}`。
-- 父窗口校验 `event.source === iframe.contentWindow`、`event.origin` 精确匹配登记的互动站点 origin、nonce、schema、payload 限制、当前课程与 Lesson；使用明确的 `targetOrigin`，禁止 `'*'` 广播。
-- **不向 iframe 下发 Supabase 登录令牌、管理员凭据、Secret Key、正确答案。** iframe 请求由父窗口认证后转发到服务端。
-- 事件只是客户端陈述；任何浏览器端 JS 消息都可以被用户伪造。积分和可信通过条件必须使用服务端判题/校验器；管理员 UI 要区分 reported/verified。
-- 假设实验由平台团队开发并经代码审核。学生上传任意可执行 HTML 不属于 MVP。
+- 组件只来自 `components/activities/registry.tsx` 的显式注册；manifest 的 `activityId` 必须同时存在于 `lib/activities/catalog.ts`。
+- 组件与主应用同源，只能通过受认证的 `/api/learning/**` 读写状态；服务端根据会话确定 student，逐请求校验 enrollment/lesson 归属。
+- 不向组件下发 Supabase service role、管理员凭据或测验答案；会话 Cookie 设置 `httpOnly`。
+- 事件只是客户端陈述；任何浏览器端 JS 都可以被用户伪造。积分和可信通过条件必须使用服务端判题/校验器；管理员 UI 要区分 reported/verified。
+- 假设互动组件由平台团队开发并经代码审核。学生上传任意可执行 HTML 不属于 MVP。
 
 ### 6.4 课程文件与 manifest（内容即代码）
 
@@ -300,12 +297,9 @@ content/
       intro.mdx
       principle.mdx
       quiz.server.json         # 答案仅服务端读取，严禁前端打包
-      validators.ts           # 互动实验服务端验证器
-apps/
-  labs/
-    sql-basics-demo/          # 独立 Web App，部署到 labs 域名
-packages/
-  learning-sdk/               # 课程 SDK 包，可单独打包
+      validators.ts            # 互动组件服务端验证器
+components/activities/         # activityId registry 与原生组件
+lib/activities/                # 纯模拟/校验逻辑与活动目录
 ```
 
 示例 `course.json`：
@@ -319,15 +313,15 @@ packages/
   "lessons": [
     { "slug": "intro", "title": "基础概念", "type": "article", "source": "intro.mdx", "completionPolicy": "manual", "required": true },
     { "slug": "principle", "title": "工作原理", "type": "article", "source": "principle.mdx", "completionPolicy": "manual", "required": true },
-    { "slug": "demo", "title": "模拟器", "type": "interactive", "entryUrl": "https://labs.example.net/sql-basics-demo/", "completionPolicy": "server_validated", "validatorId": "sql-basics-demo", "required": true },
+    { "slug": "demo", "title": "模拟器", "type": "interactive", "activityId": "sql-injection-lab", "completionPolicy": "server_validated", "required": true },
     { "slug": "final-quiz", "title": "最终测验", "type": "quiz", "source": "quiz.server.json", "completionPolicy": "server_validated", "required": true }
   ]
 }
 ```
 
-- `pnpm courses:validate` 验证 schema、顺序、唯一 slug、资源可用性、必修数、最终题目与 validator 引用。
+- `pnpm courses:validate` 验证 schema、顺序、唯一 slug、资源可用性、必修数、最终题目与 activityId/validator 引用。
 - `pnpm courses:sync` 将 manifest 元数据写入 courses、lessons（upsert）；不覆盖管理员维护的发布状态；更新 `content_version`。已存在 enrollment 的课程拒绝改变课程结构（必修集合、章节 ID 和顺序）；结构性升级发布新 slug。
-- 发布前验证课程；已入学课程的章节结构必须保持冻结。MVP 允许修正文案；涉及必修章节增删、顺序调整与评分规则变化时发布新 course slug，避免历史进度失真。
+- 发布前验证课程；已入学课程的章节结构、题库内容与 validator 源码必须保持冻结。MVP 允许修正文案；涉及必修章节增删、顺序调整、题目或评分规则变化时发布新 course slug，避免历史进度失真。
 
 ## 7. 权限矩阵和数据安全
 
@@ -396,7 +390,7 @@ not_started → in_progress → completed
 - 首先用 2 个测试学生执行并发参加课程测试。
 
 ### Phase 2 — 内容交互
-- MDX 渲染；独立 iframe 实验；Learning SDK + 安全桥；event/state API；服务端 validator；自动保存和恢复；互动状态显示。
+- MDX 渲染；原生 React 互动组件；同源 Learning SDK；event/state API；服务端 validator；自动保存和恢复；互动状态显示。
 
 ### Phase 3 — 成果评估
 - 题目获取、服务端判题、重试、积分 ledger、笔记自动保存；课程完成触发；管理员查看课程学员名单和学生详情。
@@ -414,7 +408,7 @@ not_started → in_progress → completed
 5. 管理员可以查到一个学生的当前课程、章节、课程进度、最后在线、最近交互、已完成章节，以及近期事件。
 6. 管理员可以查看某课程 `active/completed/abandoned` 学生名单，各自进度和最近在线。
 7. 独立互动实验能发送事件，保存状态，刷新后恢复；来源不匹配、nonce 错误、数据超限消息被拒绝。
-8. 伪造 iframe `complete` 或 HTTP `events` 不得通过 `server_validated` 章节，不得直接增加积分。
+8. 伪造 `complete` 或 HTTP `events` 不得通过 `server_validated` 章节，不得直接增加积分。
 9. 学生提交最终测验，服务器给分；答案不会出现在客户端网络响应或打包资源；达到阈值才能完成。
 10. 同一 lesson 完成请求、同一 attemptId 测验提交和同一 eventId 事件重试均保持幂等；积分不重复。
 11. 全部必修章节完成后课程变为 completed，允许参加新课程，旧课程可复习。
@@ -436,7 +430,7 @@ not_started → in_progress → completed
 3. 每个阶段完成可运行的功能、数据库迁移、测试和必要文档；完成当前验收再进入下一阶段。
 4. UI 保持简洁，优先桌面端可用，同时在窄屏不溢出；支持浅色/深色主题。
 5. 优先让学员的「参加 → 学习 → 互动 → 测验 → 结课」闭环真实跑通，同时让管理员准确看到数据。
-6. 所有涉及权限、积分、认证、评分、课程唯一占用和 iframe 消息安全的规则必须经过自动化测试。
-7. 课程作者应可以独立编写任何前端技术实现的静态实验，只要遵循 SDK 契约；首批实现一个可恢复、可追踪、可由服务端判定通过的实验。
+6. 所有涉及权限、积分、认证、评分、课程唯一占用和活动注册/状态保存的规则必须经过自动化测试。
+7. 课程作者应可以独立编写 React 互动组件，只要遵循 activityId 注册与 SDK 契约；首批实现两个可恢复、可追踪、可由服务端判定通过的实验。
 8. 遇到业务规格未定义的细节，选择实现成本最低且符合安全约束的方案，写入 `docs/decisions.md`；不增加本规格明确延期的功能。
 9. 最终交付可复制的本地启动步骤、环境变量说明、初始化管理员方法、两门种子课程、E2E 验收结果及剩余已知限制。

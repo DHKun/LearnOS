@@ -24,10 +24,9 @@
       "slug": "query-audit-lab",
       "title": "实验：审计一条登录查询",
       "type": "interactive",
-      "entryUrl": "${LABS_ORIGIN}/sql-injection-lab/",
       "completionPolicy": "server_validated",
-      "validatorId": "sql-injection-lab",
-      "required": true
+      "required": true,
+      "activityId": "sql-injection-lab"
     },
     {
       "slug": "final-quiz",

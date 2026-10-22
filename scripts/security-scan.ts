@@ -63,7 +63,7 @@ for (const { label, needle } of forbidden) {
 }
 
 // The service role key variable name may appear in server code, but the value
-// must never be in the client bundle. Also ensure the labs origin stays public.
+// must never be in the client bundle.
 if (failures === 0) {
   console.log(`✓ 已扫描 ${staticFiles.length} 个客户端资源：未发现服务端密钥或测验答案解析。`);
   process.exit(0);

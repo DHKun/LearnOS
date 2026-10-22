@@ -8,7 +8,7 @@
 
 **最终目标**：管理员建号；学生完成「登录 → 参加一门课程 → 图文阅读 → 互动实验 → 服务端测验 → 结课 → 获得积分」；学生随时记笔记，离开后恢复；管理员准确查看每个学生和每门课程的实时近况、历史进度与成绩。
 
-冻结技术栈：Next.js App Router、TypeScript、Tailwind CSS、shadcn/ui、Supabase Auth/PostgreSQL/Storage、MDX、iframe、Learning SDK、Zod。
+冻结技术栈：Next.js App Router、TypeScript、Tailwind CSS、shadcn/ui、Supabase Auth/PostgreSQL/Storage、MDX、原生 React 互动组件、同源 Learning SDK、Zod。
 
 **MVP Done 定义**（全部满足）：
 
@@ -70,8 +70,8 @@
 
 **依赖**：G1 通过。
 
-- [x] **P2-01** 独立互动静态资源构建/部署配置；课程 `entryUrl` origin allowlist 验证。
-- [x] **P2-02** 父窗口 iframe bridge：`INIT/RESULT`、protocol、nonce、requestId、origin/source/schema 校验和具体 targetOrigin。
+- [x] **P2-01** 独立互动静态资源构建/部署配置（已由 Phase 11 单站点重构取代）。
+- [x] **P2-02** 父窗口 iframe bridge（已由 Phase 11 单站点重构取代）。
 - [x] **P2-03** `packages/learning-sdk`：`start`、`track`、`saveState`、`complete`、`submit`、`onRestore`。
 - [x] **P2-04** `POST /api/learning/events`，事件 UUID 幂等、类型/载荷大小限制、节流和交互时间更新。
 - [x] **P2-05** `GET/PUT /api/learning/states/:lessonId`，版本号乐观锁、自动保存、恢复与冲突处理。
@@ -82,8 +82,8 @@
 **门禁 G2**
 
 - [x] 事件上报、刷新/关闭重开恢复、步骤完成、状态版本冲突全通过。`tests/e2e/security.spec.ts`、`tests/integration/functions.test.ts`、`tests/e2e/learning-flow.spec.ts`。
-- [x] 篡改 iframe origin/source/nonce、超大 payload 的请求被拒绝。`tests/unit/bridge.test.ts`、`tests/e2e/security.spec.ts`（事件 8KB/状态 64KB/笔记 64KB）。
-- [x] 伪造 `complete`、事件上报或 iframe 消息无法绕过服务端校验，也无法刷积分。`tests/e2e/security.spec.ts`。
+- [x] 超大 payload 的请求被拒绝。`tests/e2e/security.spec.ts`（事件 8KB/状态 64KB/笔记 64KB）。
+- [x] 伪造 `complete` 或事件上报无法绕过服务端校验，也无法刷积分。`tests/e2e/security.spec.ts`。
 - [x] 跨用户、跨课程、跨章节读写事件/状态被拒绝，RLS/服务端测试通过。`tests/integration/rls.test.ts`、`tests/e2e/security.spec.ts`。
 - [x] Phase 2 相关测试、lint、typecheck、build 通过。
 
@@ -120,7 +120,7 @@
 - [x] **P4-02** 示例课程 B（`idempotent-retries`）：article、独立 interactive、最终 quiz，可从头完成。
 - [x] **P4-03** 示例课程 manifest 验证与同步加入可复现流程；结构变更遵守课程版本冻结策略。
 - [x] **P4-04** E2E：2 个学生 + 1 个管理员；覆盖报名并发、学习、互动、测验、笔记、积分及管理员查看。
-- [x] **P4-05** 完整权限、RLS、Origin/CSRF、iframe、重放、资源归属测试与敏感信息扫描。
+- [x] **P4-05** 完整权限、RLS、Origin/CSRF、重放、资源归属测试与敏感信息扫描。
 - [x] **P4-06** README、架构、API、课程制作、决策日志、截图与验证命令。
 - [x] **P4-07** 执行最终全套命令、汇总真实结果。
 
@@ -144,7 +144,7 @@
 | A04 | 无课程时限，离线不改变 active | ☑ | `tests/e2e/presence.spec.ts`（回拨 `last_seen_at` 3 分钟）；`tests/integration/functions.test.ts` |
 | A05 | 学生详情：课程、章节、进度、在线/交互时间、事件 | ☑ | `tests/e2e/learning-flow.spec.ts`（管理员抽屉）；`/api/admin/students/:id` |
 | A06 | 课程详情：三种状态学生名单及各自进度 | ☑ | `tests/e2e/admin-courses.spec.ts`；`App (admin)/admin/courses/[id]` |
-| A07 | iframe 事件、状态恢复，异常来源/nonce/超限被拒绝 | ☑ | `tests/unit/bridge.test.ts`；`tests/e2e/security.spec.ts`（8KB/64KB 限制）；`tests/e2e/learning-flow.spec.ts` |
+| A07 | 原生互动组件事件、状态恢复、多标签冲突与超限被拒绝 | ☑ | `tests/e2e/learning-flow.spec.ts`（实验事件 payload、刷新恢复、无 iframe）；`tests/e2e/native-state.spec.ts`（多标签冲突恢复）；`tests/e2e/security.spec.ts`（8KB/64KB 限制） |
 | A08 | 伪造完成与遥测不能绕过 server_validated 或增加积分 | ☑ | `tests/e2e/security.spec.ts`；`tests/integration/functions.test.ts` |
 | A09 | 服务端判题、答案保密、达标后通过 | ☑ | `tests/e2e/security.spec.ts`（响应无 answer/explanation）；`pnpm security:scan` |
 | A10 | 章节/测验/事件幂等与积分去重 | ☑ | `tests/integration/functions.test.ts`（完成/提交/attempt/event/ledger）；`tests/e2e/security.spec.ts` |
@@ -160,7 +160,7 @@
 |---|---|---|
 | 并发报名造成两条在学课程 | PostgreSQL 部分唯一索引 + 并发集成/E2E 测试 | A02 |
 | 客户端伪造完成/刷积分 | 事务函数 + 服务端验证器 + 题库判分 + ledger 去重 | A08/A10 |
-| iframe 影响主站或滥用身份 | 独立 origin、最小 sandbox、严格 postMessage 协议 | A07 |
+| 原生互动组件滥用身份或绕过校验 | 显式 Registry、同源认证 API、httpOnly Cookie、服务端 validator | A07 |
 | 多标签覆盖学习状态 | expectedVersion 乐观锁、409 冲突提示 | A13 |
 | 管理员越权读取私人笔记 | RLS 无管理员策略 + 服务端归属检查 | A12 |
 | 已报名课程结构变化导致进度失真 | 同步时结构冻结、结构性升级新 slug | `scripts/courses/sync.ts`、课程制作文档 |
@@ -173,12 +173,12 @@
 |---|---|
 | `pnpm lint` | ✅ 0 errors / 0 warnings |
 | `pnpm typecheck` | ✅ 通过 |
-| `pnpm test` | ✅ 7 个测试文件，57 项通过（单元 + 真实 PostgreSQL RLS/事务） |
+| `pnpm test` | ✅ 8 个测试文件，58 项通过（单元 + 真实 PostgreSQL RLS/事务） |
 | `pnpm build` | ✅ Next.js 生产构建成功（22 个页面/接口路由） |
-| `pnpm security:scan` | ✅ 扫描 54 个客户端资源，未发现 service role key 或测验解析 |
-| `pnpm test:e2e` | ✅ 11 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、笔记自动保存、越权与重放、在线语义） |
+| `pnpm security:scan` | ✅ 扫描 57 个客户端资源，未发现 service role key 或测验解析 |
+| `pnpm test:e2e` | ✅ 12 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、原生互动刷新恢复、多标签状态冲突、笔记自动保存、越权与重放、在线语义） |
 | `pnpm courses:validate` | ✅ 2/2 门课程通过 |
-| `pnpm db:reset` | ✅ 3 个迁移重建成功 |
+| 数据库迁移 | ✅ 7 个迁移已通过 `migration up` 应用；未执行全量 `db:reset`，避免清空运行数据 |
 | `pnpm seed:admin` / `pnpm seed:demo` | ✅ 管理员 + 2 名学生 + 2 门已发布课程 |
 | RLS 测试 | ✅ student/admin/anon 8 项（`tests/integration/rls.test.ts`） |
 
@@ -192,6 +192,7 @@ tests/e2e/learning-flow.spec.ts         2 tests
 tests/e2e/notes.spec.ts                 1 test
 tests/e2e/presence.spec.ts              1 test
 tests/e2e/security.spec.ts              2 tests
+tests/e2e/native-state.spec.ts          1 test
 ```
 
 ## 9. 未验证项与已知限制
@@ -207,13 +208,29 @@ tests/e2e/security.spec.ts              2 tests
 ```text
 当前 Phase：Release（完成）
 当前任务：P0-01 ～ P4-07 全部完成
-最近验证日期：2026-10-21
-本次已完成：两门课程、28 个 API、11 张表 + RLS + 事务函数、Learning SDK 与两个实验、
+最近验证日期：2026-10-22
+本次已完成：两门课程、28 个 API、11 张表 + RLS + 事务函数、同源 Learning SDK 与两个原生互动组件、
             学生 5 页 / 管理员 4 页、E2E 与 RLS 测试、文档与截图；
             性能专项 35 项（bundle −156KB、实验 −55%、测验 −69%），见 docs/performance.md；
-            审计修复 LRN-001/004/005/006/007/008/009 与残余风险，见 docs/audit-remediation.md
-测试结果：lint/typecheck/build 通过；Vitest 57 passed；Playwright 11 passed；
+            审计修复 LRN-001/004/005/006/007/008/009 与残余风险，见 docs/audit-remediation.md；
+            完成单站点原生活动重构（activityId Registry、移除 iframe/Labs/postMessage、历史数据迁移验证）
+测试结果：lint/typecheck/build 通过；Vitest 58 passed；Playwright 12 passed；
           security scan 通过；courses:validate 2/2
 失败 / 阻塞：无（本地）；云端部署与 SMTP 未执行
 下一个门禁：无（MVP Release，本地）
 ```
+
+## 11. 单站点原生活动重构（2026-10-22）
+
+- [x] Manifest/Loader/Sync/DB 约束改为 `activityId`，移除 `entryUrl` 与 Labs origin 校验。
+- [x] 新增 `lib/activities/catalog.ts`、`components/activities/registry.tsx`、`ActivityHost`。
+- [x] 两个实验迁移为原生 React 组件，纯模拟逻辑与 server validator 共用。
+- [x] 新增同源 `LearningClient` + `LearningProvider` + `useActivityState`，去掉 postMessage。
+- [x] 删除 `apps/labs`、`packages/learning-sdk`、iframe 播放器、bridge、Labs 服务与 `LABS_*` 配置。
+- [x] 迁移 `20250101000600_activity_registry.sql` 保留课程/章节/报名/进度/笔记/积分/测验记录；事务级迁移演练通过；有报名时再次 `courses:sync` 成功且不覆盖 `activityId`。
+- [x] E2E 覆盖原生组件运行、事件 payload、刷新恢复、多标签冲突、无 iframe、生产构建仅启动 3000。
+- [x] 文档同步：README、AGENTS、MVP-SPEC、architecture、course-authoring、decisions、audit-remediation。
+- [x] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` / `pnpm test:e2e` / `pnpm security:scan` 通过（58 unit/integration、12 E2E、57 静态资源扫描）。
+- [ ] 云端 staging / SMTP / TLS 未验证（环境限制）。
+
+**门禁**：本地代码、测试、数据库与文档均已完成；云端验收留待 staging。

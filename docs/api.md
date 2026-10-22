@@ -44,9 +44,9 @@ HTTP 状态：`400 BAD_REQUEST`、`401 UNAUTHENTICATED`、`403 FORBIDDEN`、`404
 
 `GET /api/courses/:slug` → `{ course, lessons, myEnrollment, myLessonProgress }`
 
-- `lessons`: `{ id, slug, title, type, position, required, completionPolicy, entryUrl? }`。
+- `lessons`: `{ id, slug, title, type, position, required, completionPolicy, activityId? }`。
 - 非 published 课程只有已报名学生可读。
-- `entryUrl` 只对交互章节返回。
+- `activityId` 只对交互章节返回。
 
 ### 1.4 当前进行中的课程
 

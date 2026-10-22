@@ -29,7 +29,7 @@
 - Tailwind CSS + shadcn/ui（简洁界面、浅色/深色两种主题）。
 - Supabase Auth + PostgreSQL + Storage；通过 `@supabase/ssr` 接入认证。
 - Zod 入参校验、RLS、事务、唯一约束、幂等键。
-- 仓库内可信 MDX + `course.json` 内容即代码；独立静态互动 App 使用跨域 iframe 和 Learning SDK。
+- 仓库内可信 MDX + `course.json` 内容即代码；互动组件通过 `activityId` 注册，使用同源 Learning SDK。
 - 管理页面轮询刷新；课程页面心跳。尽量减少额外运行时服务与依赖。
 - 使用docker 或 docker compose 或者 mise来开发和部署
 
@@ -41,7 +41,7 @@
 2. 独立记录 `last_seen_at`（心跳）和 `last_interaction_at`（真实交互）；超过 120 秒无有效心跳显示离线，但课程仍 active。
 3. 章节按 `article / interactive / quiz` 三类播放；进度按必修章节完成数量计算。最终测验通过后才完成测验章节。
 4. 互动课由开发者自由实现 HTML/JS/React/Vue/Canvas/3D；平台提供 `start`、`track`、`saveState`、`complete`、`submit`、`onRestore` SDK。
-5. iframe postMessage 严格校验 origin/source/nonce/schema；不把身份令牌、正确答案或任何服务端密钥交给 iframe。
+5. 互动组件只允许来自显式 Registry；使用同源认证 API，不把身份令牌、正确答案或任何服务端密钥交给客户端组件。
 6. 事件与步骤自报告只用于遥测或 `reported` 类任务；`server_validated` 通过与积分由服务端判定；积分 `point_events` 去重。
 7. 章节首次完成发 10 分，课程最终测验首次通过额外发 50 分，重复或并发请求不得重复发放。
 8. 笔记仅所有者可读写；管理员默认无法读取。学生不可读取、修改其他学生的记录。

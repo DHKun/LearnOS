@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
-import { loadAllCourses, readQuizFile, resolveEntryUrl, type LoadedCourse } from "@/lib/content/loader";
+import { loadAllCourses, readQuizFile, type LoadedCourse } from "@/lib/content/loader";
+import { getActivityDefinition } from "@/lib/activities/catalog";
 import { getValidator } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -52,8 +53,11 @@ function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
       if (config.quizHash !== sha256(canonicalJson(quiz))) return false;
     }
     if (lesson.type === "interactive") {
-      if (config.validatorId !== lesson.validatorId) return false;
-      const validator = getValidator(lesson.validatorId);
+      const activity = getActivityDefinition(lesson.activityId);
+      if (!activity) return false;
+      if (config.activityId !== lesson.activityId) return false;
+      if (config.validatorId !== activity.validatorId) return false;
+      const validator = getValidator(activity.validatorId);
       if (!validator || config.validatorHash !== sha256(validator.toString())) return false;
     }
     return true;
@@ -102,7 +106,7 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
 
       if (enrollments > 0 && !structureMatches(loaded, existingLessons)) {
         throw new Error(
-          `课程 ${manifest.slug} 已有 ${enrollments} 条学习记录，拒绝改变必修结构、评分规则或题库内容（章节 ID/顺序/类型、完成策略、及格线、finalExam、题目内容、validator）。请使用新的 course slug 发布结构性升级。`,
+          `课程 ${manifest.slug} 已有 ${enrollments} 条学习记录，拒绝改变必修结构、评分规则或题库内容（章节 ID/顺序/类型、完成策略、及格线、finalExam、题目内容、activityId、validator）。请使用新的 course slug 发布结构性升级。`,
         );
       }
 
@@ -148,10 +152,12 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
       if (lesson.type === "article") {
         contentRef = lesson.source;
       } else if (lesson.type === "interactive") {
-        const validator = getValidator(lesson.validatorId);
+        const activity = getActivityDefinition(lesson.activityId);
+        if (!activity) throw new Error(`未注册的 activityId: ${lesson.activityId}`);
+        const validator = getValidator(activity.validatorId);
         config = {
-          entryUrl: resolveEntryUrl(lesson.entryUrl),
-          validatorId: lesson.validatorId,
+          activityId: lesson.activityId,
+          validatorId: activity.validatorId,
           validatorHash: validator ? sha256(validator.toString()) : null,
           ...(lesson.config ?? {}),
         };

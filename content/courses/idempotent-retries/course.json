@@ -24,10 +24,9 @@
       "slug": "retry-lab",
       "title": "实验：让支付恰好发生一次",
       "type": "interactive",
-      "entryUrl": "${LABS_ORIGIN}/idempotency-lab/",
       "completionPolicy": "server_validated",
-      "validatorId": "idempotency-lab",
-      "required": true
+      "required": true,
+      "activityId": "idempotency-lab"
     },
     {
       "slug": "final-quiz",

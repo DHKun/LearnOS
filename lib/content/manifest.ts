@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { ACTIVITY_IDS } from "@/lib/activities/catalog";
+
 export const lessonTypeSchema = z.enum(["article", "interactive", "quiz"]);
 export const completionPolicySchema = z.enum(["manual", "reported", "server_validated"]);
 
@@ -29,9 +31,8 @@ export const lessonManifestSchema = z.discriminatedUnion("type", [
   z.object({
     ...baseLesson,
     type: z.literal("interactive"),
-    entryUrl: z.string().min(1),
+    activityId: z.enum(ACTIVITY_IDS),
     completionPolicy: completionPolicySchema.default("server_validated"),
-    validatorId: z.string().min(1).max(80),
     config: z.record(z.unknown()).optional(),
   }),
   z.object({

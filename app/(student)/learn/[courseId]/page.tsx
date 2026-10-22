@@ -6,7 +6,7 @@ import { FlaskConical, ListChecks, Lock, FileText } from "lucide-react";
 import { CompleteLessonButton, JoinCourseButton } from "@/components/learning/actions";
 import { ArticleView } from "@/components/learning/article-view";
 import { LearningHeartbeat } from "@/components/learning/heartbeat";
-import { LabFrame } from "@/components/learning/lab-frame";
+import { ActivityHost } from "@/components/activities/activity-host";
 import { LessonNav } from "@/components/learning/lesson-nav";
 import { NotesPanel } from "@/components/learning/notes-panel";
 import { QuizPlayer } from "@/components/learning/quiz-player";
@@ -166,20 +166,20 @@ export default async function LearnPage({
               </div>
             )}
 
-            {current.type === "interactive" && current.entryUrl && (
-              <LabFrame
-                entryUrl={current.entryUrl}
+            {current.type === "interactive" && current.activityId && (
+              <ActivityHost
+                activityId={current.activityId}
                 lessonId={current.id}
                 enrollmentId={enrollment.id}
-                title={current.title}
+                initialState={initialLabState?.state ?? null}
+                initialVersion={initialLabState?.version ?? 0}
                 readOnly={readOnly}
-                initialState={initialLabState}
               />
             )}
 
-            {current.type === "interactive" && !current.entryUrl && (
+            {current.type === "interactive" && !current.activityId && (
               <p className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-                实验地址缺失，请联系管理员重新同步课程。
+                实验组件未配置，请联系管理员重新同步课程。
               </p>
             )}
 

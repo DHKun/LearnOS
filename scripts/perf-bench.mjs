@@ -120,21 +120,15 @@ async function measureStudent(browser, student) {
 
     const labStart = Date.now();
     await page.getByRole("link", { name: /实验：审计一条登录查询/ }).click();
-    await page
-      .frameLocator('iframe[title^="交互实验"]')
-      .getByRole("heading", { name: "登录查询审计台" })
-      .waitFor({ timeout: 20_000 });
-    result.labIframe = Date.now() - labStart;
+    await page.getByTestId("sql-activity").waitFor({ timeout: 20_000 });
+    result.activityLoad = Date.now() - labStart;
 
     const labWarmStart = Date.now();
     await page.getByRole("link", { name: /参数化查询为什么有效/ }).click();
     await page.getByRole("heading", { name: "参数化查询为什么有效" }).waitFor();
     await page.getByRole("link", { name: /实验：审计一条登录查询/ }).click();
-    await page
-      .frameLocator('iframe[title^="交互实验"]')
-      .getByRole("heading", { name: "登录查询审计台" })
-      .waitFor({ timeout: 20_000 });
-    result.labWarm = Date.now() - labWarmStart;
+    await page.getByTestId("sql-activity").waitFor({ timeout: 20_000 });
+    result.activityWarm = Date.now() - labWarmStart;
 
     const quizStart = Date.now();
     await page.getByRole("link", { name: /最终测验/ }).click();

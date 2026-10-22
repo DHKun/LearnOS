@@ -31,7 +31,7 @@ export type LessonSummary = {
   required: boolean;
   completionPolicy: CompletionPolicy;
   /** Only populated for interactive lessons. */
-  entryUrl?: string;
+  activityId?: string;
 };
 
 export type MyLessonProgress = Record<

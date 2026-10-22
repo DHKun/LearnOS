@@ -21,9 +21,8 @@ function validManifest() {
         slug: "lab",
         title: "实验",
         type: "interactive",
-        entryUrl: "http://localhost:4310/demo/",
+        activityId: "sql-injection-lab",
         completionPolicy: "server_validated",
-        validatorId: "demo-validator",
         required: true,
       },
       {

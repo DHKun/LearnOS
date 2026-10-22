@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
       "connect-src 'self' " + (process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""),
-      "frame-src 'self' " + (process.env.NEXT_PUBLIC_LABS_ORIGIN ?? ""),
+      "frame-src 'self'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

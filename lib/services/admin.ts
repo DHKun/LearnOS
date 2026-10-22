@@ -1,4 +1,5 @@
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
+import { getActivityDefinition } from "@/lib/activities/catalog";
 import { getValidator } from "@/lib/content/validators.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isOnline } from "@/lib/services/shared";
@@ -364,9 +365,11 @@ export async function updateCourse(
 
     for (const lesson of list) {
       if (lesson.type === "interactive") {
-        const validatorId = (lesson.config as Record<string, unknown>)?.validatorId;
-        if (typeof validatorId !== "string" || !getValidator(validatorId)) {
-          throw new ApiError("VALIDATION_ERROR", `互动章节 ${lesson.title} 缺少有效的服务端验证器`);
+        const activityId = (lesson.config as Record<string, unknown>)?.activityId;
+        const activity =
+          typeof activityId === "string" ? getActivityDefinition(activityId) : null;
+        if (!activity || !getValidator(activity.validatorId)) {
+          throw new ApiError("VALIDATION_ERROR", `互动章节 ${lesson.title} 缺少有效的活动或验证器`);
         }
       }
       if ((lesson.type === "article" || lesson.type === "quiz") && !lesson.content_ref) {

@@ -6,7 +6,7 @@
 
 ## 1. 项目目标
 
-交付一个可实际使用的多人互动学习平台 MVP：管理员发放账号；学生同时只能学习一门进行中的课程，课程无时间限制；学生通过图文、独立 JS 交互实验和服务端测验学习，可随时记笔记；系统保存学习进度、最新活跃时间和积分；管理员按学生或课程查看学习记录。
+交付一个可实际使用的多人互动学习平台 MVP：管理员发放账号；学生同时只能学习一门进行中的课程，课程无时间限制；学生通过图文、原生 JS/React 交互组件和服务端测验学习，可随时记笔记；系统保存学习进度、最新活跃时间和积分；管理员按学生或课程查看学习记录。
 
 **实现优先级**：端到端可用性 > 数据/权限正确性 > 稳定性 > 页面美观 > 扩展性。任何“开发完成”都必须有对应的可执行证据。
 
@@ -26,8 +26,8 @@
 - UI：**Tailwind CSS + shadcn/ui**，桌面优先、窄屏可用，支持 light/dark。ASCII 可做主题扩展，但不作为上线阻塞项。
 - 数据：**Supabase Auth + PostgreSQL + Supabase Storage**；通过 `@supabase/ssr` 管理 Cookie 会话。
 - 输入校验：**Zod**；数据操作需行级授权；关键写操作使用数据库事务、唯一约束和幂等键。
-- 课程：仓库内可信 MDX、声明式课程 manifest、服务端测验/校验器；独立互动静态应用由隔离域名承载。
-- 互动：`iframe + postMessage + Learning SDK`；后端核准完成状态及积分。
+- 课程：仓库内可信 MDX、声明式课程 manifest、服务端测验/校验器；互动组件通过显式 `activityId` 注册。
+- 互动：主应用内原生 React 组件 + 同源认证 Learning SDK；后端核准完成状态及积分。不得使用 iframe、postMessage 或独立 Labs 站点。
 - 本地包管理：优先 **pnpm**，提交 lockfile；测试框架使用与 Next.js 兼容的轻量组合，可选 Vitest + Playwright。
 - 监控：管理端 **30 秒轮询**；学生页面可见且活动时约 **60 秒心跳**；在线判定窗口 **120 秒**。
 
@@ -61,10 +61,9 @@ lib/
   db/                   # Supabase 客户端与查询
   schemas/              # Zod schema / API 类型
   services/             # enrollments/progress/quiz/points/reporting
-  learning/             # iframe bridge、server validators
-packages/learning-sdk/  # 供独立实验引用的浏览器 SDK
+  learning/             # 同源 SDK、React Context、状态保存 Hook
+components/activities/  # activityId registry 与原生互动组件
 content/courses/        # 课程 manifest、MDX、服务端题目/校验器
-apps/labs/              # 独立静态实验（单独部署/域名）
 supabase/migrations/    # 可追踪数据库迁移
 scripts/                # 初始化管理员、课程校验与同步
 tests/                  # 单元/集成/RLS/E2E
@@ -92,7 +91,7 @@ docs/                   # 规格、架构、API、课程制作、决策
 - 心跳 `last_seen_at` 与有效交互 `last_interaction_at` 分开；后台区分「课程进行中」和「最近在线」。
 - `activity_events.id` 去重；`activity_states` 用 `expectedVersion` 乐观锁，冲突 `409 STATE_VERSION_CONFLICT`。
 - SDK `complete` 的自报告只能满足允许的 `reported` 策略；`server_validated` 章节必须使用服务端校验器。
-- Quiz 正确答案及评分器保留在服务端；不传给浏览器和互动 iframe。
+- Quiz 正确答案及评分器保留在服务端；不传给浏览器或互动组件。
 - 每 Lesson 首次完成 **+10**，课程最终测验首次通过额外 **+50**；重复完成、重放、并发、刷新都不重复发分。
 - `point_events.dedupe_key` 唯一；章节完成/结课/积分写入在同一事务完成。积分合计以 ledger 为准。
 - 默认不向管理员展示学生的私人笔记。
@@ -111,9 +110,9 @@ docs/                   # 规格、架构、API、课程制作、决策
 - 管理员创建学生时只可创建 student；禁用账号必须使业务接口立即拒绝；重置密码通过受控流程。
 - 使用 cookie 认证的写接口做 Origin/CSRF 保护；Zod 校验长度、类型、数据结构和枚举；限制遥测频率及 payload、笔记 64KB。
 - 动态笔记只按安全 Markdown 渲染；仓库内可信 MDX 可编译，外部用户提供的 MDX 不可直接执行。
-- 独立互动域与主站**不同源**；iframe 的 `sandbox` 按需最小授权。仅可信独立域上的资源才考虑 `allow-scripts allow-same-origin`。
-- iframe 双向消息要验证 `origin`、`source`、`nonce`、协议版本、请求 ID、payload schema 和授权 Lesson；使用具体的 `targetOrigin`，严禁 `'*'`。
-- 互动 iframe 不持有 Supabase Token，不直接调用高权限服务；通过经认证的父窗口桥接业务 API。
+- 互动组件只允许来自仓库内经过审核的 Registry；禁止根据用户输入构造模块路径。
+- 组件与主应用同源，只允许通过受认证的 `/api/learning/**` 读写状态；不得直接持有 service role 或绕过服务端校验。
+- 互动组件不得使用 `eval` 或执行用户输入的任意脚本；纯客户端仿真只作为教学交互，最终通过/积分必须由服务端验证器判定。
 - 遥测是客户端声明；**不能把任意客户端事件当作可信过关凭证**。
 
 ## 8. 测试与阶段门禁

@@ -8,29 +8,11 @@ import {
   type LessonManifest,
   type QuizFile,
 } from "@/lib/content/manifest";
+import { getActivityDefinition } from "@/lib/activities/catalog";
 import { getValidator } from "@/lib/content/validators.server";
 
 export const CONTENT_ROOT = path.join(process.cwd(), "content", "courses");
 
-
-export function getLabsOrigin(): string {
-  return process.env.NEXT_PUBLIC_LABS_ORIGIN ?? "http://localhost:4310";
-}
-
-export function getAllowedLabOrigins(): string[] {
-  const configured = process.env.LABS_ALLOWED_ORIGINS ?? process.env.NEXT_PUBLIC_LABS_ORIGIN ?? "";
-  return configured
-    .split(",")
-    .map((origin) => origin.trim().replace(/\/$/, ""))
-    .filter(Boolean);
-}
-
-/** Resolve the `${LABS_ORIGIN}` placeholder used in course manifests. */
-export function resolveEntryUrl(entryUrl: string): string {
-  return entryUrl
-    .replaceAll("${LABS_ORIGIN}", getLabsOrigin())
-    .replaceAll("{LABS_ORIGIN}", getLabsOrigin());
-}
 
 export function courseDir(slug: string): string {
   return path.join(CONTENT_ROOT, slug);
@@ -105,44 +87,17 @@ export function loadCourse(slug: string): LoadedCourse {
     }
   }
 
-  const allowedOrigins = getAllowedLabOrigins();
-  const appOrigin = process.env.NEXT_PUBLIC_APP_URL
-    ? new URL(process.env.NEXT_PUBLIC_APP_URL).origin
-    : null;
-  const warnedHosts = new Set<string>();
   for (const lesson of parsed.data.lessons) {
     if (lesson.type !== "interactive") continue;
-    const resolved = resolveEntryUrl(lesson.entryUrl);
-    let url: URL;
-    try {
-      url = new URL(resolved);
-    } catch {
-      throw new Error(`课程 ${slug} 的互动章节 ${lesson.slug} entryUrl 不是合法 URL`);
-    }
-    if (!["http:", "https:"].includes(url.protocol)) {
-      throw new Error(`课程 ${slug} 的互动章节 ${lesson.slug} 必须使用 http(s) 地址`);
-    }
-    if (!allowedOrigins.includes(url.origin)) {
+    const activity = getActivityDefinition(lesson.activityId);
+    if (!activity) {
       throw new Error(
-        `课程 ${slug} 的互动章节 ${lesson.slug} origin ${url.origin} 不在允许列表 ${allowedOrigins.join(", ")}`,
+        `课程 ${slug} 的互动章节 ${lesson.slug} 引用了未注册的 activityId: ${lesson.activityId}`,
       );
     }
-    if (appOrigin && url.origin === appOrigin) {
+    if (!getValidator(activity.validatorId)) {
       throw new Error(
-        `课程 ${slug} 的互动章节 ${lesson.slug} 不能与主应用同源（${appOrigin}）`,
-      );
-    }
-    if (appOrigin && url.hostname === new URL(appOrigin).hostname) {
-      if (!warnedHosts.has(url.hostname)) {
-        warnedHosts.add(url.hostname);
-        console.warn(
-          `[learnos] 实验站与主应用使用同一主机名 ${url.hostname}，Cookie 不按端口隔离；生产环境请使用独立域名。`,
-        );
-      }
-    }
-    if (!getValidator(lesson.validatorId)) {
-      throw new Error(
-        `课程 ${slug} 的互动章节 ${lesson.slug} 引用了未注册的 validatorId: ${lesson.validatorId}`,
+        `课程 ${slug} 的互动章节 ${lesson.slug} 缺少服务端验证器: ${activity.validatorId}`,
       );
     }
   }

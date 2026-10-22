@@ -52,7 +52,7 @@
 
 **理由**：比「按 position 猜最后一个」更显式，发布校验也可复用。
 
-## D08 — 实验地址使用 `${LABS_ORIGIN}` 占位符
+## D08 — 实验地址使用 `${LABS_ORIGIN}` 占位符（已废弃，见 D22）
 
 **决定**：manifest 中 `entryUrl` 可写 `${LABS_ORIGIN}/lab/`，校验/同步时替换为环境变量值并存入 `lessons.config.entryUrl`。
 
@@ -86,7 +86,7 @@
 
 ## D13 — 课程结构冻结的实现方式
 
-**决定**：`courses:sync` 在课程已有 enrollment 时比较章节 `slug/position/required/type`、完成策略、测验 `passScore/finalExam` 与交互 `validatorId`，有任何差异即失败并提示使用新 slug；无 enrollment 时允许删除/重建章节。发布状态不被普通同步覆盖（仅 `--publish` 显式覆盖）。实验 `entryUrl` 允许随部署域名更新。
+**决定**：`courses:sync` 在课程已有 enrollment 时比较章节 `slug/position/required/type`、完成策略、测验 `passScore/finalExam`、题库内容哈希、交互 `activityId` 与 validator 源码哈希，有任何差异即失败并提示使用新 slug；无 enrollment 时允许删除/重建章节。发布状态不被普通同步覆盖（仅 `--publish` 显式覆盖）。
 
 **影响**：历史进度不会因章节重排失真；文案与题库可原地更新。需要结构性升级时复制课程目录并发布新 slug。
 
@@ -96,7 +96,7 @@
 
 **影响**：复习不改变历史进度；网络重试不会报错或重复发分。
 
-## D15 — 实验站点独立域名与 sandbox
+## D15 — 实验站点独立域名与 sandbox（已废弃，见 D22）
 
 **决定**：`apps/labs` 由简单 Node 静态服务器（或任意静态主机）默认监听 `0.0.0.0:4310`；浏览器使用的 origin 可以是 `localhost` 或服务器 LAN IP，但必须与 `NEXT_PUBLIC_LABS_ORIGIN` 一致并重新同步课程。iframe 使用 `sandbox="allow-scripts allow-same-origin"`。主站 CSP `frame-src` 与实验站 `frame-ancestors` 互相限制；实验服务器自动把本机非回环 IPv4 加入允许的父页面 origin。
 
@@ -141,3 +141,15 @@
 **决定**：客户端统一使用 `lib/uuid.ts#createUuid()`：优先 `crypto.randomUUID`，否则用 `crypto.getRandomValues` 生成 RFC 4122 v4；Learning SDK 内置同样的兜底。所有服务继续监听 `0.0.0.0`，以支持局域网演示。
 
 **影响**：局域网 HTTP 下交互实验、测验、状态保存均可正常使用；生产仍应启用 HTTPS。
+
+## D22 — 互动实验改为单站点原生 React 组件
+
+**背景**：MVP 阶段互动实验部署在独立静态站点，通过 iframe + postMessage + Learning SDK 与主站通信。该方案带来第二套部署、跨域配置、CSP/frame-ancestors、Cookie 同主机风险和额外的加载延迟。
+
+**决定**：互动实验全部迁移为主应用内经过审核的 React/TypeScript 组件，通过 `activityId` 在 `lib/activities/catalog.ts` 与 `components/activities/registry.tsx` 显式注册；`ActivityHost` 通过服务端渲染的 enrollment/lesson/初始状态绑定 `LearningClient`，直接调用同源认证 `/api/learning/**`。删除 `apps/labs`、`packages/learning-sdk`、iframe 播放器、postMessage bridge、Labs 静态服务器与全部 `LABS_*` 环境变量。
+
+**数据**：新增迁移 `20250101000600_activity_registry.sql`，仅把 `lessons.config.entryUrl` 替换为 `config.activityId`，保留 course/lesson ID、enrollment、lesson_progress、notes、point_events、quiz_attempts 等全部历史记录；课程同步不再要求 `entryUrl`，已有 enrollment 的课程继续冻结结构、题库与 validator 哈希。
+
+**安全影响**：互动组件与主应用同源，不能依赖 origin 隔离；安全边界改为「显式 registry + 受审核代码 + 服务端归属校验 + httpOnly Cookie + 服务端 validator」。客户端事件仍是可伪造遥测，不能作为过关凭证。
+
+**影响**：部署只需要一个 Next.js 站点、一个域名和现有 Supabase；新互动组件需同时注册 catalog、registry 和服务端 validator。

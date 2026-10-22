@@ -52,12 +52,6 @@ export default defineConfig({
       reuseExistingServer: true,
       timeout: 120_000,
     },
-    {
-      command: "pnpm labs:dev",
-      url: `${process.env.NEXT_PUBLIC_LABS_ORIGIN ?? "http://localhost:4310"}/`,
-      reuseExistingServer: true,
-      timeout: 120_000,
-    },
   ],
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });

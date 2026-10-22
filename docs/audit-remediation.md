@@ -14,7 +14,7 @@
 | LRN-005 | P2 | 已修复 | 新增 `student_points_total()` / `student_point_totals()`；积分总数改用 SQL `SUM`，明细单独读取；测试 1005 条流水 |
 | LRN-006 | P2 | 已修复 | 新增 `admin_students_page()`，在数据库完成过滤、计数、排序、分页；服务端不再全量拉取 |
 | LRN-007 | P2 | 已修复（离页仍为 best-effort） | `save_state` 改为原子 upsert；SDK 串行化并发保存；`pagehide` 携带 `keepalive` |
-| LRN-008 | P2 | 已缓解 | Supabase 会话 Cookie 改为 `httpOnly`；实验 origin 与主应用同源直接拒绝；同主机名（不同端口）会在启动日志警告 |
+| LRN-008 | P2 | 已重构消除 | 删除 iframe/Labs 跨域边界；会话 Cookie `httpOnly`；互动组件走显式 Registry + 同源认证 API |
 | LRN-009 | P2 | 已修复 | `courses:sync` 计算并冻结题库内容哈希与 validator 源码哈希；已有报名时变更会被拒绝 |
 | LRN-010 | 发布前 | 未验证 | 仍需 staging/生产域名、SMTP、TLS、备份与压测证据 |
 
@@ -79,10 +79,10 @@
 
 ### LRN-008 实验域与 Cookie
 
-- `createServerClient` 与中间件统一设置 Cookie：`httpOnly: true`、`sameSite: lax`、`secure` 按 HTTPS 自动开启。
-- `loadCourse` 拒绝实验 origin 与主应用完全相同。
-- 同主机名不同端口时输出警告：Cookie 不按端口隔离；生产必须使用独立注册域名。
-- 本轮本地部署仍是 `10.66.66.2:3000` 与 `10.66.66.2:4310`，同主机不同端口，仅用于演示。
+- 架构重构后已删除独立 Labs origin、iframe 与 postMessage；互动组件在主应用内运行，不再存在跨域消息边界。
+- `createServerClient` 与中间件统一设置会话 Cookie：`httpOnly: true`、`sameSite: lax`、`secure` 按 HTTPS 自动开启。
+- 互动组件只能来自显式 Registry，并通过同源认证 `/api/learning/**` 读写；服务端继续校验 enrollment/lesson 归属。
+- 残余风险转为「同源组件与主应用共享 Cookie/JS 环境」：必须通过代码审核、服务端 validator 和 `httpOnly` 控制，不能把客户端遥测当作过关凭证。
 
 ### LRN-009 题库内容冻结
 
@@ -95,10 +95,10 @@
 ```text
 pnpm lint          ✅
 pnpm typecheck     ✅
-pnpm test          ✅ 57 passed (7 files)
+pnpm test          ✅ 58 passed (8 files)
 pnpm build         ✅
-pnpm security:scan ✅
-pnpm test:e2e      ✅ 11 passed
+pnpm security:scan ✅ 57 个客户端资源
+pnpm test:e2e      ✅ 12 passed
 ```
 
 未执行：真实 staging 部署、SMTP、TLS、备份恢复、20–50 人并发压测。

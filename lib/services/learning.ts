@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { loadCourse } from "@/lib/content/loader";
+import { getActivityDefinition } from "@/lib/activities/catalog";
 import { getValidator } from "@/lib/content/validators.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { findEnrollmentForLesson, getOwnedEnrollment } from "@/lib/services/enrollments";
@@ -179,7 +180,8 @@ export async function submitInteraction(
     throw new ApiError("SUBMISSION_NOT_ALLOWED");
   }
 
-  const validator = getValidator(manifestLesson.validatorId);
+  const activity = getActivityDefinition(manifestLesson.activityId);
+  const validator = activity ? getValidator(activity.validatorId) : null;
   if (!validator) throw new ApiError("SUBMISSION_NOT_ALLOWED");
 
   const result = await validator(input.submission);
