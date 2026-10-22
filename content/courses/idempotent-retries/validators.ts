@@ -3,7 +3,7 @@ import {
   isRetryPolicy,
   validateIdempotencyConfig,
   type IdempotencyConfig,
-} from "@/lib/activities/idempotency";
+} from "./simulation/idempotency";
 
 export type IdempotencyFeedback = {
   passed: boolean;

@@ -41,5 +41,40 @@
       "finalExam": true,
       "unit": "实验与测验"
     }
-  ]
+  ],
+  "schemaVersion": 2,
+  "plugins": {
+    "concepts": [
+      {
+        "id": "lost-response",
+        "legacyGlobalId": "idempotency.lost-response",
+        "component": "concepts/idempotency-lost-response.tsx",
+        "export": "IdempotencyLostResponse",
+        "title": "支付回执丢失：一次请求为什么扣了两次",
+        "analogy": "付款成功但小票没打印，顾客又付了一次"
+      },
+      {
+        "id": "deduplication",
+        "legacyGlobalId": "idempotency.deduplication",
+        "component": "concepts/idempotency-deduplication.tsx",
+        "export": "IdempotencyDeduplication",
+        "title": "订单号去重：重复请求只执行一次",
+        "analogy": "同一个快递订单号，仓库只发货一次"
+      }
+    ],
+    "activities": [
+      {
+        "id": "idempotency-lab",
+        "legacyGlobalId": "idempotency-lab",
+        "component": "activities/idempotency.tsx",
+        "export": "IdempotencyActivity",
+        "title": "恰好一次支付",
+        "validator": {
+          "id": "idempotency-lab",
+          "path": "validators.ts",
+          "export": "validateIdempotencyLab"
+        }
+      }
+    ]
+  }
 }

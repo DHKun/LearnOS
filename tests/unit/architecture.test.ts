@@ -25,12 +25,13 @@ describe("单站点原生互动架构", () => {
   it("课程 manifest 使用 activityId 并已注册组件", () => {
     const manifest = read("content/courses/sql-injection-basics/course.json");
     const idempotency = read("content/courses/idempotent-retries/course.json");
-    const registry = read("components/activities/registry.tsx");
+    const registry = read("lib/generated/course-components.tsx");
     expect(manifest).toContain('"activityId": "sql-injection-lab"');
     expect(idempotency).toContain('"activityId": "idempotency-lab"');
     expect(manifest).not.toContain("entryUrl");
     expect(idempotency).not.toContain("entryUrl");
-    expect(registry).toContain('"sql-injection-lab"');
-    expect(registry).toContain('"idempotency-lab"');
+    expect(registry).toContain("sql-injection-lab");
+    expect(registry).toContain("idempotency-lab");
+    expect(read("components/activities/registry.tsx")).toContain("ACTIVITY_COMPONENTS");
   });
 });

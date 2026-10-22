@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { loadAllCourses, readQuizFile, type LoadedCourse } from "@/lib/content/loader";
 import { getActivityDefinition } from "@/lib/activities/catalog";
 import { buildCourseUpdate } from "@/lib/content/sync-policy";
-import { getValidator } from "@/lib/content/validators.server";
+import { getValidator, getValidatorFingerprint } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -59,7 +59,14 @@ function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
       if (config.activityId !== lesson.activityId) return false;
       if (config.validatorId !== activity.validatorId) return false;
       const validator = getValidator(activity.validatorId);
-      if (!validator || config.validatorHash !== sha256(validator.toString())) return false;
+      if (!validator) return false;
+      const fingerprint = getValidatorFingerprint(activity.validatorId);
+      if (
+        config.validatorFingerprintVersion === 2 &&
+        config.validatorFingerprint !== fingerprint
+      ) {
+        return false;
+      }
     }
     return true;
   });
@@ -156,7 +163,8 @@ export async function syncCourses(
         config = {
           activityId: lesson.activityId,
           validatorId: activity.validatorId,
-          validatorHash: validator ? sha256(validator.toString()) : null,
+          validatorFingerprint: getValidatorFingerprint(activity.validatorId) ?? null,
+          validatorFingerprintVersion: 2,
           ...(lesson.unit ? { unit: lesson.unit } : {}),
           ...(lesson.config ?? {}),
         };

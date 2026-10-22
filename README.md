@@ -9,6 +9,7 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 - 28 个 API 契约：[`docs/api.md`](docs/api.md)
 - 课程制作与实验接入：[`docs/course-authoring.md`](docs/course-authoring.md)
 - 实现取舍日志：[`docs/decisions.md`](docs/decisions.md)
+- 课程插件规范：[`docs/course-plugin-spec.md`](docs/course-plugin-spec.md)
 - 30+ 次性能优化与测量：[`docs/performance.md`](docs/performance.md)
 - 静态审计修复记录：[`docs/audit-remediation.md`](docs/audit-remediation.md)
 - 概念动画与教学设计：[`docs/teaching-design.md`](docs/teaching-design.md)
@@ -142,10 +143,12 @@ NEXT_PUBLIC_APP_URL="http://10.66.66.2:3000"
 
 ## 课程内容工作流
 
-课程是仓库中的可信代码，不在管理后台编辑章节：
+课程是仓库中的可信代码，新增课程只需新增插件目录与 `course.json`，无需修改核心 Registry：
 
 ```bash
-pnpm courses:validate    # 校验 manifest、MDX/题库资源、最终测验、validator 注册
+pnpm courses:prepare     # 扫描课程插件并生成 Registry（build/dev/typecheck 自动执行）
+pnpm courses:scan        # 输出课程版本/源码摘要，供部署候选比较
+pnpm courses:validate    # 校验 manifest、MDX/题库资源、最终测验、activity/validator 注册
 pnpm courses:sync        # 将元数据写入 courses/lessons，保留管理员发布状态
 pnpm courses:sync --publish  # 显式发布（种子/演示用途）
 ```

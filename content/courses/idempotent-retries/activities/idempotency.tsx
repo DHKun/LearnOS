@@ -16,7 +16,7 @@ import {
   validateIdempotencyConfig,
   type KeyStrategy,
   type RetryPolicy,
-} from "@/lib/activities/idempotency";
+} from "../simulation/idempotency";
 import { useLearning } from "@/lib/learning/context";
 import { useActivityState } from "@/lib/learning/hooks";
 import type { ActivityComponentProps, LearningState } from "@/lib/learning/types";

@@ -46,8 +46,33 @@ export const lessonManifestSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
+
+const pluginComponent = z.object({
+  id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+  legacyGlobalId: z.string().min(1).max(160).optional(),
+  component: safeRelativePath,
+  export: z.string().regex(/^[A-Za-z_$][A-Za-z0-9_$]*$/),
+  title: z.string().min(1).max(160).optional(),
+  analogy: z.string().min(1).max(500).optional(),
+});
+
+const pluginActivity = pluginComponent.extend({
+  validator: z.object({
+    id: z.string().min(1).max(160).optional(),
+    path: safeRelativePath,
+    export: z.string().regex(/^[A-Za-z_$][A-Za-z0-9_$]*$/),
+  }),
+});
+
+const pluginsSchema = z.object({
+  concepts: z.array(pluginComponent).default([]),
+  activities: z.array(pluginActivity).default([]),
+});
+
 export const courseManifestSchema = z
   .object({
+    schemaVersion: z.literal(2).optional(),
+    plugins: pluginsSchema.optional(),
     slug: z
       .string()
       .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "课程 slug 只能使用小写字母、数字和连字符"),

@@ -95,7 +95,7 @@
 ```text
 pnpm lint          ✅
 pnpm typecheck     ✅
-pnpm test          ✅ 61 passed (9 files)
+pnpm test          ✅ 63 passed (10 files)
 pnpm build         ✅
 pnpm security:scan ✅ 62 个客户端资源
 pnpm test:e2e      ✅ 16 passed

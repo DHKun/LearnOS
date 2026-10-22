@@ -15,7 +15,7 @@ import {
   SQL_PAYLOADS,
   validateSqlDefences,
   type SqlInjectionFeedback,
-} from "@/lib/activities/sql-injection";
+} from "../simulation/sql-injection";
 import { useLearning } from "@/lib/learning/context";
 import { useActivityState } from "@/lib/learning/hooks";
 import type { ActivityComponentProps, LearningState } from "@/lib/learning/types";

@@ -2,7 +2,7 @@ import {
   isSqlDefenceId,
   validateSqlDefences,
   type SqlInjectionFeedback,
-} from "@/lib/activities/sql-injection";
+} from "./simulation/sql-injection";
 
 export type { SqlInjectionFeedback };
 

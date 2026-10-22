@@ -16,8 +16,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:rls": "vitest run tests/integration/rls.test.ts",
-    "courses:validate": "tsx scripts/courses/validate-cli.ts",
-    "courses:sync": "tsx scripts/courses/sync-cli.ts",
+    "courses:validate": "pnpm courses:prepare && tsx scripts/courses/validate-cli.ts",
+    "courses:sync": "pnpm courses:prepare && tsx scripts/courses/sync-cli.ts",
     "db:reset": "npx supabase db reset",
     "db:status": "npx supabase status",
     "seed:admin": "tsx scripts/seed-admin.ts",
@@ -26,7 +26,12 @@
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
     "security:scan": "tsx scripts/security-scan.ts",
-    "preview": "next build && node scripts/run-next.mjs start"
+    "preview": "pnpm build && node scripts/run-next.mjs start",
+    "courses:prepare": "tsx scripts/courses/generate.ts",
+    "predev": "pnpm courses:prepare",
+    "prebuild": "pnpm courses:prepare",
+    "pretypecheck": "pnpm courses:prepare",
+    "courses:scan": "tsx scripts/courses/scan.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.15",

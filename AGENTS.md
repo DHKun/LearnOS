@@ -26,7 +26,7 @@
 - UI：**Tailwind CSS + shadcn/ui**，桌面优先、窄屏可用，支持 light/dark。ASCII 可做主题扩展，但不作为上线阻塞项。
 - 数据：**Supabase Auth + PostgreSQL + Supabase Storage**；通过 `@supabase/ssr` 管理 Cookie 会话。
 - 输入校验：**Zod**；数据操作需行级授权；关键写操作使用数据库事务、唯一约束和幂等键。
-- 课程：仓库内可信 MDX、声明式课程 manifest（支持可选 unit 分组）、服务端测验/校验器；概念动画通过显式 `conceptId`、互动组件通过 `activityId` 注册。
+- 课程：每门课程是 `content/courses/<slug>/` 插件；Manifest v2 声明 concepts/activities/validators，`pnpm courses:prepare` 自动生成 Registry，禁止手工维护注册表。
 - 互动：主应用内原生 React 组件 + 同源认证 Learning SDK；后端核准完成状态及积分。不得使用 iframe、postMessage 或独立 Labs 站点。
 - 教学：抽象概念优先使用「生活类比 → 动画解释 → 自由探索 → 即时反馈 → 知识检查 → 原理总结」。动画必须有暂停/重播/单步/静态替代，并支持 reduced-motion；动画播放本身不产生积分。
 - 本地包管理：优先 **pnpm**，提交 lockfile；测试框架使用与 Next.js 兼容的轻量组合，可选 Vitest + Playwright。

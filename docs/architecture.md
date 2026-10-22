@@ -204,3 +204,12 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 - `/admin`：整体监控、待关注学生。
 - `/admin/students`：搜索、筛选、创建、分页；点击进入独立详情。
 - `/admin/courses/[id]`：课程结构、学员分页与详情。
+
+## 13. 课程插件与自动注册
+
+- 每门课程是 `content/courses/<slug>/` 下的完整插件；`course.json` 的 `plugins` 声明 concept、activity 与 validator，路径/导出在生成期校验。
+- `scripts/courses/generate.ts` 扫描全部 Manifest，稳定排序生成 `lib/generated/course-catalog.ts`、`course-components.tsx`、`validator-registry.server.ts`；平台 Registry 只引用生成物。
+- 新课程无需修改核心 Registry；删除课程会清除生成项。
+- 旧两门课程用 `legacyGlobalId` 保留原 activity/concept ID 与历史数据；组件源码已迁入课程目录。
+- Validator 指纹来自 validator 文件 SHA-256，由生成器输出；旧 `validatorHash` 在首次同步时兼容升级到版本 2 指纹。
+- `pnpm courses:scan` 输出课程版本与源码摘要，作为生产部署候选比较的输入；生产构建/流量切换执行器尚未实现。

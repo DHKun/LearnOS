@@ -173,7 +173,7 @@
 |---|---|
 | `pnpm lint` | ✅ 0 errors / 0 warnings |
 | `pnpm typecheck` | ✅ 通过 |
-| `pnpm test` | ✅ 9 个测试文件，61 项通过（单元 + 真实 PostgreSQL RLS/事务） |
+| `pnpm test` | ✅ 10 个测试文件，63 项通过（单元 + 真实 PostgreSQL RLS/事务） |
 | `pnpm build` | ✅ Next.js 生产构建成功（22 个页面/接口路由） |
 | `pnpm security:scan` | ✅ 扫描 62 个客户端资源，未发现 service role key 或测验解析 |
 | `pnpm test:e2e` | ✅ 16 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、四个概念动画、知识检查、原生互动刷新恢复、多标签状态冲突、笔记自动保存、管理员独立学生详情/互链、确认弹窗、越权与重放、在线语义） |
@@ -217,7 +217,7 @@ tests/e2e/admin-detail.spec.ts          1 test
             性能专项 35 项（bundle −156KB、实验 −55%、测验 −69%），见 docs/performance.md；
             审计修复 LRN-001/004/005/006/007/008/009 与残余风险，见 docs/audit-remediation.md；
             完成单站点原生活动重构（activityId Registry、移除 iframe/Labs/postMessage、历史数据迁移验证）
-测试结果：lint/typecheck/build 通过；Vitest 61 passed；Playwright 16 passed；
+测试结果：lint/typecheck/build 通过；Vitest 63 passed；Playwright 16 passed；
           security scan 通过；courses:validate 2/2
 失败 / 阻塞：无（本地）；云端部署与 SMTP 未执行
 下一个门禁：无（MVP Release，本地）
@@ -233,7 +233,7 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 迁移 `20250101000600_activity_registry.sql` 保留课程/章节/报名/进度/笔记/积分/测验记录；事务级迁移演练通过；有报名时再次 `courses:sync` 成功且不覆盖 `activityId`。
 - [x] E2E 覆盖原生组件运行、事件 payload、刷新恢复、多标签冲突、无 iframe、生产构建仅启动 3000。
 - [x] 文档同步：README、AGENTS、MVP-SPEC、architecture、course-authoring、decisions、audit-remediation。
-- [x] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` / `pnpm test:e2e` / `pnpm security:scan` 通过（61 unit/integration、16 E2E、62 静态资源扫描）。
+- [x] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` / `pnpm test:e2e` / `pnpm security:scan` 通过（63 unit/integration、16 E2E、62 静态资源扫描）。
 - [ ] 云端 staging / SMTP / TLS 未验证（环境限制）。
 
 **门禁**：本地代码、测试、数据库与文档均已完成；云端验收留待 staging。
@@ -275,3 +275,14 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [ ] 慢速网络/断网、真实 SMTP/TLS/staging、并发压测未验证（环境限制）。
 
 > 真实结果以第 8 节和最终报告为准；不以复选框替代测试。
+
+## 13. 课程插件化（2026-10-22）
+
+- [x] `course.json` Manifest v2：`plugins.concepts` / `plugins.activities` / validator 声明。
+- [x] `pnpm courses:prepare` 自动扫描、路径/导出校验、稳定排序、生成 Registry。
+- [x] 生成 `course-catalog.ts`、`course-components.tsx`、`validator-registry.server.ts`。
+- [x] 旧两门课程组件迁入各自 `content/courses/<slug>/concepts|activities|simulation`，保留原 activityId/conceptId 与学习记录。
+- [x] `pnpm courses:scan` 输出课程版本与源码摘要。
+- [x] Validator 指纹改为生成器对源码文件计算 SHA-256，旧指纹首次同步兼容升级。
+- [x] `build/dev/typecheck/courses:validate/courses:sync` 自动 prepare。
+- [ ] 生产部署控制台/执行器未实现：当前环境没有反向代理、隔离构建器或 CI 凭据，不能真实完成“一键构建—切换流量—健康检查—回滚”；后台不做假成功。
