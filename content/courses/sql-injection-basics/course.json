@@ -1,0 +1,42 @@
+{
+  "slug": "sql-injection-basics",
+  "title": "SQL 注入：从字符串拼接到参数化查询",
+  "description": "从一个登录框出发，理解注入的成因、为什么转义总是慢一步，以及参数化查询与最小权限如何真正阻断它。",
+  "version": "1.0.0",
+  "lessons": [
+    {
+      "slug": "where-injection-comes-from",
+      "title": "注入从哪里来",
+      "type": "article",
+      "source": "01-where-injection-comes-from.mdx",
+      "completionPolicy": "manual",
+      "required": true
+    },
+    {
+      "slug": "why-parameterized-queries-work",
+      "title": "参数化查询为什么有效",
+      "type": "article",
+      "source": "02-parameterized-queries.mdx",
+      "completionPolicy": "manual",
+      "required": true
+    },
+    {
+      "slug": "query-audit-lab",
+      "title": "实验：审计一条登录查询",
+      "type": "interactive",
+      "entryUrl": "${LABS_ORIGIN}/sql-injection-lab/",
+      "completionPolicy": "server_validated",
+      "validatorId": "sql-injection-lab",
+      "required": true
+    },
+    {
+      "slug": "final-quiz",
+      "title": "最终测验",
+      "type": "quiz",
+      "source": "quiz.server.json",
+      "completionPolicy": "server_validated",
+      "required": true,
+      "finalExam": true
+    }
+  ]
+}

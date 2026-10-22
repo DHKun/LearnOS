@@ -1,0 +1,80 @@
+参数化查询（prepared statement）把 SQL 分成两次发送：
+
+1. **准备阶段**：数据库解析带有占位符的语句，确定语法结构。
+2. **执行阶段**：客户端把参数值单独发送，数据库只把它们当成值绑定。
+
+```ts
+const sql = "SELECT id, password_hash FROM users WHERE email = $1";
+const rows = await db.query(sql, [email]);
+```
+
+即使 `email` 的值是 `' OR '1'='1' --`，数据库在准备阶段已经知道「这里是一个字符串参数」，值里的引号不会重新参与语法解析。**结构在数据到达之前就固定了。**
+
+<Callout type="tip" title="一句话记忆">
+拼接是「把用户输入写进代码」，参数化是「把用户输入交给数据库当数据」。前者改变语法，后者不改变。
+</Callout>
+
+## 占位符不是字符串替换
+
+很多驱动提供 `query(sql, params)`，内部可能是客户端替换，也可能是真正的服务端 prepare。安全的判断标准不是 API 名字，而是**参数是否被当作独立的值传输**。如果库只是帮你把值拼进 SQL 字符串，那它依然不安全。
+
+查询构建器（Knex、Drizzle、Prisma 等）在大多数情况下默认使用参数绑定。但要注意两类例外：
+
+- `orderBy`、表名、列名这类标识符无法用值参数表示。
+- 部分构建器提供 `raw()`，把字符串直接插入 SQL。
+
+```ts
+// 不安全：标识符来自用户
+db("orders").orderByRaw(req.query.sort);
+
+// 安全：白名单枚举
+const sortable = { newest: "created_at desc", amount: "amount desc" } as const;
+const order = sortable[req.query.sort as keyof typeof sortable] ?? sortable.newest;
+db("orders").orderByRaw(order);
+```
+
+## 标识符白名单
+
+表名、列名、排序方向在 SQL 里是语法的一部分，无法参数化。正确做法是**枚举白名单**：用户只能从服务端定义的集合里选，服务端把选择映射为固定字符串。
+
+```ts
+const SORT_COLUMNS = new Set(["created_at", "amount", "status"]);
+if (!SORT_COLUMNS.has(input.sort)) throw new BadRequest("invalid sort");
+```
+
+不要尝试用正则「清洗」标识符。白名单是有限的、可审计的；清洗规则会不断被绕过。
+
+## 纵深防御
+
+参数化是主防线，但生产系统通常再加几层：
+
+1. **最小权限**：应用连接数据库的账号只拥有需要的表权限，不要用 `postgres` 超级用户。
+2. **输入校验**：邮箱必须是邮箱、金额必须是数字，用 Zod 之类的 schema 拒绝明显异常。
+3. **错误信息收敛**：不要将数据库错误原文返回给浏览器，避免泄露表结构。
+4. **审计与告警**：记录异常查询模式，但不记录密码等敏感值。
+5. **WAF 只作补充**：规则匹配可以被编码绕过，不能替代参数化。
+
+<Callout type="warning" title="关于存储过程">
+存储过程本身不是银弹。如果过程内部用 `EXECUTE '...' || input` 动态拼接，注入依旧存在。安全的是参数绑定，不是「用了存储过程」这个形式。
+</Callout>
+
+## 对照表
+
+| 场景 | 不安全 | 安全 |
+| --- | --- | --- |
+| 登录查询 | 字符串拼接 email | `WHERE email = $1` |
+| 数值比较 | `WHERE id = ${id}` | `WHERE id = $1` |
+| 排序 | 直接拼 sort 参数 | 白名单映射 |
+| 模糊搜索 | 拼接 `%${q}%` 到 SQL | 参数值本身包含 `%`，如 `$1` = `%q%` |
+| 批量 IN | 拼 `id1,id2` | `WHERE id = ANY($1)` |
+
+## 本文小结
+
+- 参数化把「结构」和「值」分开发送，用户输入无法改变语法。
+- 标识符要用白名单，不能参数化也不能靠清洗。
+- 参数化是主防线，最小权限与错误收敛是纵深防御。
+- 下一节进入实验：你会审计一条真实的登录查询，并让服务端判定修复是否有效。
+
+<Callout type="note" title="完成后">
+点击「标记本章完成」继续。下一章是服务端验证的互动实验，只有实验提交通过才会完成。
+</Callout>

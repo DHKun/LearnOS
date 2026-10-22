@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LearnOS Labs</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f5f2ea;
+        color: #1f2933;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", sans-serif;
+      }
+      main {
+        max-width: 640px;
+        padding: 32px;
+      }
+      h1 {
+        font-family: "Iowan Old Style", Georgia, serif;
+        font-size: 32px;
+        margin: 0 0 8px;
+      }
+      p {
+        color: #6b7280;
+        line-height: 1.7;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: 12px;
+        margin-top: 24px;
+      }
+      a {
+        display: block;
+        border: 1px solid #e2ddd2;
+        border-radius: 10px;
+        padding: 16px 18px;
+        background: #fffdf8;
+        color: inherit;
+        text-decoration: none;
+      }
+      a:hover {
+        border-color: #0f6b5c;
+      }
+      strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      span {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 12px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>LearnOS Labs</h1>
+      <p>
+        这些实验运行在与主站不同的源上，通过 Learning SDK 与父窗口通信。
+        它们只能从课程播放器中打开，或在此独立预览界面（交互会因缺少父窗口而被禁用）。
+      </p>
+      <ul>
+        <li>
+          <a href="./sql-injection-lab/">
+            <strong>SQL 注入审计台</strong>
+            <span>sql-injection-lab</span>
+          </a>
+        </li>
+        <li>
+          <a href="./idempotency-lab/">
+            <strong>恰好一次支付</strong>
+            <span>idempotency-lab</span>
+          </a>
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

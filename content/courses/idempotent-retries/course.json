@@ -1,0 +1,42 @@
+{
+  "slug": "idempotent-retries",
+  "title": "重试与幂等：别让一次点击扣两次款",
+  "description": "网络超时不代表请求没到。理解至少一次投递、超时歧义与幂等键，设计一个重试也不会重复扣款的支付流程。",
+  "version": "1.0.0",
+  "lessons": [
+    {
+      "slug": "why-retries-duplicate",
+      "title": "超时的请求到底发生了什么",
+      "type": "article",
+      "source": "01-why-retries-duplicate.mdx",
+      "completionPolicy": "manual",
+      "required": true
+    },
+    {
+      "slug": "idempotency-keys",
+      "title": "幂等键与去重存储",
+      "type": "article",
+      "source": "02-idempotency-keys.mdx",
+      "completionPolicy": "manual",
+      "required": true
+    },
+    {
+      "slug": "retry-lab",
+      "title": "实验：让支付恰好发生一次",
+      "type": "interactive",
+      "entryUrl": "${LABS_ORIGIN}/idempotency-lab/",
+      "completionPolicy": "server_validated",
+      "validatorId": "idempotency-lab",
+      "required": true
+    },
+    {
+      "slug": "final-quiz",
+      "title": "最终测验",
+      "type": "quiz",
+      "source": "quiz.server.json",
+      "completionPolicy": "server_validated",
+      "required": true,
+      "finalExam": true
+    }
+  ]
+}
