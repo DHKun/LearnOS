@@ -3,6 +3,16 @@
 1. **准备阶段**：数据库解析带有占位符的语句，确定语法结构。
 2. **执行阶段**：客户端把参数值单独发送，数据库只把它们当成值绑定。
 
+<ConceptPlayer conceptId="sql.parameter-binding" blockId="sql-binding" />
+
+<MiniCheck
+  id="sql-binding-check"
+  question="参数化查询为什么能阻止注入？"
+  options={["它把所有特殊字符都删掉了", "SQL 结构先固定，输入只作为值绑定", "它只允许数字参数"]}
+  answer={1}
+  explanation="参数化不是字符过滤，而是结构与值分离；输入无法再进入语法层。"
+/>
+
 ```ts
 const sql = "SELECT id, password_hash FROM users WHERE email = $1";
 const rows = await db.query(sql, [email]);

@@ -15,12 +15,15 @@ export function NotesPanel({
   lessonId,
   lessonTitle,
   initialNote,
+  studentId,
 }: {
   lessonId: string;
   lessonTitle: string;
   initialNote?: NoteData;
+  studentId: string;
 }) {
   const hasInitial = initialNote !== undefined;
+  const draftKey = `learnos:note:${studentId}:${lessonId}`;
   const [content, setContent] = React.useState(initialNote?.content ?? "");
   const [savedContent, setSavedContent] = React.useState(initialNote?.content ?? "");
   const [updatedAt, setUpdatedAt] = React.useState<string | null>(initialNote?.updatedAt ?? null);
@@ -32,6 +35,116 @@ export function NotesPanel({
   const [previewLoading, setPreviewLoading] = React.useState(false);
   const requestRef = React.useRef(0);
   const dirtyRef = React.useRef(false);
+  const contentRef = React.useRef(content);
+  const savedRef = React.useRef(savedContent);
+  const [remoteDraft, setRemoteDraft] = React.useState<{ content: string; at: number } | null>(
+    null,
+  );
+
+  contentRef.current = content;
+  savedRef.current = savedContent;
+
+  React.useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== draftKey || !event.newValue) return;
+      try {
+        const draft = JSON.parse(event.newValue) as { content?: string; at?: number };
+        if (typeof draft.content === "string" && draft.content !== contentRef.current) {
+          setRemoteDraft({ content: draft.content, at: draft.at ?? Date.now() });
+        }
+      } catch {
+        // Ignore malformed drafts from another tab.
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [draftKey]);
+
+  React.useEffect(() => {
+    try {
+      const draft = JSON.parse(window.localStorage.getItem(draftKey) ?? "null") as {
+        content?: string;
+        at?: number;
+      } | null;
+      const serverAt = initialNote?.updatedAt ? Date.parse(initialNote.updatedAt) : 0;
+      if (
+        typeof draft?.content === "string" &&
+        draft.content !== (initialNote?.content ?? "") &&
+        (draft.at ?? 0) > serverAt
+      ) {
+        setContent(draft.content);
+        setStatus("idle");
+      } else if (draft) {
+        window.localStorage.removeItem(draftKey);
+      }
+    } catch {
+      // Ignore malformed drafts.
+    }
+  }, [draftKey, initialNote?.content]);
+
+  const persistDraft = React.useCallback(
+    (value: string) => {
+      try {
+        window.localStorage.setItem(draftKey, JSON.stringify({ content: value, at: Date.now() }));
+      } catch {
+        // localStorage may be unavailable in private mode; server save still runs.
+      }
+    },
+    [draftKey],
+  );
+
+  const save = React.useCallback(
+    async (value: string, keepalive = false) => {
+      const requestId = ++requestRef.current;
+      if (!keepalive) setStatus("saving");
+      setError(null);
+      try {
+        const data = await apiFetch<NoteData>(`/api/notes/${lessonId}`, {
+          method: "PUT",
+          keepalive,
+          body: JSON.stringify({ content: value }),
+        });
+        if (requestRef.current !== requestId) return;
+        setSavedContent(value);
+        setUpdatedAt(data.updatedAt);
+        setStatus("saved");
+        try {
+          window.localStorage.removeItem(draftKey);
+        } catch {
+          // Ignore storage cleanup failures.
+        }
+      } catch (caught) {
+        if (requestRef.current !== requestId) return;
+        setStatus("error");
+        setError(caught instanceof ApiClientError ? caught.message : "自动保存失败");
+      }
+    },
+    [draftKey, lessonId],
+  );
+
+  React.useEffect(() => {
+    const onPageHide = () => {
+      if (contentRef.current === savedRef.current) return;
+      persistDraft(contentRef.current);
+      void apiFetch(`/api/notes/${lessonId}`, {
+        method: "PUT",
+        keepalive: true,
+        body: JSON.stringify({ content: contentRef.current }),
+      }).catch(() => undefined);
+    };
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      if (contentRef.current !== savedRef.current) {
+        persistDraft(contentRef.current);
+        void apiFetch(`/api/notes/${lessonId}`, {
+          method: "PUT",
+          keepalive: true,
+          body: JSON.stringify({ content: contentRef.current }),
+        }).catch(() => undefined);
+      }
+    };
+  }, [lessonId, persistDraft]);
 
   React.useEffect(() => {
     if (mode !== "preview") return;
@@ -95,27 +208,10 @@ export function NotesPanel({
 
   React.useEffect(() => {
     if (content === savedContent) return;
-    const timer = setTimeout(async () => {
-      const requestId = ++requestRef.current;
-      setStatus("saving");
-      setError(null);
-      try {
-        const data = await apiFetch<NoteData>(`/api/notes/${lessonId}`, {
-          method: "PUT",
-          body: JSON.stringify({ content }),
-        });
-        if (requestRef.current !== requestId) return;
-        setSavedContent(content);
-        setUpdatedAt(data.updatedAt);
-        setStatus("saved");
-      } catch (caught) {
-        if (requestRef.current !== requestId) return;
-        setStatus("error");
-        setError(caught instanceof ApiClientError ? caught.message : "自动保存失败");
-      }
-    }, 900);
+    persistDraft(content);
+    const timer = setTimeout(() => void save(content), 900);
     return () => clearTimeout(timer);
-  }, [content, lessonId, savedContent]);
+  }, [content, persistDraft, save, savedContent]);
 
   const bytes = new TextEncoder().encode(content).length;
   const overLimit = bytes > MAX_BYTES;
@@ -204,7 +300,42 @@ export function NotesPanel({
             {(bytes / 1024).toFixed(1)} / 64 KB
           </span>
         </div>
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {error && (
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-destructive">{error}</p>
+            <button
+              type="button"
+              className="text-xs font-medium text-primary hover:underline"
+              onClick={() => void save(content)}
+            >
+              重试保存
+            </button>
+          </div>
+        )}
+        {remoteDraft && (
+          <div className="rounded-md border border-warning/50 bg-warning/10 px-3 py-2 text-xs">
+            <p>另一标签页也修改了这条笔记。</p>
+            <div className="mt-1 flex gap-2">
+              <button
+                type="button"
+                className="font-medium text-primary hover:underline"
+                onClick={() => {
+                  setContent(remoteDraft.content);
+                  setRemoteDraft(null);
+                }}
+              >
+                载入另一标签页版本
+              </button>
+              <button
+                type="button"
+                className="text-muted-foreground hover:underline"
+                onClick={() => setRemoteDraft(null)}
+              >
+                保留当前版本
+              </button>
+            </div>
+          </div>
+        )}
         <p className="text-[11px] leading-relaxed text-muted-foreground">
           支持 Markdown；原始 HTML 将被转义。笔记仅本人可见。
         </p>

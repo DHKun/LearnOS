@@ -6,6 +6,16 @@
 
 客户端无法区分这三种情况。它只知道「结果未知」。**超时不是失败，而是未知。**
 
+<ConceptPlayer conceptId="idempotency.lost-response" blockId="idem-lost-response" />
+
+<MiniCheck
+  id="idem-timeout-check"
+  question="支付请求超时，最准确的描述是？"
+  options={["请求一定失败了", "请求一定成功了", "结果未知，服务器可能已经执行"]}
+  answer={2}
+  explanation="超时只说明客户端没拿到结果，不能推断服务器是否执行。重试前必须有业务幂等保护。"
+/>
+
 <Callout type="warning" title="最危险的默认动作">
 遇到超时直接重试，会把「未知」变成「可能执行两次」。对于扣款、发券、扣库存这类有副作用的操作，重复执行就是事故。
 </Callout>

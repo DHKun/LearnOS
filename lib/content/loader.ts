@@ -9,6 +9,7 @@ import {
   type QuizFile,
 } from "@/lib/content/manifest";
 import { getActivityDefinition } from "@/lib/activities/catalog";
+import { isConceptId } from "@/lib/education/concepts";
 import { getValidator } from "@/lib/content/validators.server";
 
 export const CONTENT_ROOT = path.join(process.cwd(), "content", "courses");
@@ -106,7 +107,19 @@ export function loadCourse(slug: string): LoadedCourse {
 }
 
 export function loadAllCourses(): LoadedCourse[] {
-  return listCourseSlugs().map(loadCourse);
+  return listCourseSlugs().map((slug) => {
+    const course = loadCourse(slug);
+    for (const lesson of course.manifest.lessons) {
+      if (lesson.type !== "article") continue;
+      const source = readArticleSource(course, lesson);
+      for (const match of source.matchAll(/<ConceptPlayer[^>]*conceptId=["']([^"']+)["']/g)) {
+        if (!isConceptId(match[1])) {
+          throw new Error(`课程 ${slug} 章节 ${lesson.slug} 引用了未注册的概念动画: ${match[1]}`);
+        }
+      }
+    }
+    return course;
+  });
 }
 
 export function readArticleSource(course: LoadedCourse, lesson: LessonManifest): string {

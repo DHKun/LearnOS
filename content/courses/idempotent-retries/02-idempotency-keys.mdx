@@ -7,6 +7,16 @@ Idempotency-Key: 6f1c2a2e-9b1f-4e2a-8f3d-2b7c9a1e4d55
 {"orderId":"42","amount":99}
 ```
 
+<ConceptPlayer conceptId="idempotency.deduplication" blockId="idem-dedup" />
+
+<MiniCheck
+  id="idem-key-check"
+  question="幂等键应该在哪一层生成和复用？"
+  options={["每次 HTTP 重试生成新 UUID", "一次业务操作生成一个键，所有重试复用", "由数据库在每次查询时随机生成"]}
+  answer={1}
+  explanation="幂等键标识业务操作，不是 HTTP 请求；同一操作的所有重试必须复用同一个键。"
+/>
+
 注意两个细节：
 
 - 键属于「一次业务操作」，不是「一次 HTTP 请求」。

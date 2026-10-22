@@ -30,6 +30,8 @@ export type LessonSummary = {
   position: number;
   required: boolean;
   completionPolicy: CompletionPolicy;
+  /** Optional logical grouping. */
+  unit?: string;
   /** Only populated for interactive lessons. */
   activityId?: string;
 };
@@ -157,6 +159,25 @@ export type AdminOverview = {
     lastInteractionAt: string | null;
     online: boolean;
   }[];
+};
+
+
+export type AdminAttentionItem = {
+  studentId: string;
+  name: string;
+  courseId: string;
+  courseTitle: string;
+  currentLesson: string | null;
+  progress: number;
+  lastInteractionAt: string | null;
+  startedAt: string;
+};
+
+export type AdminAttention = {
+  notStarted: AdminAttentionItem[];
+  inactive: AdminAttentionItem[];
+  stuck: AdminAttentionItem[];
+  recentlyCompleted: AdminAttentionItem[];
 };
 
 export type AdminStudentRow = {

@@ -153,3 +153,19 @@
 **安全影响**：互动组件与主应用同源，不能依赖 origin 隔离；安全边界改为「显式 registry + 受审核代码 + 服务端归属校验 + httpOnly Cookie + 服务端 validator」。客户端事件仍是可伪造遥测，不能作为过关凭证。
 
 **影响**：部署只需要一个 Next.js 站点、一个域名和现有 Supabase；新互动组件需同时注册 catalog、registry 和服务端 validator。
+
+## D23 — 概念动画与混合内容采用 MDX + 显式 Registry
+
+**决定**：不新增内容块数据库表。article 章节的 MDX 可组合 `<ConceptPlayer>`、`<MiniCheck>` 与现有 `Callout`；`conceptId` 由 `lib/education/concepts.ts` 固定清单管理，组件在 `components/concepts/registry.tsx` 显式按需加载。新增可选 `unit` 写入 `lessons.config.unit`，仅用于目录分组，不参与结构冻结。
+
+**理由**：旧课程无需重做，章节 ID/进度不变；MDX 顺序作者可控；静态校验能拒绝未注册概念；避免为纯展示内容引入新表。
+
+**影响**：概念状态保存在单课时 `activity_states`；每章建议一个概念动画。动画/知识检查不计分，正式测验仍由服务端判分。
+
+## D24 — 课程元数据所有权与同步策略
+
+**决定**：manifest 拥有课程结构、内容版本、题库、validator 与 `activityId`；`title`/`description` 只在创建课程时作为初始值，之后归管理员在线编辑。普通 `courses:sync` 不再覆盖标题/简介；需要以仓库为准时显式执行 `pnpm courses:sync --refresh-metadata`。
+
+**理由**：管理员编辑不应被下一次同步静默回滚，同时保留内容团队显式覆盖的能力。
+
+**影响**：新增纯函数 `lib/content/sync-policy.ts` 与单元测试；结构冻结仍只针对章节、评分与活动/题库哈希。

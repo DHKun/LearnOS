@@ -55,8 +55,14 @@ export function LessonNav({
             const status = lessonProgress[lesson.id]?.status ?? "not_started";
             const active = lesson.id === currentLessonId;
             const Icon = TYPE_ICON[lesson.type];
+            const showUnit = lesson.unit && lessons[index - 1]?.unit !== lesson.unit;
             return (
               <li key={lesson.id}>
+                {showUnit && (
+                  <p className="border-b border-border/60 bg-muted/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {lesson.unit}
+                  </p>
+                )}
                 <Link
                   href={`/learn/${courseId}?lesson=${lesson.id}`}
                   prefetch

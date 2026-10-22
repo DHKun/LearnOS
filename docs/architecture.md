@@ -184,3 +184,23 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 - 互动组件随主应用构建产物发布，不需要额外静态站点或域名。
 - 数据库：Supabase 托管或本地 Docker；所有迁移可重复执行。
 - 生产需配置 SMTP、Cookie 安全属性与反向代理；本仓库未执行云端部署。
+
+## 12. 教学层与新版工作区
+
+- **概念层**：`lib/education/concepts.ts` 管理 `conceptId` 元数据；`components/concepts/registry.tsx` 按需加载四个概念动画；文章 MDX 通过 `<ConceptPlayer>` 组合动画与文字，通过 `<MiniCheck>` 插入不计分知识检查。
+- **动画控制**：`components/education/concept-frame.tsx` 统一播放/暂停/重播/单步/速度、类比边界、静态图解、键盘和 `prefers-reduced-motion`；状态写入同一课时的 `activity_states`，事件写入 `activity_events`。
+- **学习工作区**：`components/learning/workspace.tsx` 在桌面提供可折叠目录、主内容、默认关闭的笔记抽屉与专注模式；移动端目录和笔记分别使用抽屉，内容优先。
+- **连续学习**：`LessonPager` 提供上一节/下一节/课程完成入口；页头显示当前完成条件。
+- **管理员**：`/admin/students/[id]` 为独立学生详情页，含概览、章节进度、学习时间线和成绩/积分四个标签页；课程详情学员表分页并在学生/课程之间互链。
+- **管理数据**：列表与详情使用可见性感知的客户端轮询 + 请求序号保护；编辑弹窗/确认弹窗打开时暂停刷新；服务端概览通过 `AutoRefresh` 刷新。
+- **元数据所有权**：manifest 拥有结构、题目、validator 与版本；`title`/`description` 创建后归管理员编辑，普通 `courses:sync` 不覆盖，只有 `--refresh-metadata` 显式覆盖。
+
+### 12.1 页面职责
+
+- `/courses`：学习入口与目录；只保留一个当前课程入口。
+- `/courses/[slug]`：介绍、目标、章节预览、报名/恢复。
+- `/learn/[courseId]`：沉浸式工作区（目录 + 内容 + 笔记抽屉 + 连续学习）。
+- `/me`：个人历史、成绩、积分。
+- `/admin`：整体监控、待关注学生。
+- `/admin/students`：搜索、筛选、创建、分页；点击进入独立详情。
+- `/admin/courses/[id]`：课程结构、学员分页与详情。

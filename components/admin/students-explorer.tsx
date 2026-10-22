@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { KeyRound, Lock, Search, Unlock, UserPlus } from "lucide-react";
 
-import { AutoRefresh } from "@/components/auto-refresh";
 import { OnlineDot, StatusBadge } from "@/components/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ApiClientError, apiFetch } from "@/lib/client/api";
+import { usePolling } from "@/lib/client/use-polling";
 import { formatDateTime, formatRelative } from "@/lib/utils";
 import type { AdminStudentDetail, AdminStudentRow } from "@/lib/types";
 
@@ -37,13 +39,8 @@ type ListResponse = {
   pageSize: number;
 };
 
-export function StudentsExplorer({
-  initial,
-  initialStudentId,
-}: {
-  initial: ListResponse;
-  initialStudentId?: string;
-}) {
+export function StudentsExplorer({ initial }: { initial: ListResponse }) {
+  const router = useRouter();
   const [rows, setRows] = React.useState(initial.items);
   const [total, setTotal] = React.useState(initial.total);
   const [page, setPage] = React.useState(initial.page);
@@ -52,7 +49,7 @@ export function StudentsExplorer({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const [selectedId, setSelectedId] = React.useState<string | null>(initialStudentId ?? null);
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [confirmAction, setConfirmAction] = React.useState<{
     title: string;
     description: string;
@@ -66,10 +63,15 @@ export function StudentsExplorer({
   const [actionMessage, setActionMessage] = React.useState<string | null>(null);
 
   const pageSize = initial.pageSize;
+  const requestRef = React.useRef(0);
 
   const load = React.useCallback(
-    async (next: { page?: number; q?: string; online?: "all" | "true" | "false" } = {}) => {
-      setLoading(true);
+    async (
+      next: { page?: number; q?: string; online?: "all" | "true" | "false" } = {},
+      silent = false,
+    ) => {
+      const requestId = ++requestRef.current;
+      if (!silent) setLoading(true);
       setError(null);
       const nextPage = next.page ?? 1;
       const nextQuery = next.q ?? query;
@@ -83,16 +85,25 @@ export function StudentsExplorer({
 
       try {
         const data = await apiFetch<ListResponse>(`/api/admin/students?${params.toString()}`);
+        if (requestId !== requestRef.current) return;
         setRows(data.items);
         setTotal(data.total);
         setPage(data.page);
       } catch (caught) {
-        setError(caught instanceof ApiClientError ? caught.message : "加载学生失败");
+        if (requestId === requestRef.current) {
+          setError(caught instanceof ApiClientError ? caught.message : "加载学生失败");
+        }
       } finally {
-        setLoading(false);
+        if (requestId === requestRef.current) setLoading(false);
       }
     },
     [online, pageSize, query],
+  );
+
+  usePolling(
+    () => load({ page, q: query, online }, true),
+    30_000,
+    selectedId !== "new",
   );
 
   const loadDetail = React.useCallback(async (studentId: string) => {
@@ -109,14 +120,8 @@ export function StudentsExplorer({
     }
   }, []);
 
-  React.useEffect(() => {
-    if (initialStudentId) void loadDetail(initialStudentId);
-  }, [initialStudentId, loadDetail]);
-
   function openStudent(id: string) {
-    setSelectedId(id);
-    setDetail(null);
-    void loadDetail(id);
+    router.push(`/admin/students/${id}`);
   }
 
   function toggleDisabled() {
@@ -172,7 +177,6 @@ export function StudentsExplorer({
 
   return (
     <div className="space-y-5">
-      <AutoRefresh />
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-end">
         <form
           className="flex flex-1 items-end gap-2"
@@ -264,7 +268,13 @@ export function StudentsExplorer({
               >
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{row.name}</span>
+                    <Link
+                      href={`/admin/students/${row.id}`}
+                      className="font-medium hover:text-primary"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {row.name}
+                    </Link>
                     {row.disabled && <Badge variant="destructive">已停用</Badge>}
                   </div>
                   <span className="text-xs text-muted-foreground">{row.email ?? "—"}</span>

@@ -19,12 +19,14 @@ test.describe("章节笔记", () => {
       await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`), { timeout: 20_000 });
 
       const note = "## 我的理解\n\n- 参数化查询把结构固定\n- 输入永远只是值";
-      const textarea = page.getByLabel("章节笔记");
+      await page.getByRole("button", { name: "笔记" }).click();
+      const textarea = page.getByPlaceholder("输入本章节笔记");
       await textarea.fill(note);
       await expect(page.getByText("已自动保存")).toBeVisible({ timeout: 20_000 });
 
       await page.reload();
-      await expect(page.getByLabel("章节笔记")).toHaveValue(note, { timeout: 20_000 });
+      await page.getByRole("button", { name: "笔记" }).click();
+      await expect(page.getByPlaceholder("输入本章节笔记")).toHaveValue(note, { timeout: 20_000 });
 
       await page.getByRole("button", { name: "预览" }).click();
       await expect(page.getByRole("heading", { name: "我的理解" })).toBeVisible();

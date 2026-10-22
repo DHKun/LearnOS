@@ -59,7 +59,7 @@ export function SqlInjectionActivity({ readOnly }: ActivityComponentProps) {
   const results = auditPayloads(state.defences);
 
   function toggleDefence(id: string) {
-    if (readOnly || state.passed) return;
+    if (readOnly) return;
     const enabled = !state.defences.includes(id);
     setState({
       ...state,
@@ -72,20 +72,20 @@ export function SqlInjectionActivity({ readOnly }: ActivityComponentProps) {
   }
 
   function selectPayload(id: string) {
-    if (readOnly || state.passed) return;
+    if (readOnly) return;
     setState({ ...state, payloadId: id, audited: false });
     sdk.track("payload_selected", { payloadId: id });
   }
 
   function runAudit() {
-    if (readOnly || state.passed) return;
+    if (readOnly) return;
     setState({ ...state, audited: true });
     const blocked = results.filter((result) => result.blocked).length;
     sdk.track("audit_run", { defences: state.defences, blocked });
   }
 
   async function submitAudit() {
-    if (readOnly || state.passed || submitting) return;
+    if (readOnly || submitting) return;
     setSubmitting(true);
     try {
       const result = await sdk.submit({ defences: state.defences });
@@ -137,9 +137,12 @@ export function SqlInjectionActivity({ readOnly }: ActivityComponentProps) {
         />
       </div>
 
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        一条登录 SQL 正在接受审计。选择防御措施并运行注入测试，提交后由服务端验证器重新判定。
-      </p>
+      <div className="rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+        <p className="font-medium">实验目标</p>
+        <p className="mt-1 text-muted-foreground">
+          让全部四个注入载荷都无法改变查询结构，同时保持正常邮箱可登录；提交后由服务端重新判定。
+        </p>
+      </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
         <Card>
@@ -159,7 +162,7 @@ export function SqlInjectionActivity({ readOnly }: ActivityComponentProps) {
                     type="checkbox"
                     className="mt-1 size-4 accent-[var(--primary)]"
                     checked={checked}
-                    disabled={readOnly || state.passed}
+                    disabled={readOnly}
                     onChange={() => toggleDefence(defence.id)}
                   />
                   <span>
@@ -190,7 +193,7 @@ export function SqlInjectionActivity({ readOnly }: ActivityComponentProps) {
                   name="sql-payload"
                   className="mt-1 size-4 accent-[var(--primary)]"
                   checked={state.payloadId === item.id}
-                  disabled={readOnly || state.passed}
+                  disabled={readOnly}
                   onChange={() => selectPayload(item.id)}
                 />
                 <span>
@@ -247,17 +250,31 @@ export function SqlInjectionActivity({ readOnly }: ActivityComponentProps) {
           )}
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" variant="outline" onClick={runAudit} disabled={readOnly || state.passed}>
+            <Button type="button" variant="outline" onClick={runAudit} disabled={readOnly}>
               运行安全审计
             </Button>
             <Button
               type="button"
               onClick={() => void submitAudit()}
-              disabled={!state.audited || state.passed || submitting || readOnly}
+              disabled={!state.audited || submitting || readOnly || state.passed}
             >
               {submitting ? "正在提交…" : "提交审计结论"}
             </Button>
-            {state.passed && <span className="text-sm text-success">服务端验证通过</span>}
+            {state.passed && <span className="text-sm text-success">服务端验证通过 · 可继续探索</span>}
+            {state.passed && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setState({ ...INITIAL });
+                  setFeedback(null);
+                  sdk.track("activity_reset", { activityId: "sql-injection-lab" });
+                }}
+              >
+                重置模拟
+              </Button>
+            )}
           </div>
 
           {feedback && (

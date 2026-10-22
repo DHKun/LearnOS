@@ -19,6 +19,8 @@ const baseLesson = {
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "slug 只能使用小写字母、数字和连字符"),
   title: z.string().min(1).max(160),
   required: z.boolean().default(true),
+  /** Optional logical grouping; no extra database table is required. */
+  unit: z.string().min(1).max(80).optional(),
 };
 
 export const lessonManifestSchema = z.discriminatedUnion("type", [

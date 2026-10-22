@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowUpRight, Pencil, Send, Archive } from "lucide-react";
 
-import { AutoRefresh } from "@/components/auto-refresh";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ApiClientError, apiFetch } from "@/lib/client/api";
+import { usePolling } from "@/lib/client/use-polling";
 import type { AdminCourseRow } from "@/lib/types";
 
 const STATUS_LABEL = {
@@ -46,17 +46,28 @@ export function CoursesManager({ initial }: { initial: AdminCourseRow[] }) {
     action: "publish" | "archive";
   } | null>(null);
 
-  async function refresh() {
-    setLoading(true);
+  const requestRef = React.useRef(0);
+
+  async function refresh(silent = false) {
+    const requestId = ++requestRef.current;
+    if (!silent) setLoading(true);
     try {
       const data = await apiFetch<{ items: AdminCourseRow[] }>("/api/admin/courses");
-      setCourses(data.items);
+      if (requestId === requestRef.current) setCourses(data.items);
     } catch (caught) {
-      setError(caught instanceof ApiClientError ? caught.message : "刷新失败");
+      if (requestId === requestRef.current) {
+        setError(caught instanceof ApiClientError ? caught.message : "刷新失败");
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestRef.current) setLoading(false);
     }
   }
+
+  usePolling(
+    () => refresh(true),
+    30_000,
+    editing === null && confirmCourse === null,
+  );
 
   async function update(courseId: string, patch: Record<string, unknown>) {
     setError(null);
@@ -93,7 +104,6 @@ export function CoursesManager({ initial }: { initial: AdminCourseRow[] }) {
 
   return (
     <div className="space-y-5">
-      <AutoRefresh />
       {(message || error) && (
         <p className={error ? "text-sm text-destructive" : "text-sm text-success"}>
           {error ?? message}

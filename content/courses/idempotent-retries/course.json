@@ -10,7 +10,8 @@
       "type": "article",
       "source": "01-why-retries-duplicate.mdx",
       "completionPolicy": "manual",
-      "required": true
+      "required": true,
+      "unit": "原理"
     },
     {
       "slug": "idempotency-keys",
@@ -18,7 +19,8 @@
       "type": "article",
       "source": "02-idempotency-keys.mdx",
       "completionPolicy": "manual",
-      "required": true
+      "required": true,
+      "unit": "原理"
     },
     {
       "slug": "retry-lab",
@@ -26,7 +28,8 @@
       "type": "interactive",
       "completionPolicy": "server_validated",
       "required": true,
-      "activityId": "idempotency-lab"
+      "activityId": "idempotency-lab",
+      "unit": "实验与测验"
     },
     {
       "slug": "final-quiz",
@@ -35,7 +38,8 @@
       "source": "quiz.server.json",
       "completionPolicy": "server_validated",
       "required": true,
-      "finalExam": true
+      "finalExam": true,
+      "unit": "实验与测验"
     }
   ]
 }

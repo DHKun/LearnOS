@@ -95,10 +95,10 @@
 ```text
 pnpm lint          ✅
 pnpm typecheck     ✅
-pnpm test          ✅ 58 passed (8 files)
+pnpm test          ✅ 61 passed (9 files)
 pnpm build         ✅
-pnpm security:scan ✅ 56 个客户端资源
-pnpm test:e2e      ✅ 13 passed
+pnpm security:scan ✅ 62 个客户端资源
+pnpm test:e2e      ✅ 16 passed
 ```
 
 未执行：真实 staging 部署、SMTP、TLS、备份恢复、20–50 人并发压测。

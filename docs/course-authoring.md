@@ -63,6 +63,7 @@ lib/activities/            # 纯模拟/校验逻辑与活动目录
 | `version` | 是 | semver，同步后写入 `courses.content_version` |
 | `lessons` | 是 | 至少 1 个；数组顺序即章节顺序（position 从 0 开始） |
 | `required` | 否 | 默认 `true`；课程至少 1 个必修 |
+| `unit` | 否 | 可选逻辑分组，写入 `lessons.config.unit`，用于目录分组；不增加表，不参与结构冻结 |
 | `type` | 是 | `article` / `interactive` / `quiz` |
 | `completionPolicy` | 依类型 | article: `manual`；interactive: `reported` / `server_validated`；quiz: `server_validated` |
 | `source` | article/quiz | 课程目录内相对路径；禁止 `..`、绝对路径 |
@@ -172,7 +173,11 @@ const VALIDATORS = {
 
 ## 6. 原生互动组件与 Learning SDK
 
-互动实验是主应用内的 React 组件，与主站同源，不使用 iframe、postMessage 或独立静态站点。
+互动实验是主应用内的 React 组件，与主站同源，不使用 iframe、postMessage 或独立静态站点。概念动画与混合内容（文字 + 动画 + 知识检查）的完整作者指南见 [`teaching-design.md`](teaching-design.md)。
+
+### 混合内容
+
+文章 MDX 可以直接组合 `<ConceptPlayer>` 与 `<MiniCheck>`，顺序由 MDX 控制；旧的纯 Markdown 文章继续可用。`ConceptPlayer` 的 `conceptId` 必须在 `lib/education/concepts.ts` 与 `components/concepts/registry.tsx` 注册；`pnpm courses:validate` 会拒绝未注册 ID。
 
 ### 6.1 目录
 

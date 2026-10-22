@@ -29,7 +29,7 @@ export default async function AdminCourseDetailPage({
   const { id } = await params;
   const [detail, students] = await Promise.all([
     getAdminCourseDetail(id),
-    listCourseStudents(id, { page: 1, pageSize: 100 }),
+    listCourseStudents(id, { page: 1, pageSize: 20 }),
   ]);
   if (!detail) notFound();
 

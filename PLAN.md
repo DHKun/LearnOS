@@ -173,10 +173,10 @@
 |---|---|
 | `pnpm lint` | ✅ 0 errors / 0 warnings |
 | `pnpm typecheck` | ✅ 通过 |
-| `pnpm test` | ✅ 8 个测试文件，58 项通过（单元 + 真实 PostgreSQL RLS/事务） |
+| `pnpm test` | ✅ 9 个测试文件，61 项通过（单元 + 真实 PostgreSQL RLS/事务） |
 | `pnpm build` | ✅ Next.js 生产构建成功（22 个页面/接口路由） |
-| `pnpm security:scan` | ✅ 扫描 56 个客户端资源，未发现 service role key 或测验解析 |
-| `pnpm test:e2e` | ✅ 13 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、原生互动刷新恢复、多标签状态冲突、笔记自动保存、越权与重放、在线语义） |
+| `pnpm security:scan` | ✅ 扫描 62 个客户端资源，未发现 service role key 或测验解析 |
+| `pnpm test:e2e` | ✅ 16 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、四个概念动画、知识检查、原生互动刷新恢复、多标签状态冲突、笔记自动保存、管理员独立学生详情/互链、确认弹窗、越权与重放、在线语义） |
 | `pnpm courses:validate` | ✅ 2/2 门课程通过 |
 | 数据库迁移 | ✅ 7 个迁移已通过 `migration up` 应用；未执行全量 `db:reset`，避免清空运行数据 |
 | `pnpm seed:admin` / `pnpm seed:demo` | ✅ 管理员 + 2 名学生 + 2 门已发布课程 |
@@ -194,6 +194,8 @@ tests/e2e/presence.spec.ts              1 test
 tests/e2e/security.spec.ts              2 tests
 tests/e2e/native-state.spec.ts          1 test
 tests/e2e/confirm-dialogs.spec.ts       1 test
+tests/e2e/concepts.spec.ts              2 tests
+tests/e2e/admin-detail.spec.ts          1 test
 ```
 
 ## 9. 未验证项与已知限制
@@ -215,7 +217,7 @@ tests/e2e/confirm-dialogs.spec.ts       1 test
             性能专项 35 项（bundle −156KB、实验 −55%、测验 −69%），见 docs/performance.md；
             审计修复 LRN-001/004/005/006/007/008/009 与残余风险，见 docs/audit-remediation.md；
             完成单站点原生活动重构（activityId Registry、移除 iframe/Labs/postMessage、历史数据迁移验证）
-测试结果：lint/typecheck/build 通过；Vitest 58 passed；Playwright 13 passed；
+测试结果：lint/typecheck/build 通过；Vitest 61 passed；Playwright 16 passed；
           security scan 通过；courses:validate 2/2
 失败 / 阻塞：无（本地）；云端部署与 SMTP 未执行
 下一个门禁：无（MVP Release，本地）
@@ -231,7 +233,45 @@ tests/e2e/confirm-dialogs.spec.ts       1 test
 - [x] 迁移 `20250101000600_activity_registry.sql` 保留课程/章节/报名/进度/笔记/积分/测验记录；事务级迁移演练通过；有报名时再次 `courses:sync` 成功且不覆盖 `activityId`。
 - [x] E2E 覆盖原生组件运行、事件 payload、刷新恢复、多标签冲突、无 iframe、生产构建仅启动 3000。
 - [x] 文档同步：README、AGENTS、MVP-SPEC、architecture、course-authoring、decisions、audit-remediation。
-- [x] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` / `pnpm test:e2e` / `pnpm security:scan` 通过（58 unit/integration、13 E2E、56 静态资源扫描）。
+- [x] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` / `pnpm test:e2e` / `pnpm security:scan` 通过（61 unit/integration、16 E2E、62 静态资源扫描）。
 - [ ] 云端 staging / SMTP / TLS 未验证（环境限制）。
 
 **门禁**：本地代码、测试、数据库与文档均已完成；云端验收留待 staging。
+
+## 12. 教学体验与 UX 重构（2026-10-22）
+
+### Phase 1 — 可靠性
+
+- [x] 管理端列表/详情使用可见性感知轮询、请求序号保护，编辑/确认弹窗期间暂停刷新。
+- [x] 笔记本地草稿、900ms 自动保存、失败重试、`pagehide`/卸载 keepalive、多标签冲突提示；登出清理本地草稿。
+- [x] manifest 拥有结构/题库/版本，管理员拥有 title/description；普通 `courses:sync` 不覆盖管理员元数据，新增 `--refresh-metadata`。
+- [x] 单测覆盖元数据同步策略。
+
+### Phase 2 — 学习工作区
+
+- [x] 桌面可折叠目录、主内容优先、默认关闭的笔记抽屉、专注模式。
+- [x] 移动端目录抽屉、笔记抽屉、内容优先；375/768/1440 宽度检查，无页面级横向溢出。
+- [x] 上一节/下一节、当前任务说明、完成条件、结课结果与课程入口。
+
+### Phase 3 — 概念动画与混合内容
+
+- [x] `conceptId` Registry、按需加载、`ConceptFrame` 控制器、reduced-motion、键盘、静态图解。
+- [x] 四个动画：SQL 数据/指令、SQL 参数化、幂等回执丢失、幂等键去重。
+- [x] MDX 混合内容：概念动画 + `MiniCheck` + 文字/`Callout`；旧 MDX 兼容。
+- [x] 可选 `unit` 逻辑分组写入 `lessons.config.unit`，不新增表。
+- [x] 概念状态保存/恢复、概念/知识检查事件进入时间线。
+
+### Phase 4 — 管理员体验
+
+- [x] 独立 `/admin/students/[id]`，概览/章节/时间线/成绩积分四标签，中文事件语义映射。
+- [x] 待关注学生：未开始、长期未活动、可能卡章节、最近完成；仅提示，不自动退课。
+- [x] 课程学员真实数据库分页（20/页）、状态筛选、学生/课程互链。
+- [x] 管理员学生/课程列表与详情轮询刷新。
+
+### 验收
+
+- [x] `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`、`pnpm test:e2e`、`pnpm security:scan`、`pnpm courses:validate` 通过。
+- [x] E2E 覆盖四个概念动画、知识检查、刷新恢复、原生互动、响应式页面、管理员详情/互链。
+- [ ] 慢速网络/断网、真实 SMTP/TLS/staging、并发压测未验证（环境限制）。
+
+> 真实结果以第 8 节和最终报告为准；不以复选框替代测试。

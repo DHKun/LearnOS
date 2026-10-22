@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { loadAllCourses, readQuizFile, type LoadedCourse } from "@/lib/content/loader";
 import { getActivityDefinition } from "@/lib/activities/catalog";
+import { buildCourseUpdate } from "@/lib/content/sync-policy";
 import { getValidator } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -69,7 +70,9 @@ function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
  * - Preserves the admin-managed publish status unless `publish` is explicitly set.
  * - Refuses to change required structure once enrollments exist.
  */
-export async function syncCourses(options: { publish?: boolean } = {}): Promise<SyncSummary[]> {
+export async function syncCourses(
+  options: { publish?: boolean; refreshMetadata?: boolean } = {},
+): Promise<SyncSummary[]> {
   const db = createAdminClient();
   const courses = loadAllCourses();
   const summaries: SyncSummary[] = [];
@@ -110,12 +113,7 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
         );
       }
 
-      const update: Record<string, unknown> = {
-        title: manifest.title,
-        description: manifest.description,
-        content_version: manifest.version,
-      };
-      if (options.publish) update.status = "published";
+      const update = buildCourseUpdate(manifest, options);
 
       const { error: updateError } = await db.from("courses").update(update).eq("id", courseId);
       if (updateError) throw updateError;
@@ -146,7 +144,7 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
     }
 
     for (const [index, lesson] of manifest.lessons.entries()) {
-      let config: Record<string, unknown> = {};
+      let config: Record<string, unknown> = lesson.unit ? { unit: lesson.unit } : {};
       let contentRef: string | null = null;
 
       if (lesson.type === "article") {
@@ -159,6 +157,7 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
           activityId: lesson.activityId,
           validatorId: activity.validatorId,
           validatorHash: validator ? sha256(validator.toString()) : null,
+          ...(lesson.unit ? { unit: lesson.unit } : {}),
           ...(lesson.config ?? {}),
         };
       } else {
@@ -168,6 +167,7 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
           passScore: quiz.passScore,
           questionCount: quiz.questions.length,
           finalExam: Boolean(lesson.finalExam),
+          ...(lesson.unit ? { unit: lesson.unit } : {}),
           quizHash: sha256(canonicalJson(quiz)),
         };
       }

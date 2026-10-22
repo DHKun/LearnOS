@@ -4,6 +4,8 @@ import { getValidator } from "@/lib/content/validators.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isOnline } from "@/lib/services/shared";
 import type {
+  AdminAttention,
+  AdminAttentionItem,
   AdminCourseStudentRow,
   AdminOverview,
   AdminStudentDetail,
@@ -79,6 +81,94 @@ export async function listStudents(options: {
     total: number;
     page: number;
     pageSize: number;
+  };
+}
+
+export async function getAdminAttention(): Promise<AdminAttention> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("enrollments")
+    .select(
+      "id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at,profiles(display_name,email),courses(title,lessons(id,title)),lesson_progress(lesson_id,status)",
+    )
+    .in("status", ["active", "completed"]);
+  if (error) throw error;
+
+  const now = Date.now();
+  const days = (ms: number) => now - ms;
+  const rows = (data ?? []) as unknown as {
+    student_id: string;
+    course_id: string;
+    status: string;
+    current_lesson_id: string | null;
+    started_at: string;
+    last_interaction_at: string | null;
+    completed_at: string | null;
+    profiles: { display_name: string; email: string | null }[] | { display_name: string; email: string | null } | null;
+    courses: {
+      title: string;
+      lessons: { id: string; title: string }[];
+    } | null;
+    lesson_progress: { lesson_id: string; status: string }[];
+  }[];
+
+  const build = (row: (typeof rows)[number]): AdminAttentionItem => {
+    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    const lessons = row.courses?.lessons ?? [];
+    const completed = new Set(
+      row.lesson_progress.filter((item) => item.status === "completed").map((item) => item.lesson_id),
+    );
+    const required = lessons.length || 1;
+    return {
+      studentId: row.student_id,
+      name: profile?.display_name ?? "未命名学生",
+      courseId: row.course_id,
+      courseTitle: row.courses?.title ?? "未知课程",
+      currentLesson:
+        lessons.find((lesson) => lesson.id === row.current_lesson_id)?.title ?? null,
+      progress: Math.round((completed.size / required) * 100),
+      lastInteractionAt: row.last_interaction_at,
+      startedAt: row.started_at,
+    };
+  };
+
+  const active = rows.filter((row) => row.status === "active");
+  const notStarted = active
+    .filter(
+      (row) =>
+        row.lesson_progress.filter((item) => item.status === "completed").length === 0 &&
+        !row.current_lesson_id &&
+        !row.last_interaction_at,
+    )
+    .map(build);
+  const inactive = active
+    .filter((row) => {
+      const reference = row.last_interaction_at ?? row.started_at;
+      return new Date(reference).getTime() < days(3 * 24 * 60 * 60 * 1000);
+    })
+    .map(build);
+  const stuck = active
+    .filter((row) => {
+      const item = build(row);
+      return (
+        Boolean(row.current_lesson_id) &&
+        item.progress < 100 &&
+        new Date(row.last_interaction_at ?? row.started_at).getTime() <
+          days(2 * 24 * 60 * 60 * 1000)
+      );
+    })
+    .map(build);
+  const recentlyCompleted = rows
+    .filter((row) => row.status === "completed")
+    .filter((row) => row.completed_at && new Date(row.completed_at).getTime() > days(7 * 24 * 60 * 60 * 1000))
+    .map(build);
+
+  const limit = (items: AdminAttentionItem[]) => items.slice(0, 6);
+  return {
+    notStarted: limit(notStarted),
+    inactive: limit(inactive),
+    stuck: limit(stuck),
+    recentlyCompleted: limit(recentlyCompleted),
   };
 }
 
@@ -158,7 +248,7 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
     completedByEnrollment.set(row.enrollment_id, set);
   }
 
-  const current = enrollments.find((row) => row.status === "active") ?? null;
+  const current = enrollments.find((row) => row.status === "active") ?? enrollments[0] ?? null;
 
   const currentLessons = current
     ? lessons
@@ -409,11 +499,18 @@ export async function listCourseStudents(
   if (courseError) throw courseError;
   if (!course) throw new ApiError("COURSE_NOT_FOUND");
 
-  const enrollmentsResult = await db
+  const start = Math.max(0, (options.page - 1) * options.pageSize);
+  let enrollmentQuery = db
     .from("enrollments")
-    .select("id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at,lesson_progress(lesson_id,status),profiles(user_id,email,display_name)")
-    .eq("course_id", courseId)
-    .order("started_at", { ascending: false });
+    .select(
+      "id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at,lesson_progress(lesson_id,status),profiles(user_id,email,display_name)",
+      { count: "exact" },
+    )
+    .eq("course_id", courseId);
+  if (options.status) enrollmentQuery = enrollmentQuery.eq("status", options.status);
+  const enrollmentsResult = await enrollmentQuery
+    .order("started_at", { ascending: false })
+    .range(start, start + options.pageSize - 1);
 
   if (enrollmentsResult.error) throw enrollmentsResult.error;
 
@@ -425,12 +522,8 @@ export async function listCourseStudents(
     .slice()
     .sort((a, b) => a.position - b.position);
 
-  const filtered = options.status
-    ? enrollments.filter((row) => row.status === options.status)
-    : enrollments;
-
   const completedByEnrollment = new Map<string, Set<string>>();
-  for (const enrollment of filtered) {
+  for (const enrollment of enrollments) {
     for (const progress of enrollment.lesson_progress ?? []) {
       if (progress.status !== "completed") continue;
       const set = completedByEnrollment.get(enrollment.id) ?? new Set<string>();
@@ -440,7 +533,7 @@ export async function listCourseStudents(
   }
   const lessonById = new Map(lessons.map((row) => [row.id, row]));
 
-  const items = filtered.map((enrollment) => {
+  const items = enrollments.map((enrollment) => {
     const profile = Array.isArray(enrollment.profiles)
       ? enrollment.profiles[0]
       : enrollment.profiles;
@@ -460,11 +553,9 @@ export async function listCourseStudents(
     };
   });
 
-  const total = items.length;
-  const start = (options.page - 1) * options.pageSize;
   return {
-    items: items.slice(start, start + options.pageSize),
-    total,
+    items,
+    total: enrollmentsResult.count ?? items.length,
     page: options.page,
     pageSize: options.pageSize,
   };

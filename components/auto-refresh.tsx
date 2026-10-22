@@ -8,8 +8,30 @@ export function AutoRefresh({ seconds = 30 }: { seconds?: number }) {
   const router = useRouter();
 
   React.useEffect(() => {
-    const timer = setInterval(() => router.refresh(), seconds * 1000);
-    return () => clearInterval(timer);
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const refresh = () => {
+      if (!document.hidden) router.refresh();
+    };
+    const start = () => {
+      if (!timer) timer = setInterval(refresh, seconds * 1000);
+    };
+    const stop = () => {
+      if (timer) clearInterval(timer);
+      timer = null;
+    };
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else {
+        refresh();
+        start();
+      }
+    };
+    if (!document.hidden) start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [router, seconds]);
 
   return null;

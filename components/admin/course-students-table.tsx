@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 
-import { AutoRefresh } from "@/components/auto-refresh";
 import { OnlineDot, StatusBadge } from "@/components/status";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ApiClientError, apiFetch } from "@/lib/client/api";
+import { usePolling } from "@/lib/client/use-polling";
 import { formatRelative } from "@/lib/utils";
 import type { AdminCourseStudentRow, EnrollmentStatus } from "@/lib/types";
 
@@ -39,33 +40,45 @@ export function CourseStudentsTable({
   initial: ListResponse;
 }) {
   const [filter, setFilter] = React.useState<"all" | EnrollmentStatus>("all");
+  const [page, setPage] = React.useState(initial.page);
   const [data, setData] = React.useState(initial);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const requestRef = React.useRef(0);
+  const pageSize = initial.pageSize || 20;
 
   const load = React.useCallback(
-    async (next: "all" | EnrollmentStatus) => {
-      setLoading(true);
+    async (next: "all" | EnrollmentStatus, nextPage = 1, silent = false) => {
+      const requestId = ++requestRef.current;
+      if (!silent) setLoading(true);
       setError(null);
-      const params = new URLSearchParams({ page: "1", pageSize: "100" });
+      const params = new URLSearchParams({
+        page: String(nextPage),
+        pageSize: String(pageSize),
+      });
       if (next !== "all") params.set("status", next);
       try {
         const result = await apiFetch<ListResponse>(
           `/api/admin/courses/${courseId}/students?${params.toString()}`,
         );
+        if (requestId !== requestRef.current) return;
         setData(result);
+        setPage(result.page);
       } catch (caught) {
-        setError(caught instanceof ApiClientError ? caught.message : "加载学员失败");
+        if (requestId === requestRef.current) {
+          setError(caught instanceof ApiClientError ? caught.message : "加载学员失败");
+        }
       } finally {
-        setLoading(false);
+        if (requestId === requestRef.current) setLoading(false);
       }
     },
-    [courseId],
+    [courseId, pageSize],
   );
+
+  usePolling(() => load(filter, page, true), 30_000);
 
   return (
     <div className="space-y-4">
-      <AutoRefresh />
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((item) => (
           <Button
@@ -74,7 +87,7 @@ export function CourseStudentsTable({
             variant={filter === item.value ? "default" : "outline"}
             onClick={() => {
               setFilter(item.value);
-              void load(item.value);
+              void load(item.value, 1);
             }}
           >
             {item.label}
@@ -110,7 +123,12 @@ export function CourseStudentsTable({
             {data.items.map((row) => (
               <TableRow key={row.enrollmentId}>
                 <TableCell>
-                  <span className="font-medium">{row.name}</span>
+                  <Link
+                    href={`/admin/students/${row.studentId}`}
+                    className="font-medium hover:text-primary"
+                  >
+                    {row.name}
+                  </Link>
                   <p className="text-[11px] text-muted-foreground">{row.email ?? "—"}</p>
                 </TableCell>
                 <TableCell>
@@ -144,6 +162,30 @@ export function CourseStudentsTable({
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          共 {data.total} 条 · 第 {data.page} / {Math.max(1, Math.ceil(data.total / pageSize))} 页
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={data.page <= 1 || loading}
+            onClick={() => void load(filter, data.page - 1)}
+          >
+            上一页
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={data.page >= Math.ceil(data.total / pageSize) || loading}
+            onClick={() => void load(filter, data.page + 1)}
+          >
+            下一页
+          </Button>
+        </div>
       </div>
     </div>
   );

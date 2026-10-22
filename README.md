@@ -1,6 +1,6 @@
 # LearnOS — 互动式学习平台 MVP
 
-LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账号；学生通过**图文 MDX**、**原生 React 互动组件**和**服务端判分测验**完成课程，并可记录私人笔记。系统保存学习进度、活跃时间与积分；管理员可从**学生**和**课程**两个维度查看学习记录。
+LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账号；学生通过**图文 MDX**、**概念动画**、**原生 React 互动组件**和**服务端判分测验**完成课程，并可记录私人笔记。系统保存学习进度、活跃时间与积分；管理员可从**学生**和**课程**两个维度查看学习记录。
 
 - 业务规格：[`docs/MVP-SPEC.md`](docs/MVP-SPEC.md)（唯一业务真相源）
 - 工程规范：[`AGENTS.md`](AGENTS.md)
@@ -11,12 +11,18 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 - 实现取舍日志：[`docs/decisions.md`](docs/decisions.md)
 - 30+ 次性能优化与测量：[`docs/performance.md`](docs/performance.md)
 - 静态审计修复记录：[`docs/audit-remediation.md`](docs/audit-remediation.md)
+- 概念动画与教学设计：[`docs/teaching-design.md`](docs/teaching-design.md)
+- UX/教学升级报告：[`docs/ux-upgrade.md`](docs/ux-upgrade.md)
 
 ![登录页](docs/screenshots/login.png)
 ![课程目录](docs/screenshots/courses.png)
+![学习工作区](docs/screenshots/workspace-desktop-top.png)
+![移动端学习](docs/screenshots/workspace-mobile-top.png)
 ![学习播放器](docs/screenshots/learn-article.png)
+![概念动画](docs/screenshots/concept-sql-data.png)
 ![原生互动实验](docs/screenshots/native-sql-activity.png)
-![管理概览](docs/screenshots/admin-overview.png)
+![管理概览](docs/screenshots/admin-overview-v2.png)
+![学生详情](docs/screenshots/admin-student-detail-v2.png)
 ![深色主题](docs/screenshots/dark-course-detail.png)
 
 ## 技术栈
@@ -31,6 +37,14 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 | 互动 | 主应用内原生 React 活动组件 + 同源认证 Learning SDK |
 | 测试 | Vitest（单元 + 真实 PostgreSQL/RLS 集成）、Playwright（E2E） |
 | 本地基础设施 | Supabase CLI + Docker（Postgres/Auth/Studio/Mailpit） |
+
+## 学习体验
+
+- **概念动画**：每个核心知识点按「生活类比 → 动画 → 自由探索 → 知识检查 → 原理解释」组织，支持播放、暂停、重播、单步、速度、静态图解与 reduced-motion。
+- **混合内容**：MDX 文章可组合文字、动画、Callout 和不计分知识检查；旧文章无需改写。
+- **学习工作区**：可折叠目录、专注模式、默认关闭的笔记抽屉、移动端目录/笔记抽屉、上一节/下一节与完成条件提示。
+- **管理员监控**：独立学生详情（概览/章节/时间线/积分）、待关注学生视图、课程学员分页与双向跳转。
+- **数据可靠性**：管理端可见性感知轮询、笔记本地草稿与冲突提示、元数据同步保护、状态乐观锁。
 
 ## 从零启动（本地）
 
@@ -173,10 +187,10 @@ E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同�
 ```text
 app/
   (student)/            # /courses、/courses/[slug]、/learn/[courseId]、/me
-  (admin)/admin/        # /admin、/admin/students、/admin/courses、/admin/courses/[id]
+  (admin)/admin/        # /admin、/admin/students、/admin/students/[id]、/admin/courses、/admin/courses/[id]
   api/                  # 28 个 REST 方法
   login/
-components/             # 播放器、原生互动组件、笔记、管理端与 shadcn 风格 UI
+components/             # 工作区、概念动画、原生互动组件、笔记、管理端与 UI
 lib/
   api/                  # 统一响应、错误码、Origin/CSRF、鉴权守卫
   auth/                 # 服务端会话、角色守卫、登录 Server Action

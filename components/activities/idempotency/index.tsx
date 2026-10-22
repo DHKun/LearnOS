@@ -65,12 +65,12 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
   const simulation = simulateIdempotency(state);
 
   function update(patch: Partial<IdempotencyActivityState>) {
-    if (readOnly || state.passed) return;
+    if (readOnly) return;
     setState({ ...state, ...patch, ran: false });
   }
 
   function runSimulation() {
-    if (readOnly || state.passed) return;
+    if (readOnly) return;
     setState({ ...state, ran: true });
     const result = simulateIdempotency(state);
     sdk.track("retry_simulation_run", {
@@ -83,7 +83,7 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
   }
 
   async function submitStrategy() {
-    if (readOnly || state.passed || submitting) return;
+    if (readOnly || submitting) return;
     setSubmitting(true);
     try {
       const result = await sdk.submit({
@@ -133,9 +133,12 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
         />
       </div>
 
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        订单 #42 需要支付 ¥99。模拟网络在响应回程中连续丢失，客户端会自动重试。配置幂等键与去重策略，使服务端最终只扣款一次。
-      </p>
+      <div className="rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+        <p className="font-medium">实验目标</p>
+        <p className="mt-1 text-muted-foreground">
+          订单 #42 需要支付 ¥99。配置幂等键、重试与去重策略，让连续网络故障后服务端最终只扣款一次。
+        </p>
+      </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
         <Card>
@@ -154,7 +157,7 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
                   name="key-strategy"
                   className="mt-1 size-4 accent-[var(--primary)]"
                   checked={state.keyStrategy === strategy.id}
-                  disabled={readOnly || state.passed}
+                  disabled={readOnly}
                   onChange={() => update({ keyStrategy: strategy.id })}
                 />
                 <span>
@@ -183,7 +186,7 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
                   name="retry-policy"
                   className="mt-1 size-4 accent-[var(--primary)]"
                   checked={state.retryPolicy === policy.id}
-                  disabled={readOnly || state.passed}
+                  disabled={readOnly}
                   onChange={() => update({ retryPolicy: policy.id })}
                 />
                 <span>
@@ -200,7 +203,7 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
                 type="checkbox"
                 className="mt-1 size-4 accent-[var(--primary)]"
                 checked={state.dedupe}
-                disabled={readOnly || state.passed}
+                disabled={readOnly}
                 onChange={(event) => update({ dedupe: event.target.checked })}
               />
               <span>
@@ -225,7 +228,7 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
                 max={5}
                 step={1}
                 value={state.maxRetries}
-                disabled={readOnly || state.passed}
+                disabled={readOnly}
                 onChange={(event) => update({ maxRetries: Number(event.target.value) })}
                 className="mt-2 w-full accent-[var(--primary)]"
               />
@@ -272,17 +275,31 @@ export function IdempotencyActivity({ readOnly }: ActivityComponentProps) {
           )}
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="button" variant="outline" onClick={runSimulation} disabled={readOnly || state.passed}>
+            <Button type="button" variant="outline" onClick={runSimulation} disabled={readOnly}>
               运行支付重试模拟
             </Button>
             <Button
               type="button"
               onClick={() => void submitStrategy()}
-              disabled={!state.ran || state.passed || submitting || readOnly}
+              disabled={!state.ran || submitting || readOnly || state.passed}
             >
               {submitting ? "正在提交…" : "提交策略"}
             </Button>
-            {state.passed && <span className="text-sm text-success">服务端验证通过</span>}
+            {state.passed && <span className="text-sm text-success">服务端验证通过 · 可继续探索</span>}
+            {state.passed && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setState({ ...INITIAL });
+                  setFeedback(null);
+                  sdk.track("activity_reset", { activityId: "idempotency-lab" });
+                }}
+              >
+                重置模拟
+              </Button>
+            )}
           </div>
 
           {feedback && (

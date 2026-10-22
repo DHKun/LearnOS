@@ -7,6 +7,9 @@ import { CompleteLessonButton, JoinCourseButton } from "@/components/learning/ac
 import { ArticleView } from "@/components/learning/article-view";
 import { LearningHeartbeat } from "@/components/learning/heartbeat";
 import { ActivityHost } from "@/components/activities/activity-host";
+import { LearningWorkspace } from "@/components/learning/workspace";
+import { LessonPager } from "@/components/learning/lesson-pager";
+import { LearningProvider } from "@/lib/learning/context";
 import { LessonNav } from "@/components/learning/lesson-nav";
 import { NotesPanel } from "@/components/learning/notes-panel";
 import { QuizPlayer } from "@/components/learning/quiz-player";
@@ -74,7 +77,7 @@ export default async function LearnPage({
   let outline: LessonHeading[] = [];
   let initialLabState: Awaited<ReturnType<typeof getStateForEnrollment>> | null = null;
   let initialQuiz: Awaited<ReturnType<typeof getQuizData>> | null = null;
-  if (!abandoned && current.type === "interactive") {
+  if (!abandoned && (current.type === "interactive" || current.type === "article")) {
     initialLabState = await getStateForEnrollment(enrollment.id, current.id);
   }
   if (!abandoned && current.type === "quiz") {
@@ -90,19 +93,56 @@ export default async function LearnPage({
     }
   }
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_20rem]">
-      <LessonNav
-        courseId={course.id}
-        courseTitle={course.title}
-        lessons={lessons}
-        currentLessonId={current.id}
-        progress={enrollment.progress}
-        lessonProgress={myLessonProgress}
-        outline={outline}
-      />
+  const completionHint = readOnly
+    ? "课程已完成，当前章节仅供复习。"
+    : current.type === "article"
+      ? completedCurrent
+        ? "本章已完成。可继续下一节，或重新阅读。"
+        : "阅读本节内容，必要时完成概念动画与知识检查，然后标记本章完成。"
+      : current.type === "interactive"
+        ? completedCurrent
+          ? "实验已通过服务端验证。可继续探索不同参数。"
+          : "完成互动模拟并提交结论；通过服务端验证后本章完成。"
+        : completedCurrent
+          ? "最终测验已通过。"
+          : "完成最终测验并达到及格线，课程方可结课。";
 
-      <div className="min-w-0 space-y-6">
+  return (
+    <LearningWorkspace
+      lessonLabel={`${course.title} · 第 ${current.position + 1} / ${lessons.length} 章`}
+      nav={
+        <LessonNav
+          courseId={course.id}
+          courseTitle={course.title}
+          lessons={lessons}
+          currentLessonId={current.id}
+          progress={enrollment.progress}
+          lessonProgress={myLessonProgress}
+          outline={outline}
+        />
+      }
+      notes={
+        <NotesPanel
+          key={current.id}
+          lessonId={current.id}
+          lessonTitle={current.title}
+          initialNote={initialNote}
+          studentId={student.id}
+        />
+      }
+      pager={
+        abandoned ? null : (
+          <LessonPager
+            courseId={course.id}
+            courseSlug={course.slug}
+            lessons={lessons}
+            currentLessonId={current.id}
+            courseCompleted={enrollment.status === "completed"}
+          />
+        )
+      }
+      content={
+        <div className="space-y-6">
         {abandoned ? (
           <Card>
             <CardHeader>
@@ -143,18 +183,32 @@ export default async function LearnPage({
               <h1 className="mt-3 font-serif text-3xl font-semibold tracking-tight">
                 {current.title}
               </h1>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {completionHint}
+              </p>
             </header>
 
             {current.type === "article" && articleSource && (
-              <div className="rounded-xl border border-border bg-card p-5 sm:p-8">
-                <ArticleView source={articleSource} />
-              </div>
+              <LearningProvider
+                activityId="article"
+                lessonId={current.id}
+                enrollmentId={enrollment.id}
+                initialState={initialLabState?.state ?? null}
+                initialVersion={initialLabState?.version ?? 0}
+                readOnly={readOnly}
+              >
+                <div className="rounded-xl border border-border bg-card p-5 sm:p-8">
+                  <ArticleView source={articleSource} />
+                </div>
+              </LearningProvider>
             )}
 
             {current.type === "article" && (
               <div className="flex flex-col gap-2 border-t border-border pt-5">
                 {readOnly ? (
                   <p className="text-sm text-muted-foreground">复习模式不记录新的完成状态。</p>
+                ) : completedCurrent ? (
+                  <p className="text-sm text-success">本章已完成，可继续下一节。</p>
                 ) : (
                   <CompleteLessonButton
                     key={current.id}
@@ -204,14 +258,8 @@ export default async function LearnPage({
             </div>
           </>
         )}
-      </div>
-
-      <NotesPanel
-        key={current.id}
-        lessonId={current.id}
-        lessonTitle={current.title}
-        initialNote={initialNote}
-      />
-    </div>
+        </div>
+      }
+    />
   );
 }

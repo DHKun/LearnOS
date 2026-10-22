@@ -10,7 +10,8 @@
       "type": "article",
       "source": "01-where-injection-comes-from.mdx",
       "completionPolicy": "manual",
-      "required": true
+      "required": true,
+      "unit": "原理"
     },
     {
       "slug": "why-parameterized-queries-work",
@@ -18,7 +19,8 @@
       "type": "article",
       "source": "02-parameterized-queries.mdx",
       "completionPolicy": "manual",
-      "required": true
+      "required": true,
+      "unit": "原理"
     },
     {
       "slug": "query-audit-lab",
@@ -26,7 +28,8 @@
       "type": "interactive",
       "completionPolicy": "server_validated",
       "required": true,
-      "activityId": "sql-injection-lab"
+      "activityId": "sql-injection-lab",
+      "unit": "实验与测验"
     },
     {
       "slug": "final-quiz",
@@ -35,7 +38,8 @@
       "source": "quiz.server.json",
       "completionPolicy": "server_validated",
       "required": true,
-      "finalExam": true
+      "finalExam": true,
+      "unit": "实验与测验"
     }
   ]
 }

@@ -26,8 +26,9 @@
 - UI：**Tailwind CSS + shadcn/ui**，桌面优先、窄屏可用，支持 light/dark。ASCII 可做主题扩展，但不作为上线阻塞项。
 - 数据：**Supabase Auth + PostgreSQL + Supabase Storage**；通过 `@supabase/ssr` 管理 Cookie 会话。
 - 输入校验：**Zod**；数据操作需行级授权；关键写操作使用数据库事务、唯一约束和幂等键。
-- 课程：仓库内可信 MDX、声明式课程 manifest、服务端测验/校验器；互动组件通过显式 `activityId` 注册。
+- 课程：仓库内可信 MDX、声明式课程 manifest（支持可选 unit 分组）、服务端测验/校验器；概念动画通过显式 `conceptId`、互动组件通过 `activityId` 注册。
 - 互动：主应用内原生 React 组件 + 同源认证 Learning SDK；后端核准完成状态及积分。不得使用 iframe、postMessage 或独立 Labs 站点。
+- 教学：抽象概念优先使用「生活类比 → 动画解释 → 自由探索 → 即时反馈 → 知识检查 → 原理总结」。动画必须有暂停/重播/单步/静态替代，并支持 reduced-motion；动画播放本身不产生积分。
 - 本地包管理：优先 **pnpm**，提交 lockfile；测试框架使用与 Next.js 兼容的轻量组合，可选 Vitest + Playwright。
 - 监控：管理端 **30 秒轮询**；学生页面可见且活动时约 **60 秒心跳**；在线判定窗口 **120 秒**。
 
@@ -62,6 +63,9 @@ lib/
   schemas/              # Zod schema / API 类型
   services/             # enrollments/progress/quiz/points/reporting
   learning/             # 同源 SDK、React Context、状态保存 Hook
+  education/            # 概念元数据、事件语义映射
+components/education/   # 动画控制器、生活类比框、知识检查
+components/concepts/    # conceptId registry 与概念动画
 components/activities/  # activityId registry 与原生互动组件
 content/courses/        # 课程 manifest、MDX、服务端题目/校验器
 supabase/migrations/    # 可追踪数据库迁移
@@ -114,6 +118,7 @@ docs/                   # 规格、架构、API、课程制作、决策
 - 组件与主应用同源，只允许通过受认证的 `/api/learning/**` 读写状态；不得直接持有 service role 或绕过服务端校验。
 - 互动组件不得使用 `eval` 或执行用户输入的任意脚本；纯客户端仿真只作为教学交互，最终通过/积分必须由服务端验证器判定。
 - 遥测是客户端声明；**不能把任意客户端事件当作可信过关凭证**。
+- 概念动画与知识检查不得替代服务端正式测验；检查点不计分，不改变课程完成状态。
 
 ## 8. 测试与阶段门禁
 

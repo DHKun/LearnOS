@@ -33,6 +33,7 @@ function toLessonSummary(row: LessonRow): LessonSummary {
     position: row.position,
     required: row.required,
     completionPolicy: row.completion_policy,
+    ...(typeof config.unit === "string" ? { unit: config.unit } : {}),
     ...(row.type === "interactive" && typeof config.activityId === "string"
       ? { activityId: config.activityId }
       : {}),

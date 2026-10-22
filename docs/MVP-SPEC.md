@@ -323,6 +323,14 @@ lib/activities/                # 纯模拟/校验逻辑与活动目录
 - `pnpm courses:sync` 将 manifest 元数据写入 courses、lessons（upsert）；不覆盖管理员维护的发布状态；更新 `content_version`。已存在 enrollment 的课程拒绝改变课程结构（必修集合、章节 ID 和顺序）；结构性升级发布新 slug。
 - 发布前验证课程；已入学课程的章节结构、题库内容与 validator 源码必须保持冻结。MVP 允许修正文案；涉及必修章节增删、顺序调整、题目或评分规则变化时发布新 course slug，避免历史进度失真。
 
+### 6.5 混合内容与概念动画
+
+- 一个 article 章节的 MDX 可以按顺序组合文字、`ConceptPlayer`、`Callout`、`MiniCheck` 等可信组件；不新增数据库表，不改变旧章节读取。
+- `ConceptPlayer` 通过稳定 `conceptId` 引用 `lib/education/concepts.ts` 注册的概念，组件按需加载；`blockId` 标识章节内的教学块。
+- 概念动画必须支持播放/暂停/重播/上一步/下一步/速度、步骤说明、静态图解和 `prefers-reduced-motion`；动画播放、知识检查不计分。
+- 学习状态与事件通过同源 Learning SDK 持久化；事件只是遥测，不能替代服务端正式测验/validator。
+- 可选 `unit` 只作为 manifest 的逻辑分组，同步到 `lessons.config.unit`，不增加表；不参与结构冻结。
+
 ## 7. 权限矩阵和数据安全
 
 | 资源 | student | admin |

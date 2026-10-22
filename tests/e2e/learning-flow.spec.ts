@@ -44,16 +44,16 @@ test.describe("学生完整学习闭环（SQL 注入课程）", () => {
 
       // Article 1
       await page.getByRole("button", { name: /标记本章完成/ }).click();
-      await expect(page.getByRole("button", { name: "本章已完成" })).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText("本章已完成").first()).toBeVisible({ timeout: 20_000 });
 
       // Article 2
-      await page.getByRole("link", { name: /参数化查询为什么有效/ }).click();
+      await page.getByRole("link", { name: /参数化查询为什么有效/ }).first().click();
       await expect(page.getByRole("heading", { name: "参数化查询为什么有效" })).toBeVisible();
       await page.getByRole("button", { name: /标记本章完成/ }).click();
-      await expect(page.getByRole("button", { name: "本章已完成" })).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText("本章已完成").first()).toBeVisible({ timeout: 20_000 });
 
       // Interactive activity runs natively in the course page
-      await page.getByRole("link", { name: /实验：审计一条登录查询/ }).click();
+      await page.getByRole("link", { name: /实验：审计一条登录查询/ }).first().click();
       const activity = page.getByTestId("sql-activity");
       await expect(activity).toBeVisible({ timeout: 20_000 });
       await expect(page.locator("iframe")).toHaveCount(0);
@@ -85,7 +85,7 @@ test.describe("学生完整学习闭环（SQL 注入课程）", () => {
       expect(auditEvent?.payload.defences).toContain("parameterize");
 
       // Final quiz — answers come from the server-only fixture file.
-      await page.getByRole("link", { name: /最终测验/ }).click();
+      await page.getByRole("link", { name: /最终测验/ }).first().click();
       await expect(page.getByRole("heading", { name: "最终测验" })).toBeVisible();
 
       const quiz = JSON.parse(fs.readFileSync(QUIZ_FILE, "utf8")) as QuizFile;
@@ -115,11 +115,12 @@ test.describe("学生完整学习闭环（SQL 注入课程）", () => {
       await login(adminPage, "admin@learnos.local", "LearnOS-Admin-2025!");
       await expect(adminPage).toHaveURL(/\/admin/);
 
-      await adminPage.goto(`/admin/students?student=${student.id}`);
-      await expect(adminPage.getByRole("dialog").getByText(student.name)).toBeVisible({
+      await adminPage.goto(`/admin/students/${student.id}`);
+      await expect(adminPage.getByRole("heading", { name: student.name })).toBeVisible({
         timeout: 20_000,
       });
-      await expect(adminPage.getByRole("dialog").getByText("已完成").first()).toBeVisible();
+      await adminPage.getByRole("tab", { name: "成绩与积分" }).click();
+      await expect(adminPage.getByText("已完成").first()).toBeVisible();
 
       const detail = await api<{
         recentEvents: { type: string; payload: Record<string, unknown> }[];
@@ -163,18 +164,18 @@ test.describe("学生完整学习闭环（重试与幂等课程）", () => {
       await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`), { timeout: 20_000 });
 
       await page.getByRole("button", { name: /标记本章完成/ }).click();
-      await expect(page.getByRole("button", { name: "本章已完成" })).toBeVisible({
+      await expect(page.getByText("本章已完成").first()).toBeVisible({
         timeout: 20_000,
       });
 
-      await page.getByRole("link", { name: /幂等键与去重存储/ }).click();
+      await page.getByRole("link", { name: /幂等键与去重存储/ }).first().click();
       await expect(page.getByRole("heading", { name: "幂等键与去重存储" })).toBeVisible();
       await page.getByRole("button", { name: /标记本章完成/ }).click();
-      await expect(page.getByRole("button", { name: "本章已完成" })).toBeVisible({
+      await expect(page.getByText("本章已完成").first()).toBeVisible({
         timeout: 20_000,
       });
 
-      await page.getByRole("link", { name: /实验：让支付恰好发生一次/ }).click();
+      await page.getByRole("link", { name: /实验：让支付恰好发生一次/ }).first().click();
       const activity = page.getByTestId("idempotency-activity");
       await expect(activity).toBeVisible({ timeout: 20_000 });
       await expect(page.locator("iframe")).toHaveCount(0);
@@ -188,7 +189,7 @@ test.describe("学生完整学习闭环（重试与幂等课程）", () => {
       await expect(activity.getByText("重试全部复用同一个幂等键")).toBeVisible({ timeout: 20_000 });
       await expect(activity.getByText("服务端验证通过")).toBeVisible();
 
-      await page.getByRole("link", { name: /最终测验/ }).click();
+      await page.getByRole("link", { name: /最终测验/ }).first().click();
       await expect(page.getByRole("heading", { name: "最终测验" })).toBeVisible();
 
       const quiz = JSON.parse(fs.readFileSync(RETRY_QUIZ_FILE, "utf8")) as QuizFile;

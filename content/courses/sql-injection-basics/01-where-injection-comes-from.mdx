@@ -19,6 +19,16 @@ SELECT id, password_hash FROM users WHERE email = '' OR '1'='1' --'
 
 `--` 把后面的引号和条件全部注释掉。`OR '1'='1'` 永远为真，查询返回users表里的第一行，登录逻辑如果只看「有没有查到用户」，就会被绕过。
 
+<ConceptPlayer conceptId="sql.data-vs-instruction" blockId="sql-origin" />
+
+<MiniCheck
+  id="sql-data-instruction-check"
+  question="SQL 注入的根本问题是什么？"
+  options={["用户输入里出现了单引号", "用户输入改变了 SQL 的语法结构", "数据库没有开启日志"]}
+  answer={1}
+  explanation="特殊字符只是载体。真正的问题是数据越过了边界，被当成 SQL 语法的一部分。"
+/>
+
 <Callout type="warning" title="问题不在引号，在结构">
 注入的本质不是「输入里有特殊字符」，而是**数据被当成了语法**。当用户输入可以改变 SQL 的解析结构时，任何补丁都只是让攻击者换一种写法。
 </Callout>

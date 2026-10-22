@@ -29,7 +29,8 @@
 - Tailwind CSS + shadcn/ui（简洁界面、浅色/深色两种主题）。
 - Supabase Auth + PostgreSQL + Storage；通过 `@supabase/ssr` 接入认证。
 - Zod 入参校验、RLS、事务、唯一约束、幂等键。
-- 仓库内可信 MDX + `course.json` 内容即代码；互动组件通过 `activityId` 注册，使用同源 Learning SDK。
+- 仓库内可信 MDX + `course.json` 内容即代码；概念动画通过 `conceptId`、互动组件通过 `activityId` 注册，使用同源 Learning SDK。
+- 教学优先「生活类比 → 动画 → 操作 → 反馈 → 知识检查 → 原理总结」；动画播放不产生积分。
 - 管理页面轮询刷新；课程页面心跳。尽量减少额外运行时服务与依赖。
 - 使用docker 或 docker compose 或者 mise来开发和部署
 

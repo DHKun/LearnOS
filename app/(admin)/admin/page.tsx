@@ -16,14 +16,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { requireAdmin } from "@/lib/auth/session";
-import { getAdminOverview } from "@/lib/services/admin";
+import { getAdminAttention, getAdminOverview } from "@/lib/services/admin";
 import { formatRelative } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "管理概览" };
 
 export default async function AdminOverviewPage() {
   await requireAdmin();
-  const overview = await getAdminOverview();
+  const [overview, attention] = await Promise.all([getAdminOverview(), getAdminAttention()]);
 
   return (
     <div className="space-y-8">
@@ -56,6 +56,62 @@ export default async function AdminOverviewPage() {
           hint={`${overview.publishedCourseCount} 门已发布`}
         />
         <StatCard label="完成人次" value={overview.completedEnrollmentCount} hint="历史累计" />
+      </div>
+
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {[
+          {
+            title: "已报名但未开始",
+            hint: "没有已完成章节、没有当前章节，也没有有效交互",
+            items: attention.notStarted,
+          },
+          {
+            title: "长期未活动",
+            hint: "最近有效交互超过 3 天；仅提示关注，不自动退课",
+            items: attention.inactive,
+          },
+          {
+            title: "可能卡在同一章节",
+            hint: "当前章节停留超过 2 天且进度未满",
+            items: attention.stuck,
+          },
+          {
+            title: "最近完成课程",
+            hint: "最近 7 天完成",
+            items: attention.recentlyCompleted,
+          },
+        ].map((group) => (
+          <Card key={group.title}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{group.title}</CardTitle>
+              <p className="text-xs text-muted-foreground">{group.hint}</p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {group.items.length === 0 ? (
+                <p className="text-sm text-muted-foreground">当前没有符合条件的学生。</p>
+              ) : (
+                group.items.map((item) => (
+                  <Link
+                    key={`${group.title}-${item.studentId}`}
+                    href={`/admin/students/${item.studentId}`}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-muted/50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{item.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {item.courseTitle} · {item.currentLesson ?? "未开始"}
+                      </span>
+                    </span>
+                    <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                      {item.progress}%
+                    </span>
+                  </Link>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>
@@ -92,7 +148,7 @@ export default async function AdminOverviewPage() {
                   <TableRow key={`${row.studentId}-${row.courseTitle}`}>
                     <TableCell>
                       <Link
-                        href={`/admin/students?student=${row.studentId}`}
+                        href={`/admin/students/${row.studentId}`}
                         className="font-medium hover:text-primary"
                       >
                         {row.name}
