@@ -80,9 +80,9 @@ export async function getLessons(courseId: string) {
 
 export async function pointsTotal(studentId: string) {
   const db = serviceClient();
-  const { data, error } = await db.from("point_events").select("delta").eq("student_id", studentId);
+  const { data, error } = await db.rpc("student_points_total", { p_student: studentId });
   if (error) throw error;
-  return (data ?? []).reduce((sum, row) => sum + (row.delta as number), 0);
+  return Number(data ?? 0);
 }
 
 export async function withRole<T>(

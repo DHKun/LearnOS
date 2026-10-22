@@ -1,4 +1,7 @@
+import { createHash } from "node:crypto";
+
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
+import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { loadCourse, readQuizFile } from "@/lib/content/loader";
 import { findEnrollmentForLesson } from "@/lib/services/enrollments";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -118,6 +121,9 @@ export async function submitQuiz(
 
   const { correct, score } = grade(quiz.questions, answers);
   const passed = score >= quiz.passScore;
+  const requestHash = createHash("sha256")
+    .update(canonicalJson({ lessonId, answers }))
+    .digest("hex");
 
   const db = createAdminClient();
   const { data, error } = await db.rpc("record_quiz_attempt", {
@@ -132,6 +138,7 @@ export async function submitQuiz(
       total: quiz.questions.length,
       passScore: quiz.passScore,
     },
+    p_request_hash: requestHash,
   });
 
   if (error) mapDatabaseError(error);

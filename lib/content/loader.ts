@@ -106,6 +106,10 @@ export function loadCourse(slug: string): LoadedCourse {
   }
 
   const allowedOrigins = getAllowedLabOrigins();
+  const appOrigin = process.env.NEXT_PUBLIC_APP_URL
+    ? new URL(process.env.NEXT_PUBLIC_APP_URL).origin
+    : null;
+  const warnedHosts = new Set<string>();
   for (const lesson of parsed.data.lessons) {
     if (lesson.type !== "interactive") continue;
     const resolved = resolveEntryUrl(lesson.entryUrl);
@@ -122,6 +126,19 @@ export function loadCourse(slug: string): LoadedCourse {
       throw new Error(
         `课程 ${slug} 的互动章节 ${lesson.slug} origin ${url.origin} 不在允许列表 ${allowedOrigins.join(", ")}`,
       );
+    }
+    if (appOrigin && url.origin === appOrigin) {
+      throw new Error(
+        `课程 ${slug} 的互动章节 ${lesson.slug} 不能与主应用同源（${appOrigin}）`,
+      );
+    }
+    if (appOrigin && url.hostname === new URL(appOrigin).hostname) {
+      if (!warnedHosts.has(url.hostname)) {
+        warnedHosts.add(url.hostname);
+        console.warn(
+          `[learnos] 实验站与主应用使用同一主机名 ${url.hostname}，Cookie 不按端口隔离；生产环境请使用独立域名。`,
+        );
+      }
     }
     if (!getValidator(lesson.validatorId)) {
       throw new Error(

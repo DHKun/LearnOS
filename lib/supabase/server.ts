@@ -12,6 +12,12 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: {
+        path: "/",
+        sameSite: "lax",
+        httpOnly: true,
+        secure: (process.env.NEXT_PUBLIC_APP_URL ?? "").startsWith("https://"),
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();

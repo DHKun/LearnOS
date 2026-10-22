@@ -1,4 +1,8 @@
+import { createHash } from "node:crypto";
+
 import { loadAllCourses, readQuizFile, resolveEntryUrl, type LoadedCourse } from "@/lib/content/loader";
+import { getValidator } from "@/lib/content/validators.server";
+import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type SyncSummary = {
@@ -19,6 +23,10 @@ type DbLesson = {
   config: Record<string, unknown> | null;
 };
 
+function sha256(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
   if (loaded.manifest.lessons.length !== existing.length) return false;
   const sorted = [...existing].sort((a, b) => a.position - b.position);
@@ -38,12 +46,15 @@ function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
     const config = row.config ?? {};
     if (lesson.type === "quiz") {
       const quiz = readQuizFile(loaded, lesson);
-      // Grading rules are frozen once learners exist.
+      // Grading rules and actual question content are frozen once learners exist.
       if (Number(config.passScore) !== quiz.passScore) return false;
       if (Boolean(config.finalExam) !== Boolean(lesson.finalExam)) return false;
+      if (config.quizHash !== sha256(canonicalJson(quiz))) return false;
     }
-    if (lesson.type === "interactive" && config.validatorId !== lesson.validatorId) {
-      return false;
+    if (lesson.type === "interactive") {
+      if (config.validatorId !== lesson.validatorId) return false;
+      const validator = getValidator(lesson.validatorId);
+      if (!validator || config.validatorHash !== sha256(validator.toString())) return false;
     }
     return true;
   });
@@ -91,7 +102,7 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
 
       if (enrollments > 0 && !structureMatches(loaded, existingLessons)) {
         throw new Error(
-          `课程 ${manifest.slug} 已有 ${enrollments} 条学习记录，拒绝改变必修结构或评分规则（章节 ID、顺序、类型、完成策略、题库及格线/finalExam、validator）。请使用新的 course slug 发布结构性升级。`,
+          `课程 ${manifest.slug} 已有 ${enrollments} 条学习记录，拒绝改变必修结构、评分规则或题库内容（章节 ID/顺序/类型、完成策略、及格线、finalExam、题目内容、validator）。请使用新的 course slug 发布结构性升级。`,
         );
       }
 
@@ -137,9 +148,11 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
       if (lesson.type === "article") {
         contentRef = lesson.source;
       } else if (lesson.type === "interactive") {
+        const validator = getValidator(lesson.validatorId);
         config = {
           entryUrl: resolveEntryUrl(lesson.entryUrl),
           validatorId: lesson.validatorId,
+          validatorHash: validator ? sha256(validator.toString()) : null,
           ...(lesson.config ?? {}),
         };
       } else {
@@ -149,6 +162,7 @@ export async function syncCourses(options: { publish?: boolean } = {}): Promise<
           passScore: quiz.passScore,
           questionCount: quiz.questions.length,
           finalExam: Boolean(lesson.finalExam),
+          quizHash: sha256(canonicalJson(quiz)),
         };
       }
 

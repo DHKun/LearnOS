@@ -142,9 +142,25 @@ export async function getEnrollments(studentId: string) {
   }[];
 }
 
+export async function getEvents(enrollmentId: string) {
+  const db = serviceClient();
+  const { data, error } = await db
+    .from("activity_events")
+    .select("event_type,payload,step_id,created_at")
+    .eq("enrollment_id", enrollmentId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data as {
+    event_type: string;
+    payload: Record<string, unknown>;
+    step_id: string | null;
+    created_at: string;
+  }[];
+}
+
 export async function getPointsTotal(studentId: string): Promise<number> {
   const db = serviceClient();
-  const { data, error } = await db.from("point_events").select("delta").eq("student_id", studentId);
+  const { data, error } = await db.rpc("student_points_total", { p_student: studentId });
   if (error) throw error;
-  return (data ?? []).reduce((sum, row) => sum + (row.delta as number), 0);
+  return Number(data ?? 0);
 }

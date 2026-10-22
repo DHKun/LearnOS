@@ -25,6 +25,7 @@ HTTP 状态：`400 BAD_REQUEST`、`401 UNAUTHENTICATED`、`403 FORBIDDEN`、`404
 | `QUIZ_REQUIRES_SUBMISSION` | 400 | 测验不能直接标记完成 |
 | `PAYLOAD_TOO_LARGE` / `NOTE_TOO_LARGE` | 422 | 超过大小限制 |
 | `RATE_LIMITED` | 429 | 遥测事件超过 120 次/分钟/ enrollment |
+| `IDEMPOTENCY_KEY_REUSED` | 409 | 同一 submission/attempt ID 携带了不同内容 |
 
 ## 1. 学生接口（18 个方法）
 

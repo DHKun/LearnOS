@@ -173,7 +173,7 @@
 |---|---|
 | `pnpm lint` | ✅ 0 errors / 0 warnings |
 | `pnpm typecheck` | ✅ 通过 |
-| `pnpm test` | ✅ 5 个测试文件，52 项通过（单元 + 真实 PostgreSQL RLS/事务） |
+| `pnpm test` | ✅ 7 个测试文件，57 项通过（单元 + 真实 PostgreSQL RLS/事务） |
 | `pnpm build` | ✅ Next.js 生产构建成功（22 个页面/接口路由） |
 | `pnpm security:scan` | ✅ 扫描 54 个客户端资源，未发现 service role key 或测验解析 |
 | `pnpm test:e2e` | ✅ 11 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、笔记自动保存、越权与重放、在线语义） |
@@ -210,8 +210,9 @@ tests/e2e/security.spec.ts              2 tests
 最近验证日期：2026-10-21
 本次已完成：两门课程、28 个 API、11 张表 + RLS + 事务函数、Learning SDK 与两个实验、
             学生 5 页 / 管理员 4 页、E2E 与 RLS 测试、文档与截图；
-            性能专项 35 项（bundle −156KB、实验 −55%、测验 −69%），见 docs/performance.md
-测试结果：lint/typecheck/build 通过；Vitest 52 passed；Playwright 11 passed；
+            性能专项 35 项（bundle −156KB、实验 −55%、测验 −69%），见 docs/performance.md；
+            审计修复 LRN-001/004/005/006/007/008/009 与残余风险，见 docs/audit-remediation.md
+测试结果：lint/typecheck/build 通过；Vitest 57 passed；Playwright 11 passed；
           security scan 通过；courses:validate 2/2
 失败 / 阻塞：无（本地）；云端部署与 SMTP 未执行
 下一个门禁：无（MVP Release，本地）

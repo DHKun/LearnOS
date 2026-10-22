@@ -10,6 +10,7 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 - 课程制作与实验接入：[`docs/course-authoring.md`](docs/course-authoring.md)
 - 实现取舍日志：[`docs/decisions.md`](docs/decisions.md)
 - 30+ 次性能优化与测量：[`docs/performance.md`](docs/performance.md)
+- 静态审计修复记录：[`docs/audit-remediation.md`](docs/audit-remediation.md)
 
 ![登录页](docs/screenshots/login.png)
 ![课程目录](docs/screenshots/courses.png)
@@ -255,5 +256,6 @@ docs/                   # 规格、架构、API、课程制作、决策、截图
 - 不开放自由注册、社交/聊天/排行榜/证书/AI 导师/可视化课程编辑器。
 - 不提供学生自助改密页面；管理员可触发 Supabase 密码重置邮件。
 - 不使用 Supabase Storage（MVP 无图片上传需求），不执行用户上传的任意 HTML/JS。
+- 示例课程的题库和验证器随公开仓库发布，仅适用于演示；正式测评需使用私有题库/验证器或私有内容卷部署。
 - 管理端通过 30 秒轮询更新，不使用 WebSocket。
 - 云端部署、真实 SMTP、跨域生产域名未在本环境验证；相关配置步骤已记录。

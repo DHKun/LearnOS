@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { getPoints } from "@/lib/services/points";
+
 import {
   createTestUser,
   deleteTestUser,
@@ -186,6 +188,27 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
     expect(second.version).toBe(2);
   });
 
+  it("首次状态并发写入只有一个成功，另一个返回版本冲突", async () => {
+    const args = {
+      p_student: student.id,
+      p_enrollment: enrollmentId,
+      p_lesson: lessons[1].id,
+      p_state: { step: "first" },
+      p_expected_version: 0,
+    };
+    const results = await Promise.allSettled([
+      rpc("save_state", args),
+      rpc("save_state", args),
+    ]);
+    const fulfilled = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(String(rejected[0].reason)).toContain("STATE_VERSION_CONFLICT");
+  });
+
   it("完成图文章节幂等，积分只发一次", async () => {
     const articles = lessons.filter((lesson) => lesson.type === "article");
     const awards: number[] = [];
@@ -263,6 +286,18 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
     expect(duplicate.duplicate).toBe(true);
     expect(duplicate.pointsAwarded ?? 0).toBe(0);
     expect(await pointsTotal(student.id)).toBe(30);
+
+    await expect(
+      rpc("save_submission", {
+        p_student: student.id,
+        p_enrollment: enrollmentId,
+        p_lesson: lab.id,
+        p_submission_id: passedId,
+        p_submission_hash: "different-payload",
+        p_passed: true,
+        p_feedback: { message: "different" },
+      }),
+    ).rejects.toThrow("IDEMPOTENCY_KEY_REUSED");
   });
 
   it("测验尝试按 attemptId 幂等，失败可重试，最终通过才完成课程", async () => {
@@ -294,6 +329,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
       p_score: 100,
       p_passed: true,
       p_answer_summary: { correct: 5, total: 5 },
+      p_request_hash: "answers-v1",
     });
     expect(passed.passed).toBe(true);
     expect(passed.pointsAwarded).toBe(60);
@@ -315,6 +351,19 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
     expect(duplicate.duplicate).toBe(true);
     expect(duplicate.pointsAwarded ?? 0).toBe(0);
     expect(await pointsTotal(student.id)).toBe(90);
+
+    await expect(
+      rpc("record_quiz_attempt", {
+        p_student: student.id,
+        p_enrollment: enrollmentId,
+        p_lesson: quiz.id,
+        p_attempt_id: passAttempt,
+        p_score: 10,
+        p_passed: false,
+        p_answer_summary: { correct: 0, total: 5 },
+        p_request_hash: "different-answers",
+      }),
+    ).rejects.toThrow("IDEMPOTENCY_KEY_REUSED");
   });
 
   it("全部必修完成后课程 released（completed），可参加新课程", async () => {
@@ -403,5 +452,32 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         p_content: "not enrolled",
       }),
     ).rejects.toThrow("FORBIDDEN");
+  });
+
+  it("积分总数使用数据库聚合，不受明细 1000 条限制", async () => {
+    const bulkStudent = await createTestUser("student");
+    try {
+      const course = await getCourse("sql-injection-basics");
+      const joined = await rpc<{ id: string }>("join_course", {
+        p_student: bulkStudent.id,
+        p_course: course.id,
+      });
+      const rows = Array.from({ length: 1005 }, (_, index) => ({
+        student_id: bulkStudent.id,
+        enrollment_id: joined.id,
+        delta: 1,
+        reason: "bulk_test",
+        dedupe_key: `bulk:${joined.id}:${index}`,
+      }));
+      const { error } = await db().from("point_events").insert(rows);
+      expect(error).toBeNull();
+
+      const points = await getPoints(bulkStudent.id);
+      expect(points.total).toBe(1005);
+      expect(points.items.length).toBe(1000);
+      expect(await pointsTotal(bulkStudent.id)).toBe(1005);
+    } finally {
+      await deleteTestUser(bulkStudent.id);
+    }
   });
 });

@@ -65,122 +65,20 @@ export async function listStudents(options: {
   pageSize: number;
 }): Promise<{ items: AdminStudentRow[]; total: number; page: number; pageSize: number }> {
   const db = createAdminClient();
-  const [profilesResult, enrollmentsResult, coursesResult] = await Promise.all([
-    db
-      .from("profiles")
-      .select("user_id,email,display_name,disabled_at,role,point_events(delta)")
-      .eq("role", "student"),
-    db
-      .from("enrollments")
-      .select("id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at,lesson_progress(lesson_id,status)"),
-    db
-      .from("courses")
-      .select(
-        "id,title,lessons(id,course_id,title,type,position,required,completion_policy,config)",
-      ),
-  ]);
-
-  for (const result of [profilesResult, enrollmentsResult, coursesResult]) {
-    if (result.error) throw result.error;
-  }
-
-  const profiles = profilesResult.data ?? [];
-  const enrollmentRows = (enrollmentsResult.data ?? []) as unknown as (EnrollmentLite & {
-    lesson_progress?: { lesson_id: string; status: string }[];
-  })[];
-  const enrollments = enrollmentRows as EnrollmentLite[];
-  const courses = coursesResult.data ?? [];
-  const lessons = courses.flatMap(
-    (course) => (course as unknown as { lessons?: LessonLite[] }).lessons ?? [],
-  ) as LessonLite[];
-
-  const courseById = new Map(courses.map((row) => [row.id, row]));
-  const lessonById = new Map(lessons.map((row) => [row.id, row]));
-  const completedByEnrollment = new Map<string, Set<string>>();
-  for (const enrollment of enrollmentRows) {
-    for (const progress of enrollment.lesson_progress ?? []) {
-      if (progress.status !== "completed") continue;
-      const set = completedByEnrollment.get(enrollment.id) ?? new Set<string>();
-      set.add(progress.lesson_id);
-      completedByEnrollment.set(enrollment.id, set);
-    }
-  }
-  const pointsByStudent = new Map<string, number>();
-  for (const profile of profiles) {
-    const events =
-      (profile as unknown as { point_events?: { delta: number }[] }).point_events ?? [];
-    pointsByStudent.set(
-      profile.user_id,
-      events.reduce((sum, event) => sum + event.delta, 0),
-    );
-  }
-  const activeByStudent = new Map(
-    enrollments.filter((row) => row.status === "active").map((row) => [row.student_id, row]),
-  );
-
-  const query = options.q?.trim().toLowerCase();
-
-  let rows: AdminStudentRow[] = profiles
-    .filter((profile) => {
-      if (!query) return true;
-      return (
-        profile.display_name.toLowerCase().includes(query) ||
-        (profile.email ?? "").toLowerCase().includes(query)
-      );
-    })
-    .filter((profile) => {
-      if (!options.courseId) return true;
-      return enrollments.some(
-        (enrollment) =>
-          enrollment.student_id === profile.user_id && enrollment.course_id === options.courseId,
-      );
-    })
-    .filter((profile) => {
-      if (options.online === undefined) return true;
-      const active = activeByStudent.get(profile.user_id);
-      return isOnline(active?.last_seen_at ?? null) === options.online;
-    })
-    .map((profile) => {
-      const active = activeByStudent.get(profile.user_id) ?? null;
-      const progress = active
-        ? progressFor(active, lessons, completedByEnrollment.get(active.id) ?? new Set())
-        : null;
-      return {
-        id: profile.user_id,
-        name: profile.display_name,
-        email: profile.email,
-        disabled: Boolean(profile.disabled_at),
-        activeCourse: active
-          ? {
-              id: active.course_id,
-              title: courseById.get(active.course_id)?.title ?? "未知课程",
-            }
-          : null,
-        currentLesson: active?.current_lesson_id
-          ? lessonById.get(active.current_lesson_id)?.title ?? null
-          : null,
-        progress: progress?.percent ?? 0,
-        enrollmentStatus: active?.status ?? null,
-        lastSeenAt: active?.last_seen_at ?? null,
-        lastInteractionAt: active?.last_interaction_at ?? null,
-        online: isOnline(active?.last_seen_at ?? null),
-        points: pointsByStudent.get(profile.user_id) ?? 0,
-      };
-    });
-
-  rows.sort((a, b) => {
-    if (a.online !== b.online) return a.online ? -1 : 1;
-    const left = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
-    const right = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
-    if (left !== right) return right - left;
-    return a.name.localeCompare(b.name, "zh-CN");
+  const { data, error } = await db.rpc("admin_students_page", {
+    p_q: options.q?.trim() || null,
+    p_online: options.online ?? null,
+    p_course: options.courseId ?? null,
+    p_page: options.page,
+    p_page_size: options.pageSize,
   });
-
-  const total = rows.length;
-  const start = (options.page - 1) * options.pageSize;
-  rows = rows.slice(start, start + options.pageSize);
-
-  return { items: rows, total, page: options.page, pageSize: options.pageSize };
+  if (error) throw error;
+  return data as {
+    items: AdminStudentRow[];
+    total: number;
+    page: number;
+    pageSize: number;
+  };
 }
 
 export async function getStudentDetail(studentId: string): Promise<AdminStudentDetail> {
@@ -213,7 +111,7 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
 
   const courseIds = [...new Set(enrollments.map((row) => row.course_id))];
   const enrollmentIds = enrollments.map((row) => row.id);
-  const [coursesResult, progressResult, eventsResult] = await Promise.all([
+  const [coursesResult, progressResult, eventsResult, totalPointsResult] = await Promise.all([
       courseIds.length
         ? db
             .from("courses")
@@ -236,9 +134,10 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
             .order("created_at", { ascending: false })
             .limit(50)
         : Promise.resolve({ data: [], error: null }),
+      db.rpc("student_points_total", { p_student: studentId }),
     ]);
 
-  for (const result of [coursesResult, progressResult, eventsResult]) {
+  for (const result of [coursesResult, progressResult, eventsResult, totalPointsResult]) {
     if (result.error) throw result.error;
   }
 
@@ -279,7 +178,7 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
       email: profile.email,
       disabled: Boolean(profile.disabled_at),
       createdAt: profile.created_at,
-      points: profileEvents.reduce((sum, event) => sum + event.delta, 0),
+      points: Number(totalPointsResult.data ?? 0),
     },
     current: current
       ? {

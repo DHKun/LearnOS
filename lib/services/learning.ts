@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
+import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { loadCourse } from "@/lib/content/loader";
 import { getValidator } from "@/lib/content/validators.server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -183,7 +184,7 @@ export async function submitInteraction(
 
   const result = await validator(input.submission);
   const hash = createHash("sha256")
-    .update(JSON.stringify({ lessonId: input.lessonId, submission: input.submission }))
+    .update(canonicalJson({ lessonId: input.lessonId, submission: input.submission }))
     .digest("hex");
 
   const saved = await rpc<{

@@ -96,10 +96,21 @@ export function LabFrame({
       try {
         if (type === "TRACK") {
           const eventType = typeof payload.type === "string" ? payload.type : "";
-          const eventPayload =
-            typeof payload.payload === "object" && payload.payload !== null
+          const nestedPayload =
+            typeof payload.payload === "object" &&
+            payload.payload !== null &&
+            !Array.isArray(payload.payload)
               ? (payload.payload as Record<string, unknown>)
-              : {};
+              : null;
+          // Accept the legacy flattened shape from an older cached SDK while
+          // preferring the explicit `payload` field used by current SDK builds.
+          const eventPayload =
+            nestedPayload ??
+            Object.fromEntries(
+              Object.entries(payload).filter(
+                ([key]) => !["type", "stepId", "id", "payload"].includes(key),
+              ),
+            );
           const stepId = typeof payload.stepId === "string" ? payload.stepId : null;
           const result = await apiFetch<{ accepted: boolean }>("/api/learning/events", {
             method: "POST",
@@ -126,6 +137,7 @@ export function LabFrame({
               `/api/learning/states/${lessonId}`,
               {
                 method: "PUT",
+                keepalive: payload.unload === true,
                 body: JSON.stringify({
                   enrollmentId,
                   state,

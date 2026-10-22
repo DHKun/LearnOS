@@ -7,6 +7,8 @@ import {
   createTestStudent,
   deleteTestStudent,
   getCourseBySlug,
+  getEnrollments,
+  getEvents,
   getPointsTotal,
   login,
 } from "./helpers";
@@ -65,6 +67,13 @@ test.describe("学生完整学习闭环（SQL 注入课程）", () => {
       await expect(lab.getByText("登录查询已阻止全部注入载荷", { exact: false })).toBeVisible({
         timeout: 20_000,
       });
+
+      await page.waitForTimeout(400);
+      const enrollment = (await getEnrollments(student.id))[0];
+      const events = await getEvents(enrollment.id);
+      const auditEvent = events.find((event) => event.event_type === "audit_run");
+      expect(auditEvent).toBeTruthy();
+      expect(auditEvent?.payload.defences).toContain("parameterize");
 
       // Final quiz — answers come from the server-only fixture file.
       await page.getByRole("link", { name: /最终测验/ }).click();

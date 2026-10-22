@@ -88,6 +88,7 @@ export class LearningSDKClient implements LearningSDK {
   private expectedVersion = 0;
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private saveQueue: Promise<{ version: number }> | null = null;
+  private inflightSave: Promise<void> | null = null;
   private latestState: LearnOSState | null = null;
   private resolveSave: ((value: { version: number }) => void) | null = null;
   private rejectSave: ((error: Error) => void) | null = null;
@@ -215,12 +216,18 @@ export class LearningSDKClient implements LearningSDK {
     fixedId?: string,
   ): void {
     if (!this.parentOrigin || !this.initReceived) return;
-    void this.request("TRACK", { ...payload, type, stepId: stepId ?? null, id: fixedId }).catch(
-      () => undefined,
-    );
+    void this.request("TRACK", {
+      type,
+      stepId: stepId ?? null,
+      payload,
+      ...(fixedId ? { id: fixedId } : {}),
+    }).catch(() => undefined);
   }
 
   private async flushState(): Promise<void> {
+    if (this.inflightSave) {
+      await this.inflightSave.catch(() => undefined);
+    }
     if (!this.latestState || !this.resolveSave || !this.rejectSave) return;
     const state = this.latestState;
     const resolve = this.resolveSave;
@@ -230,8 +237,16 @@ export class LearningSDKClient implements LearningSDK {
     this.rejectSave = null;
     this.saveQueue = null;
 
+    const request = this.request("SAVE_STATE", { state });
+    this.inflightSave = request
+      .then(() => undefined)
+      .catch(() => undefined)
+      .finally(() => {
+        this.inflightSave = null;
+      });
+
     try {
-      const data = await this.request("SAVE_STATE", { state });
+      const data = await request;
       if (typeof data.version === "number") this.expectedVersion = data.version;
       resolve({ version: this.expectedVersion });
     } catch (error) {
@@ -241,7 +256,7 @@ export class LearningSDKClient implements LearningSDK {
 
   private flushOnUnload(): void {
     if (this.latestState && this.parentOrigin) {
-      this.post("SAVE_STATE", { state: this.latestState }, uuid(), this.nonce);
+      this.post("SAVE_STATE", { state: this.latestState, unload: true }, uuid(), this.nonce);
       this.latestState = null;
     }
   }

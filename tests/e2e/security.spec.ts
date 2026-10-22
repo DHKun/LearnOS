@@ -97,6 +97,20 @@ test.describe("服务端权威与越权防护", () => {
       expect(replay.body?.data?.passed).toBe(true);
       expect(await getPointsTotal(studentA.id)).toBe(10);
 
+      const reusedSubmission = await api(
+        page,
+        "/api/learning/submissions",
+        "POST",
+        {
+          id: submissionId,
+          enrollmentId,
+          lessonId: lab.id,
+          submission: { defences: ["type-cast"] },
+        },
+      );
+      expect(reusedSubmission.status).toBe(409);
+      expect(reusedSubmission.body?.error?.code).toBe("IDEMPOTENCY_KEY_REUSED");
+
       // 4. 多标签状态保存版本冲突
       const state1 = await api<{ version: number }>(
         page,
@@ -246,6 +260,15 @@ test.describe("服务端权威与越权防护", () => {
       expect(replayAttempt.body?.data?.duplicate).toBe(true);
       expect(replayAttempt.body?.data?.pointsAwarded ?? 0).toBe(0);
       expect(await getPointsTotal(studentA.id)).toBe(70);
+
+      const reusedAttempt = await api(
+        page,
+        `/api/quizzes/${quizLesson.id}/submit`,
+        "POST",
+        { attemptId, enrollmentId, answers: {} },
+      );
+      expect(reusedAttempt.status).toBe(409);
+      expect(reusedAttempt.body?.error?.code).toBe("IDEMPOTENCY_KEY_REUSED");
 
       await contextB.close();
     } finally {
