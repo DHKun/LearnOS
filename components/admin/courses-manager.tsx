@@ -6,6 +6,7 @@ import { ArrowUpRight, Pencil, Send, Archive } from "lucide-react";
 
 import { AutoRefresh } from "@/components/auto-refresh";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -40,6 +41,10 @@ export function CoursesManager({ initial }: { initial: AdminCourseRow[] }) {
   const [message, setMessage] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
+  const [confirmCourse, setConfirmCourse] = React.useState<{
+    course: AdminCourseRow;
+    action: "publish" | "archive";
+  } | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -70,16 +75,20 @@ export function CoursesManager({ initial }: { initial: AdminCourseRow[] }) {
     }
   }
 
-  async function publish(course: AdminCourseRow) {
-    if (!window.confirm(`发布《${course.title}》？发布前会校验必修章节与最终测验。`)) return;
-    await update(course.id, { status: "published" });
+  function publish(course: AdminCourseRow) {
+    setConfirmCourse({ course, action: "publish" });
   }
 
-  async function archive(course: AdminCourseRow) {
-    if (!window.confirm(`归档《${course.title}》？已归档课程不能接受新学生，已有学生仍可完成。`)) {
-      return;
-    }
-    await update(course.id, { status: "archived" });
+  function archive(course: AdminCourseRow) {
+    setConfirmCourse({ course, action: "archive" });
+  }
+
+  async function confirmCourseAction() {
+    if (!confirmCourse) return;
+    const { course, action } = confirmCourse;
+    await update(course.id, {
+      status: action === "publish" ? "published" : "archived",
+    });
   }
 
   return (
@@ -181,6 +190,24 @@ export function CoursesManager({ initial }: { initial: AdminCourseRow[] }) {
         课程内容由 Git 中的 course.json / MDX / 验证器维护，执行 <code>pnpm courses:sync</code> 同步。
         已有学习记录的课程不能原地改变必修结构，结构性升级请使用新 slug。
       </p>
+
+      <ConfirmDialog
+        open={confirmCourse !== null}
+        onOpenChange={(open) => !open && setConfirmCourse(null)}
+        title={
+          confirmCourse?.action === "publish"
+            ? `发布《${confirmCourse.course.title}》？`
+            : `归档《${confirmCourse?.course.title ?? ""}》？`
+        }
+        description={
+          confirmCourse?.action === "publish"
+            ? "发布后会校验必修章节与最终测验，学生将可以看到该课程。"
+            : "归档后不接受新学生，已有学生仍可完成课程。"
+        }
+        confirmLabel={confirmCourse?.action === "publish" ? "发布课程" : "归档课程"}
+        destructive={confirmCourse?.action === "archive"}
+        onConfirm={confirmCourseAction}
+      />
 
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="w-[min(94vw,36rem)]">

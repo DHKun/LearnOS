@@ -175,8 +175,8 @@
 | `pnpm typecheck` | ✅ 通过 |
 | `pnpm test` | ✅ 8 个测试文件，58 项通过（单元 + 真实 PostgreSQL RLS/事务） |
 | `pnpm build` | ✅ Next.js 生产构建成功（22 个页面/接口路由） |
-| `pnpm security:scan` | ✅ 扫描 57 个客户端资源，未发现 service role key 或测验解析 |
-| `pnpm test:e2e` | ✅ 12 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、原生互动刷新恢复、多标签状态冲突、笔记自动保存、越权与重放、在线语义） |
+| `pnpm security:scan` | ✅ 扫描 56 个客户端资源，未发现 service role key 或测验解析 |
+| `pnpm test:e2e` | ✅ 13 个 Playwright 测试通过（账号权限、CSRF、课程管理、并发/幂等/恢复、两门课程闭环、原生互动刷新恢复、多标签状态冲突、笔记自动保存、越权与重放、在线语义） |
 | `pnpm courses:validate` | ✅ 2/2 门课程通过 |
 | 数据库迁移 | ✅ 7 个迁移已通过 `migration up` 应用；未执行全量 `db:reset`，避免清空运行数据 |
 | `pnpm seed:admin` / `pnpm seed:demo` | ✅ 管理员 + 2 名学生 + 2 门已发布课程 |
@@ -193,6 +193,7 @@ tests/e2e/notes.spec.ts                 1 test
 tests/e2e/presence.spec.ts              1 test
 tests/e2e/security.spec.ts              2 tests
 tests/e2e/native-state.spec.ts          1 test
+tests/e2e/confirm-dialogs.spec.ts       1 test
 ```
 
 ## 9. 未验证项与已知限制
@@ -214,7 +215,7 @@ tests/e2e/native-state.spec.ts          1 test
             性能专项 35 项（bundle −156KB、实验 −55%、测验 −69%），见 docs/performance.md；
             审计修复 LRN-001/004/005/006/007/008/009 与残余风险，见 docs/audit-remediation.md；
             完成单站点原生活动重构（activityId Registry、移除 iframe/Labs/postMessage、历史数据迁移验证）
-测试结果：lint/typecheck/build 通过；Vitest 58 passed；Playwright 12 passed；
+测试结果：lint/typecheck/build 通过；Vitest 58 passed；Playwright 13 passed；
           security scan 通过；courses:validate 2/2
 失败 / 阻塞：无（本地）；云端部署与 SMTP 未执行
 下一个门禁：无（MVP Release，本地）
@@ -230,7 +231,7 @@ tests/e2e/native-state.spec.ts          1 test
 - [x] 迁移 `20250101000600_activity_registry.sql` 保留课程/章节/报名/进度/笔记/积分/测验记录；事务级迁移演练通过；有报名时再次 `courses:sync` 成功且不覆盖 `activityId`。
 - [x] E2E 覆盖原生组件运行、事件 payload、刷新恢复、多标签冲突、无 iframe、生产构建仅启动 3000。
 - [x] 文档同步：README、AGENTS、MVP-SPEC、architecture、course-authoring、decisions、audit-remediation。
-- [x] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` / `pnpm test:e2e` / `pnpm security:scan` 通过（58 unit/integration、12 E2E、57 静态资源扫描）。
+- [x] `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` / `pnpm test:e2e` / `pnpm security:scan` 通过（58 unit/integration、13 E2E、56 静态资源扫描）。
 - [ ] 云端 staging / SMTP / TLS 未验证（环境限制）。
 
 **门禁**：本地代码、测试、数据库与文档均已完成；云端验收留待 staging。

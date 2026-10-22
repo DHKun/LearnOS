@@ -7,6 +7,7 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { OnlineDot, StatusBadge } from "@/components/status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,13 @@ export function StudentsExplorer({
   const [error, setError] = React.useState<string | null>(null);
 
   const [selectedId, setSelectedId] = React.useState<string | null>(initialStudentId ?? null);
+  const [confirmAction, setConfirmAction] = React.useState<{
+    title: string;
+    description: string;
+    confirmLabel: string;
+    destructive: boolean;
+    run: () => Promise<void>;
+  } | null>(null);
   const [detail, setDetail] = React.useState<AdminStudentDetail | null>(null);
   const [detailLoading, setDetailLoading] = React.useState(false);
   const [detailError, setDetailError] = React.useState<string | null>(null);
@@ -111,37 +119,53 @@ export function StudentsExplorer({
     void loadDetail(id);
   }
 
-  async function toggleDisabled() {
+  function toggleDisabled() {
     if (!detail) return;
     const next = !detail.student.disabled;
-    if (!window.confirm(next ? "确定停用该学生账号？业务接口会立即拒绝其访问。" : "确定重新启用该账号？")) {
-      return;
-    }
-    try {
-      await apiFetch(`/api/admin/students/${detail.student.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ disabled: next }),
-      });
-      setActionMessage(next ? "账号已停用" : "账号已启用");
-      await loadDetail(detail.student.id);
-      await load({ page });
-    } catch (caught) {
-      setActionMessage(caught instanceof ApiClientError ? caught.message : "操作失败");
-    }
+    const studentId = detail.student.id;
+    setConfirmAction({
+      title: next ? "停用该学生账号？" : "重新启用该学生账号？",
+      description: next
+        ? "停用后该学生的业务请求会立即被拒绝，已有学习记录不会被删除。"
+        : "启用后该学生可立即恢复登录和学习。",
+      confirmLabel: next ? "停用账号" : "启用账号",
+      destructive: next,
+      run: async () => {
+        try {
+          await apiFetch(`/api/admin/students/${studentId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ disabled: next }),
+          });
+          await loadDetail(studentId);
+          await load({ page });
+          setActionMessage(next ? "账号已停用" : "账号已启用");
+        } catch (caught) {
+          setActionMessage(caught instanceof ApiClientError ? caught.message : "操作失败");
+        }
+      },
+    });
   }
 
-  async function resetPassword() {
+  function resetPassword() {
     if (!detail) return;
-    if (!window.confirm("向该学生邮箱发送密码重置邮件？")) return;
-    try {
-      await apiFetch(`/api/admin/students/${detail.student.id}/reset-password`, {
-        method: "POST",
-        body: JSON.stringify({}),
-      });
-      setActionMessage("密码重置邮件已请求发送（本地环境可在 Mailpit 查看）");
-    } catch (caught) {
-      setActionMessage(caught instanceof ApiClientError ? caught.message : "发送失败");
-    }
+    const studentId = detail.student.id;
+    setConfirmAction({
+      title: "发送密码重置邮件？",
+      description: `将向 ${detail.student.email ?? "该学生邮箱"} 发送密码重置邮件。`,
+      confirmLabel: "发送邮件",
+      destructive: false,
+      run: async () => {
+        try {
+          await apiFetch(`/api/admin/students/${studentId}/reset-password`, {
+            method: "POST",
+            body: JSON.stringify({}),
+          });
+          setActionMessage("密码重置邮件已请求发送（本地环境可在 Mailpit 查看）");
+        } catch (caught) {
+          setActionMessage(caught instanceof ApiClientError ? caught.message : "发送失败");
+        }
+      },
+    });
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -552,6 +576,18 @@ export function StudentsExplorer({
           )}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+        title={confirmAction?.title ?? ""}
+        description={confirmAction?.description ?? ""}
+        confirmLabel={confirmAction?.confirmLabel}
+        destructive={confirmAction?.destructive}
+        onConfirm={async () => {
+          await confirmAction?.run();
+        }}
+      />
     </div>
   );
 }

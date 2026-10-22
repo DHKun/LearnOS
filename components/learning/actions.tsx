@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { ApiClientError, apiFetch } from "@/lib/client/api";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { EnrollmentSummary } from "@/lib/types";
 
 export function JoinCourseButton({
@@ -60,9 +61,9 @@ export function AbandonCourseButton({ enrollmentId }: { enrollmentId: string }) 
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   async function abandon() {
-    if (!window.confirm("确定退出当前课程？进度与笔记将保留，可重新参加。")) return;
     setPending(true);
     setError(null);
     try {
@@ -80,9 +81,23 @@ export function AbandonCourseButton({ enrollmentId }: { enrollmentId: string }) 
 
   return (
     <div className="flex flex-col gap-1">
-      <Button variant="outline" size="sm" onClick={abandon} disabled={pending}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setConfirmOpen(true)}
+        disabled={pending}
+      >
         {pending ? "正在退出…" : "退出课程"}
       </Button>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="退出当前课程？"
+        description="章节进度、实验状态与笔记会保留，重新参加后可从原进度继续。"
+        confirmLabel="退出课程"
+        destructive
+        onConfirm={abandon}
+      />
       {error && <span className="text-xs text-destructive">{error}</span>}
     </div>
   );
