@@ -243,11 +243,13 @@ NEXT_PUBLIC_APP_URL=https://learn.example.com
 ### 4. 创建 provider 并自检
 
 ```bash
+pnpm oidc:check     # = oidc:setup + oidc:verify，发布前一键执行
+# 也可以分开执行：
 pnpm oidc:setup     # 校验 discovery 并幂等创建 custom:floatctf
-pnpm oidc:verify    # 六项上线前检查，必须全绿
+pnpm oidc:verify    # 七项上线前检查，必须全绿
 ```
 
-`oidc:verify` 未全绿前不要开启入口——失败的分别是 issuer 策略、CSP 两跳、provider 一致性中最常见的误配。
+`oidc:check`/`oidc:verify` 未全绿前不要开启入口——失败的分别是 issuer 策略、CSP 两跳、provider 一致性中最常见的误配。
 
 ### 5. 验收
 

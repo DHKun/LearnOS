@@ -580,7 +580,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 
 ### 21.3 上线前自检
 
-- [x] `pnpm oidc:verify`：issuer 约束、discovery、PKCE、JWKS、CSP 两跳、provider 一致性六项检查，失败即非零退出。
+- [x] `pnpm oidc:verify`：issuer 约束、discovery、PKCE、JWKS、CSP 两跳、provider 一致性七项检查，失败即非零退出；CSP 项实际探测登录页，上游修复后自动转绿。
+- [x] `pnpm oidc:check` = setup + verify，发布前一键执行。
+- [x] CI（`.github/workflows/ci.yml`）跑 lint / typecheck / unit / build；集成与 RLS 需本地 Supabase，按文档手动执行。
 - [x] `tests/unit/oidc-verify.test.ts`、`tests/unit/oidc-registered-e2e.test.ts` 覆盖 issuer 判定与 SSO 安全不变量。
 
 ### 21.4 测试
