@@ -55,6 +55,15 @@
 
 `profiles.email` 为便于管理端展示而冗余保存（见 [`decisions.md`](decisions.md)）。
 
+另有 2 张运维表（不属于上述 11 张业务表）：`deployment_jobs` 保存部署/回滚任务、阶段、日志、课程快照和镜像引用；`deployment_state` 保存当前/上一个成功版本。二者启用 RLS 且没有浏览器策略，仅 service role 可访问。
+
+### 3.0 课程部署表
+
+| 表 | 作用 | 关键约束 |
+| --- | --- | --- |
+| `deployment_jobs` | 部署/回滚任务、日志、课程快照 | 部分唯一索引保证同一时间最多一个活动任务；版本格式 `YYYY.MM.DD-NN` |
+| `deployment_state` | 当前/上一成功版本与镜像 ID | 单行 `id=true`；由 `promote_deployment` / `promote_rollback` 事务更新 |
+
 ### 3.1 业务不变量
 
 - `one_active_enrollment_per_student`：`UNIQUE(student_id) WHERE status='active'`。
@@ -180,10 +189,24 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 
 ## 11. 部署
 
-- 应用：`pnpm build` + `pnpm start`（或容器镜像），配置服务端环境变量；迁移通过 Supabase CLI/CI 执行。
-- 互动组件随主应用构建产物发布，不需要额外静态站点或域名。
-- 数据库：Supabase 托管或本地 Docker；所有迁移可重复执行。
-- 生产需配置 SMTP、Cookie 安全属性与反向代理；本仓库未执行云端部署。
+生产部署是**单机 Docker Compose**，只有两个服务：
+
+```text
+web (Next.js standalone)  ── 3000/tcp（唯一对外端口）
+updater (Node + Docker CLI) ── 无监听端口；轮询 Supabase 任务
+        │
+        ├── /var/run/docker.sock
+        └── 项目目录挂载（固定快照、compose build/up）
+```
+
+- `Dockerfile`：`deps → tools → builder → runner`。`tools` 目标运行 `courses:prepare` / `courses:validate`，也供 updater 执行 `courses:snapshot`、`courses:preflight`、`courses:sync`。
+- `docker-compose.yml`：`web` 发布 3000；`updater` 挂载 Docker Socket 与项目目录。服务端 Supabase 使用 `SUPABASE_INTERNAL_URL`（host gateway），浏览器仍用 `NEXT_PUBLIC_*`。
+- 任务持久化：`deployment_jobs` 保存状态、阶段、日志、课程快照、镜像引用；`deployment_state` 保存当前/上一个成功版本。两者 RLS 开启且无浏览器策略，仅 service role 可访问。
+- 更新顺序：固定源码快照 → tools 镜像校验 → `docker compose build web` → 保存旧镜像 → 兼容性检查 → `courses:sync` → `docker compose up -d --no-deps web` → 健康检查 → 记录成功版本。
+- 失败处理：构建/校验/兼容性失败不替换容器；启动或健康检查失败自动恢复旧镜像。手动回滚前检查目标课程结构与数据库学习记录兼容性。
+- 镜像只保留当前与上一个成功版本；部署版本为 `YYYY.MM.DD-NN`，不依赖 Git Commit。
+- 数据库仍通过 Supabase CLI/迁移执行；Compose 不删除或重建课程/学习记录。
+- 生产仍建议在 3000 前加 TLS 反向代理或只允许 VPN 访问；本仓库未执行云端托管部署。
 
 ## 12. 教学层与新版工作区
 
@@ -212,4 +235,6 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 - 新课程无需修改核心 Registry；删除课程会清除生成项。
 - 旧两门课程用 `legacyGlobalId` 保留原 activity/concept ID 与历史数据；组件源码已迁入课程目录。
 - Validator 指纹来自 validator 文件 SHA-256，由生成器输出；旧 `validatorHash` 在首次同步时兼容升级到版本 2 指纹。
-- `pnpm courses:scan` 输出课程版本与源码摘要，作为生产部署候选比较的输入；生产构建/流量切换执行器尚未实现。
+- `pnpm courses:scan` / `pnpm courses:snapshot` 输出课程版本、源码摘要、结构摘要与插件清单；`/admin/deployments` 与 `updater` 使用同一套快照逻辑。
+- Validator ID 全局唯一；组件/validator 路径解析真实路径，拒绝符号链接越出课程目录。
+- 扫描与部署使用 `sourceDigest` + `structuralDigest` 比较；版本未变但源码变化会提示，结构变化且已有学习记录会阻止部署。

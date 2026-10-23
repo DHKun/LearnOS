@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
+  // Small runtime image for docker-compose; content is copied separately.
+  output: "standalone",
   outputFileTracingIncludes: {
     "/**": ["./content/**/*"],
   },

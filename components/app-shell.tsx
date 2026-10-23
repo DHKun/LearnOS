@@ -16,6 +16,7 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "概览" },
   { href: "/admin/students", label: "学生" },
   { href: "/admin/courses", label: "课程" },
+  { href: "/admin/deployments", label: "部署" },
 ];
 
 export function AppShell({

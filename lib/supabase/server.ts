@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import { supabaseServerUrl } from "@/lib/supabase/config";
+
 /**
  * Cookie-bound Supabase client. Uses the publishable key and is therefore
  * subject to RLS. Never import the service role key here.
@@ -9,7 +11,7 @@ export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseServerUrl(),
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: {

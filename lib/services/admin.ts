@@ -2,6 +2,7 @@ import { ApiError, mapDatabaseError } from "@/lib/api/errors";
 import { getActivityDefinition } from "@/lib/activities/catalog";
 import { getValidator } from "@/lib/content/validators.server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { supabaseServerUrl } from "@/lib/supabase/config";
 import { isOnline } from "@/lib/services/shared";
 import type {
   AdminAttention,
@@ -401,7 +402,7 @@ export async function requestPasswordReset(studentId: string): Promise<{ sent: t
     throw new ApiError("STUDENT_NOT_FOUND");
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = supabaseServerUrl();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   if (!url || !anonKey) throw new ApiError("INTERNAL_ERROR");

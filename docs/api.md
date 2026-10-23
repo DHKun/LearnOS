@@ -276,6 +276,50 @@ lessonCount, enrollmentCount, activeCount, completedCount }] }`
 → `{ items: [{ studentId, name, email, enrollmentId, enrollmentStatus, progress,
 currentLesson, lastSeenAt, lastInteractionAt, online }], total, page, pageSize }`
 
+### 2.11 部署概览
+
+`GET /api/admin/deployments` → `{ state, current, previous, active, history, scan }`
+
+- `state`: `{ currentVersion, previousVersion, currentJobId, previousJobId, currentImageId, previousImageId, updatedAt }`
+- `current` / `previous`: 成功部署任务（含课程快照与结果）；`active`: 进行中任务（含实时日志）；`history`: 最近 20 条任务摘要（不含日志正文）。
+- `scan`: 与 `GET /api/admin/deployments/scan` 相同。
+- 仅管理员；学生/匿名 `403 FORBIDDEN`。
+
+### 2.12 扫描本地课程
+
+`GET /api/admin/deployments/scan` → `{ scannedAt, baselineVersion, baselineDeploymentId, items, failures, counts, canDeploy, blockingReasons }`
+
+- 只读取服务器本地 `content/courses/`，不触发构建、不访问 Git。
+- `items[].status`: `new | updated | latest | conflict | scan_failed | removed`。
+- 每个 item 含 `version`、`sourceDigest`、`structuralDigest`、`lessons`、`concepts`、`activities`、`files` 摘要与 `changes: { added, modified, removed }`。
+- 版本号未变但源码变化 → `updated` + warning；结构变化且已有 enrollment → `conflict`，`canDeploy=false`。
+
+### 2.13 创建部署 / 回滚任务
+
+`POST /api/admin/deployments` body `{ "action": "deploy" }` 或 `{ "action": "rollback", "targetJobId?": "uuid" }`
+
+→ `202` + 任务对象。
+
+- 同一时间只允许一个活动任务；重复请求 → `409 DEPLOYMENT_IN_PROGRESS`。
+- 扫描存在冲突/失败 → `409 DEPLOYMENT_CONFLICT`。
+- 没有上一成功版本 → `409 DEPLOYMENT_NOT_AVAILABLE`。
+- 任务由 `updater` 异步执行；Web 只写任务与读取状态，不执行构建。
+
+### 2.14 任务详情
+
+`GET /api/admin/deployments/:id` → 任务对象（含 `logs`、`courses`、`result`、`error`）。
+
+### 2.15 健康检查
+
+`GET /api/health` → `{ status: "ok", version, builtAt, now }`
+
+- 公开、无数据库查询；用于 Compose/updater 判断新容器是否已就绪。
+- `version` 来自镜像构建参数 `LEARNOS_BUILD_VERSION`，updater 用它确认不是旧容器在响应。
+
+### 2.16 部署任务内部存储
+
+`deployment_jobs` / `deployment_state` 仅 service role 可读写，RLS 无浏览器策略。updater 通过 Supabase REST（service role）领取任务、追加日志、调用 `promote_deployment` / `promote_rollback` / `finish_deployment_failure`。这些不是公开 API，页面不得直接暴露 service role。
+
 ## 3. 未提供的接口（明确不在 MVP）
 
-自由注册、管理员改积分、课程删除、题库编辑、笔记窥视、任意 HTML/JS 上传、通用文件上传。
+自由注册、管理员改积分、课程删除、题库编辑、笔记窥视、任意 HTML/JS 上传、通用文件上传、任意 Shell 命令执行。

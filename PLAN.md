@@ -209,18 +209,19 @@ tests/e2e/admin-detail.spec.ts          1 test
 ## 10. 当前工作记录（Agent 持续维护）
 
 ```text
-当前 Phase：Release（完成）
-当前任务：P0-01 ～ P4-07 全部完成
+当前 Phase：Release（完成）+ 单机 Docker Compose 部署（完成）
+当前任务：P0-01 ～ P4-07；第 14 节一键部署全部完成
 最近验证日期：2026-10-22
-本次已完成：两门课程、28 个 API、11 张表 + RLS + 事务函数、同源 Learning SDK 与两个原生互动组件、
-            学生 5 页 / 管理员 4 页、E2E 与 RLS 测试、文档与截图；
-            性能专项 35 项（bundle −156KB、实验 −55%、测验 −69%），见 docs/performance.md；
-            审计修复 LRN-001/004/005/006/007/008/009 与残余风险，见 docs/audit-remediation.md；
-            完成单站点原生活动重构（activityId Registry、移除 iframe/Labs/postMessage、历史数据迁移验证）
-测试结果：lint/typecheck/build 通过；Vitest 63 passed；Playwright 16 passed；
-          security scan 通过；courses:validate 2/2
-失败 / 阻塞：无（本地）；云端部署与 SMTP 未执行
-下一个门禁：无（MVP Release，本地）
+本次已完成：三门课程（含验收新增 HTTP 重试课程）、API、11+2 张表 + RLS + 事务函数、
+            同源 Learning SDK 与原生互动组件、学生 5 页 / 管理员 5 页；
+            单机 Docker Compose：web + updater、固定快照、courses:preflight/sync、
+            构建日志、系统/课程版本、自动/手动回滚、部署任务持久化；
+            性能专项、审计修复、单站点原生活动重构；见 docs/decisions.md / docs/architecture.md
+测试结果：lint 0 error（1 既有 warning）；typecheck 通过；Vitest 79 passed；
+          build 通过；Playwright 17 passed；security scan 71 资源通过；courses:validate 3/3；
+          真实 Compose 部署 2026.10.22-11 成功；构建失败/健康失败自动回滚已验证
+失败 / 阻塞：无（本地）；托管云端、SMTP、TLS、第二台主机未验证
+下一个门禁：无（本地 Release）
 ```
 
 ## 11. 单站点原生活动重构（2026-10-22）
@@ -285,4 +286,45 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `pnpm courses:scan` 输出课程版本与源码摘要。
 - [x] Validator 指纹改为生成器对源码文件计算 SHA-256，旧指纹首次同步兼容升级。
 - [x] `build/dev/typecheck/courses:validate/courses:sync` 自动 prepare。
-- [ ] 生产部署控制台/执行器未实现：当前环境没有反向代理、隔离构建器或 CI 凭据，不能真实完成“一键构建—切换流量—健康检查—回滚”；后台不做假成功。
+- [x] 生产部署执行器由单机 Docker Compose `updater` 实现（见第 14 节），不依赖反向代理、CI 凭据或镜像仓库。
+
+## 14. 单机 Docker Compose 一键部署（2026-10-22）
+
+**目标**：复制课程目录 → 管理员扫描 → 点击部署 → Docker Compose 构建并替换 web → 学生看到新内容；构建/健康检查失败不破坏旧版本，学生数据不丢失。
+
+- [x] `docker-compose.yml`：`web` + `updater`，只发布 3000；保持现有 Supabase。
+- [x] `Dockerfile`：`deps → tools → builder → runner`；standalone 运行；内容目录随镜像。
+- [x] `deploy/updater/updater.mjs`：固定操作、源码快照、日志持久化、健康检查、自动/手动回滚；不接受任意 Shell。
+- [x] `deployment_jobs` / `deployment_state` 迁移、service-role-only RLS、`claim`/日志/晋升/失败 RPC。
+- [x] `/admin/courses` 「扫描更新」：新课程/有更新/已是最新/版本冲突/扫描失败/已移除。
+- [x] `/admin/deployments`：当前系统版本、课程版本清单、待部署课程、扫描、查看更新、编译部署、构建日志、历史、上一版本回滚。
+- [x] 版本号 `YYYY.MM.DD-NN`、课程版本、源码/结构摘要、镜像 ID/标签；不依赖 Git Commit。
+- [x] 课程快照/扫描/预检共享逻辑；版本未递增检测；结构变化 + 已有学习记录阻止部署。
+- [x] 插件修复：Validator ID 重复、符号链接越界、复制即安装测试。
+- [x] Docker Compose 首次启动与旧地址 10.66.66.2:3000 真实验证。
+- [x] 复制新课程 → 扫描 → 部署 → web 容器实际更新 → 学生看到新课程。
+- [x] 构建失败不替换旧容器；健康检查失败自动恢复上一镜像；手动回滚。
+- [x] 学生学习记录/积分在部署与回滚后保持。
+- [x] lint / typecheck / test / build / E2E / security:scan / courses:validate 全量复跑。
+
+### 14.1 真实验收记录（2026-10-22，本机 Docker）
+
+| 验收项 | 实际结果 |
+| --- | --- |
+| Docker Compose 启动 | `learnos-web` healthy，`learnos-updater` running；只发布 `0.0.0.0:3000->3000/tcp`，updater 无端口 |
+| 原有站点 | `http://10.66.66.2:3000/login` → 200；管理员可登录并访问原页面 |
+| 复制新课程 | 复制幂等课程为 `content/courses/http-retry-basics`，修改 slug/概念/活动/validator ID；`pnpm courses:validate` 3/3 |
+| 扫描新课程 | `/admin/courses` 与 `/admin/deployments` 显示「新课程」；部署后显示「有更新 1.1.0」与文件变更 |
+| 真实部署 | 版本 `2026.10.22-04`、`05`、`07`、`08`、`09`、`10`、`11` 成功：Next.js 实际构建、`docker compose up` 替换 web、健康检查通过 |
+| 地址不变 | 部署后 `http://10.66.66.2:3000` 仍为 200 |
+| 学生看到新课程 | 学生 `/api/courses` 与 `/courses` 页面出现「HTTP 重试与幂等：一次请求只生效一次」 |
+| 管理员看到新版本 | 当前 `2026.10.22-11`，上一版本 `2026.10.22-10`；课程版本 HTTP `1.1.0`、另外两门 `1.0.0`，镜像摘要与历史记录准确 |
+| 构建失败不替换旧容器 | `2026.10.22-02` 在 `pnpm build` 失败、`03` 在快照阶段失败；旧容器继续 healthy，`learnos-web:current` 保持旧镜像 |
+| 健康检查失败自动回滚 | `2026.10.22-06` 注入 `/api/health` 500，任务标记 `rolled_back`；updater 自动恢复 `04` 镜像，健康检查恢复 200 |
+| 手动回滚 | `2026.10.22-05` 后手动回滚到 `04`，任务 `succeeded`，健康版本变为 `04` |
+| 学生数据 | 两名学生部署前后各保留 10 积分、笔记内容；课程/章节进度与 enrollment 未丢失 |
+| 静态验证 | `pnpm lint` 0 error（1 个既有 warning）、`pnpm typecheck` 通过、`pnpm test` 79 passed、`pnpm build` 通过 |
+| E2E | `pnpm test:e2e` 17 passed（含部署控制台扫描与权限隔离；回滚结构兼容性另有 4 项单元测试） |
+| 安全/课程 | `pnpm security:scan` 71 个资源无泄漏；`pnpm courses:validate` 3/3 |
+
+> 未验证：托管 Supabase/云端主机、真实 SMTP、TLS/反向代理、第二台干净主机重放、rootless Docker、长时间压测。上述项目未作为本次验收通过项。

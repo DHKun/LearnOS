@@ -169,3 +169,61 @@
 **理由**：管理员编辑不应被下一次同步静默回滚，同时保留内容团队显式覆盖的能力。
 
 **影响**：新增纯函数 `lib/content/sync-policy.ts` 与单元测试；结构冻结仍只针对章节、评分与活动/题库哈希。
+
+## D25 — 生产部署收敛为单机 Docker Compose
+
+**背景**：此前的生产方案引入 GitHub Actions、镜像仓库、蓝绿切换、第二台服务器与反向代理，超出本项目单机课程演示的实际需要，也让“复制课程目录 → 上线”变得依赖 Git 流程。
+
+**决定**：生产部署只使用一个 `docker-compose.yml` 管理 `web`（Next.js standalone）与 `updater`（本地更新执行器）；两者使用同一份本地 `content/courses` 源码。对外只发布 3000 端口，保持现有 Supabase 连接。部署版本使用 `YYYY.MM.DD-NN`，记录镜像 ID/标签与课程版本快照，不依赖 Git Commit、GitHub API、镜像仓库或第二条服务器。
+
+**理由**：单机管理员场景下，最少组件即可完成真实构建、容器替换、健康检查和回滚；课程目录是唯一内容真相源，扫描与部署都能直接读取本地文件。
+
+**影响**：`web` 使用 Docker 命名卷外的镜像代码，不再挂载源码；`updater` 需要宿主机 Docker Socket 与项目目录挂载。允许部署期间短暂服务中断，不实现零停机。
+
+## D26 — updater 只执行写死的固定操作，任务持久化在 Supabase
+
+**决定**：`deploy/updater/updater.mjs` 只从 `deployment_jobs` 领取任务，执行固定序列：制作源码快照 → 构建 tools 镜像（`courses:prepare` / `courses:validate`）→ `docker compose build web` → 保存旧镜像引用 → `courses:preflight` → `courses:sync` → `docker compose up -d --no-deps web` → 健康检查 → `promote_deployment`。不接受任何来自 Web UI 的命令或参数；版本号格式在数据库约束与代码中双重校验。
+
+任务、阶段、日志、课程快照、镜像引用都写入 `deployment_jobs` / `deployment_state`（service role only，RLS 无浏览器策略）。Web 容器重启不影响 updater；updater 重启时把中断的活动任务标记为失败，避免永久卡单。
+
+**理由**：满足“Web 重启不丢结果”和“构建失败不替换旧容器”，同时用最小持久化替代日志服务/任务队列。
+
+**影响**：updater 容器拥有宿主级 Docker 权限；这是单机管理员自用工具的明确风险取舍，README 已注明不要暴露到公网。旧镜像在构建前被标记为 `learnos-web:rollback-<jobId>`，`current` 标签始终指向可运行镜像；构建/校验/兼容性失败时恢复旧标签。
+
+## D27 — 扫描使用源码摘要 + 结构摘要，部署使用固定快照
+
+**决定**：`lib/deployments/course-snapshot.ts` 对每门课程计算：
+- `sourceDigest`：目录内全部文件（含 MDX/组件/题库/validator）的路径与 SHA-256；
+- `structuralDigest`：章节顺序/类型/必修/完成策略、quiz 内容哈希/及格线/finalExam、activityId/validatorId/validator 源码指纹。
+
+扫描与最近一次成功部署的课程快照比较，输出新课程/有更新/已是最新/版本冲突/扫描失败/已移除。版本号未变但 `sourceDigest` 变化时明确警告；结构变化且该课程已有学习记录时直接判为冲突并阻止部署。真正部署时 updater 先把源码复制为固定快照，后续 prepare/validate/build/sync 都基于该快照，避免构建过程中课程文件被修改。
+
+**理由**：不依赖 Git 也能判断“内容是否变化”；区分文案/UI 变化与结构/评分变化，延续既有课程冻结策略；快照保证构建与数据库同步看到同一份源码。
+
+**影响**：扫描只读，不触发构建；扫描失败或冲突会阻止部署。部署记录保存课程版本和摘要，作为下一次扫描与回滚兼容性检查的基线。
+
+## D28 — 扫描读取宿主机课程目录，运行时读取镜像内容
+
+**背景**：Web 运行在容器镜像中，镜像里的 `content/courses` 是上一次构建的固定副本。管理员在宿主机复制新课程目录后，如果扫描只读容器内文件，将永远看不到新目录。
+
+**决定**：Compose 把宿主机 `content/courses` 以只读方式挂载到 `web` 容器的 `/workspace/content/courses`，并设置 `LEARNOS_SCAN_CONTENT_ROOT` 只供扫描使用。学生运行时仍通过 `CONTENT_ROOT=/app/content/courses` 读取镜像内容，因此未部署的文案修改不会提前影响学生。
+
+**理由**：扫描与 updater 使用同一份宿主机源码；运行时内容仍由成功部署的镜像决定，避免“文件已改但没构建”的隐性不一致。
+
+**影响**：扫描能看到新复制目录；部署成功后新镜像包含该目录。若只改宿主机文件不部署，扫描显示「有更新」，学生仍看到旧版本。
+
+## D29 — 部署自动发布新课程，保留已有课程发布状态
+
+**决定**：`pnpm courses:sync` 默认仍把新课程设为 `draft`；updater 执行 `pnpm courses:sync --publish-new`，只对新创建的课程行设为 `published`，已有课程的 `status` 不被覆盖。
+
+**理由**：最终体验要求「复制目录 → 扫描 → 部署 → 学生看到新课程」，不应再要求一次手工发布；同时不能把管理员刻意归档/草稿的已有课程重新发布。
+
+**影响**：部署后新课程立即可见；管理员仍可在 `/admin/courses` 归档或调整。`--publish` 仍用于显式全部发布。
+
+## D30 — 扫描挂载使用宿主机绝对路径，updater 自动探测
+
+**背景**：updater 容器内的 Compose 以 `/workspace` 为项目目录，但 Docker 守护进程按宿主机路径解析 bind mount。直接写 `./content/courses` 会在宿主机创建空的 `/workspace/content/courses`，导致扫描看不到宿主机课程。
+
+**决定**：Compose 的 web 扫描挂载使用 `${LEARNOS_HOST_PROJECT_DIR:-.}/content/courses`。updater 启动时通过 `docker inspect` 读取自身 `/workspace` 挂载的 `Source`，把真实宿主机路径写入 `LEARNOS_HOST_PROJECT_DIR`，再执行所有 Compose 命令；宿主机手动 `docker compose up` 时默认 `.` 仍然正确。
+
+**影响**：扫描与 updater 看到同一份宿主机源码；无需在 `.env.local` 手动维护绝对路径。课程文件需对容器用户（uid 1001）可读，README 给出 `chmod -R a+rX content/courses`。

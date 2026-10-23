@@ -17,3 +17,7 @@ supabase/.branches/
 .pwlibs/
 
 .perf/
+
+# Local deployment snapshots and generated scan output
+.deployments/
+.course-scan.json

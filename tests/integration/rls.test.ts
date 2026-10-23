@@ -166,4 +166,29 @@ describe("PostgreSQL RLS：角色隔离与写保护", () => {
       }),
     ).rejects.toThrow(/permission denied/i);
   });
+
+  it("部署任务与日志只对 service role 开放", async () => {
+    await expect(
+      withRole(studentA.id, "authenticated", async (client) => {
+        await client.query("select id from public.deployment_jobs");
+      }),
+    ).rejects.toThrow(/permission denied/i);
+
+    await expect(
+      withRole(admin.id, "authenticated", async (client) => {
+        await client.query("select current_version from public.deployment_state");
+      }),
+    ).rejects.toThrow(/permission denied/i);
+
+    await expect(
+      withRole(studentA.id, "authenticated", async (client) => {
+        await client.query("select public.claim_deployment_job()");
+      }),
+    ).rejects.toThrow(/permission denied/i);
+
+    const db = serviceClient();
+    const { data, error } = await db.from("deployment_state").select("id").eq("id", true).single();
+    expect(error).toBeNull();
+    expect(data?.id).toBe(true);
+  });
 });

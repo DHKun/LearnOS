@@ -1,0 +1,92 @@
+name: learnos
+
+# The updater passes LEARNOS_BUILD_CONTEXT=<fixed snapshot> and the version
+# build args when it runs `docker compose build web`.
+x-web-build-args: &web-build-args
+  NEXT_PUBLIC_SUPABASE_URL: "${NEXT_PUBLIC_SUPABASE_URL:-}"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}"
+  NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+
+services:
+  web:
+    image: "learnos-web:${LEARNOS_IMAGE_TAG:-current}"
+    container_name: learnos-web
+    build:
+      context: "${LEARNOS_BUILD_CONTEXT:-.}"
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        <<: *web-build-args
+        LEARNOS_BUILD_VERSION: "${LEARNOS_BUILD_VERSION:-dev}"
+        LEARNOS_BUILD_TIME: "${LEARNOS_BUILD_TIME:-unknown}"
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      # Browser traffic keeps using NEXT_PUBLIC_SUPABASE_URL. Server-side
+      # clients use the host gateway because container loopback is local.
+      SUPABASE_INTERNAL_URL: "http://host.docker.internal:54321"
+      # Admin scan reads the host working copy; runtime content comes from the
+      # image, so undeployed edits never change what students see.
+      LEARNOS_SCAN_CONTENT_ROOT: "/workspace/content/courses"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # The updater detects the host project path from its own /workspace
+      # mount and passes LEARNOS_HOST_PROJECT_DIR to Compose. A manual
+      # `docker compose up` from the project root falls back to `.`.
+      - "${LEARNOS_HOST_PROJECT_DIR:-.}/content/courses:/workspace/content/courses:ro"
+    ports:
+      - "${LEARNOS_BIND_ADDRESS:-0.0.0.0}:3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+
+  updater:
+    image: "learnos-updater:latest"
+    container_name: learnos-updater
+    build:
+      context: ./deploy/updater
+      dockerfile: Dockerfile
+    env_file:
+      - .env.local
+    environment:
+      LEARNOS_PROJECT_DIR: /workspace
+      LEARNOS_COMPOSE_FILE: /workspace/docker-compose.yml
+      LEARNOS_ENV_FILE: /workspace/.env.local
+      LEARNOS_DEPLOYMENTS_DIR: /workspace/.deployments
+      LEARNOS_SNAPSHOT_DIR: /tmp/learnos-snapshots
+      LEARNOS_IMAGE_NAME: learnos-web
+      LEARNOS_IMAGE_TAG: current
+      LEARNOS_TOOLS_IMAGE: learnos-tools
+      LEARNOS_WEB_SERVICE: web
+      LEARNOS_WEB_CONTAINER: learnos-web
+      LEARNOS_HEALTH_URL: http://web:3000/api/health
+      LEARNOS_SUPABASE_URL: http://host.docker.internal:54321
+      SUPABASE_INTERNAL_URL: http://host.docker.internal:54321
+      LEARNOS_POLL_MS: "2500"
+      LEARNOS_HEALTH_TIMEOUT_MS: "180000"
+      LEARNOS_BUILD_TIMEOUT_MS: "1800000"
+      LEARNOS_SYNC_TIMEOUT_MS: "300000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Single-host admin tool by design. The updater never accepts a shell
+      # command from the web UI; see deploy/updater/updater.mjs.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    restart: unless-stopped
+    depends_on:
+      - web

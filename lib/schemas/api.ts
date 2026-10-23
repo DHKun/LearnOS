@@ -162,3 +162,11 @@ export const courseStudentsQuerySchema = paginationSchema.extend({
 });
 
 export const enrollmentIdSchema = z.object({ enrollmentId: uuidSchema }).strict();
+
+export const deploymentActionSchema = z
+  .object({
+    action: z.enum(["deploy", "rollback"]),
+    /** Optional for an explicit rollback target; defaults to the previous release. */
+    targetJobId: uuidSchema.optional(),
+  })
+  .strict();

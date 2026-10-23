@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { loadAllCourses, readQuizFile, type LoadedCourse } from "@/lib/content/loader";
 import { getActivityDefinition } from "@/lib/activities/catalog";
-import { buildCourseUpdate } from "@/lib/content/sync-policy";
+import { buildCourseUpdate, initialCourseStatus } from "@/lib/content/sync-policy";
 import { getValidator, getValidatorFingerprint } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,7 +15,7 @@ export type SyncSummary = {
   enrollments: number;
 };
 
-type DbLesson = {
+export type DbLesson = {
   id: string;
   slug: string;
   position: number;
@@ -29,7 +29,7 @@ function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
+export function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
   if (loaded.manifest.lessons.length !== existing.length) return false;
   const sorted = [...existing].sort((a, b) => a.position - b.position);
   return loaded.manifest.lessons.every((lesson, index) => {
@@ -78,7 +78,7 @@ function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
  * - Refuses to change required structure once enrollments exist.
  */
 export async function syncCourses(
-  options: { publish?: boolean; refreshMetadata?: boolean } = {},
+  options: { publish?: boolean; publishNew?: boolean; refreshMetadata?: boolean } = {},
 ): Promise<SyncSummary[]> {
   const db = createAdminClient();
   const courses = loadAllCourses();
@@ -131,7 +131,7 @@ export async function syncCourses(
           slug: manifest.slug,
           title: manifest.title,
           description: manifest.description,
-          status: options.publish ? "published" : "draft",
+          status: initialCourseStatus(options),
           content_version: manifest.version,
         })
         .select("id")
@@ -160,6 +160,9 @@ export async function syncCourses(
         const activity = getActivityDefinition(lesson.activityId);
         if (!activity) throw new Error(`未注册的 activityId: ${lesson.activityId}`);
         const validator = getValidator(activity.validatorId);
+        if (!validator) {
+          throw new Error(`缺少服务端验证器: ${activity.validatorId}`);
+        }
         config = {
           activityId: lesson.activityId,
           validatorId: activity.validatorId,

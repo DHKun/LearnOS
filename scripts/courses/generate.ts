@@ -32,9 +32,15 @@ type LegacyManifest = {
   };
 };
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const coursesDir = path.join(root, "content/courses");
-const outDir = path.join(root, "lib/generated");
+const root = process.env.LEARNOS_PROJECT_ROOT
+  ? path.resolve(process.env.LEARNOS_PROJECT_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const coursesDir = process.env.LEARNOS_COURSES_DIR
+  ? path.resolve(process.env.LEARNOS_COURSES_DIR)
+  : path.join(root, "content/courses");
+const outDir = process.env.LEARNOS_GENERATED_DIR
+  ? path.resolve(process.env.LEARNOS_GENERATED_DIR)
+  : path.join(root, "lib/generated");
 const rel = (file: string) =>
   path
     .relative(outDir, path.isAbsolute(file) ? file : path.join(root, file))
@@ -46,11 +52,17 @@ function fail(message: string): never {
 
 function inside(courseDir: string, relative: string) {
   const resolved = path.resolve(courseDir, relative);
-  if (!resolved.startsWith(courseDir + path.sep)) {
-    fail(`路径越出课程目录: ${relative}`);
+  const realCourse = fs.realpathSync(courseDir);
+  let realResolved: string;
+  try {
+    realResolved = fs.realpathSync(resolved);
+  } catch {
+    fail(`文件不存在: ${relative}`);
   }
-  if (!fs.existsSync(resolved)) fail(`文件不存在: ${relative}`);
-  return resolved;
+  if (!realResolved.startsWith(realCourse + path.sep)) {
+    fail(`路径越出课程目录（含符号链接）: ${relative}`);
+  }
+  return realResolved;
 }
 
 function hasExport(file: string, exportName: string) {
@@ -99,6 +111,10 @@ function main() {
       if (activities.some((item) => item.globalId === globalId)) {
         fail(`活动 ID 重复: ${globalId}`);
       }
+      const validatorId = activity.validator.id ?? globalId;
+      if (activities.some((item) => item.validatorId === validatorId)) {
+        fail(`Validator ID 重复: ${validatorId}`);
+      }
       const componentFile = inside(courseDir, activity.component);
       hasExport(componentFile, activity.export);
       const validatorFile = inside(courseDir, activity.validator.path);
@@ -108,7 +124,7 @@ function main() {
         globalId,
         file: componentFile,
         validatorFile,
-        validatorId: activity.validator.id ?? globalId,
+        validatorId,
         fingerprint: createHash("sha256")
           .update(fs.readFileSync(validatorFile))
           .digest("hex"),

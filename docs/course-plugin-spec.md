@@ -79,17 +79,25 @@ lib/generated/validator-registry.server.ts # 服务端 validator + 源码指纹
 
 生成器对 validator 源文件计算 SHA-256，作为 `validatorFingerprint`。旧课程首次同步会写入版本 2 指纹；此后 validator 内容变化会阻止已有学习记录的课程原地同步。不要再使用 `validator.toString()` 作为指纹（包装函数会改变字符串表现）。
 
-## 5. 课程扫描
+## 5. 课程扫描与快照
 
 ```bash
 pnpm courses:scan
 pnpm courses:scan --out   # 写入 .course-scan.json
+pnpm courses:snapshot     # 完整快照（文件摘要、章节、插件、validator 指纹）
+pnpm courses:snapshot --out .deployments/courses.json
+pnpm courses:preflight    # 只读检查结构是否与已有学习记录兼容
 ```
 
-输出每门课程的 slug、title、courseVersion、sourceDigest、文件数，用于部署候选比较；不访问数据库、不执行构建。
+- `sourceDigest`：课程目录内全部文件的路径 + SHA-256；检测文案/组件/题库/validator 的任何变化。
+- `structuralDigest`：章节结构、完成策略、quiz 哈希/及格线/finalExam、activityId/validatorId/validator 指纹；用于避开学习记录不兼容的原地更新。
+- `pnpm courses:scan` 不访问数据库、不执行构建、不依赖 Git；`/admin/deployments` 的管理员扫描使用同一套逻辑。
+- 版本号未变但源码变化 → 有更新并提示；结构变化且已有学习记录 → 版本冲突并阻止部署。
+- 部署时 `updater` 把项目复制为固定快照，后续 prepare/validate/build/sync 都基于该快照。
 
 ## 6. 构建集成
 
 - `pnpm dev` / `pnpm build` / `pnpm typecheck` 自动 prepare。
 - 新增课程只需新增目录与 `course.json`，不修改核心 Registry。
 - 删除课程后 prepare 会清除生成注册项；`courses:sync` 不会删除历史 DB 记录（需独立审核）。
+- `/admin/deployments` 的「编译并部署」会先执行 `courses:prepare` / `courses:validate`，再构建镜像；失败不会替换运行中的 web 容器。

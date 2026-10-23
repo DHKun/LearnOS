@@ -6,7 +6,7 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 - 工程规范：[`AGENTS.md`](AGENTS.md)
 - 实施计划与验收看板：[`PLAN.md`](PLAN.md)
 - 架构与安全设计：[`docs/architecture.md`](docs/architecture.md)
-- 28 个 API 契约：[`docs/api.md`](docs/api.md)
+- 28 个 MVP 业务 API + 部署/健康检查接口：[`docs/api.md`](docs/api.md)
 - 课程制作与实验接入：[`docs/course-authoring.md`](docs/course-authoring.md)
 - 实现取舍日志：[`docs/decisions.md`](docs/decisions.md)
 - 课程插件规范：[`docs/course-plugin-spec.md`](docs/course-plugin-spec.md)
@@ -114,6 +114,8 @@ pnpm seed:demo           # 创建 2 名学生，并同步/发布两门示例课�
 
 ### 5. 启动应用
 
+开发模式：
+
 ```bash
 pnpm dev
 ```
@@ -141,21 +143,106 @@ NEXT_PUBLIC_APP_URL="http://10.66.66.2:3000"
 
 如果主机配置了 HTTP 代理，请把该 IP 加入 `NO_PROXY/no_proxy`，否则浏览器或测试工具可能经代理访问。
 
+## 单机 Docker Compose 部署（生产）
+
+正式部署只依赖一个 `docker-compose.yml`、一个 `Dockerfile` 和一个轻量 `updater` 容器。**不需要 GitHub API、GitHub Actions、Git Commit、Caddy/Nginx、镜像仓库、蓝绿部署或第二台服务器。**
+
+```text
+浏览器 ── http://10.66.66.2:3000 ──▶ web (Next.js standalone)
+                                      │
+                                      ├── Supabase（保持现有连接）
+                                      │
+          updater ── Supabase deployment_jobs（任务/日志）
+             │
+             └── Docker Socket：固定快照 → 校验 → compose build → sync → up → health
+```
+
+### 1. 准备环境
+
+- Docker Engine + Compose v2（单机）。
+- 现有 Supabase（本地 CLI 或托管均可），已执行迁移。
+- 宿主机上的项目目录（updater 挂载它，并在自己的容器内创建 `/tmp/learnos-snapshots` 固定快照；任务与日志写入 Supabase）。
+- 课程源码需对容器用户可读；如果宿主机 umask 较严，执行 `chmod -R a+rX content/courses`（Web 容器以非 root 用户读取只读挂载）。
+- `.env.local` 至少包含：
+  - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`（只服务端）
+  - `DATABASE_URL`
+  - `NEXT_PUBLIC_APP_URL`（例如 `http://10.66.66.2:3000`）
+  - 可选 `LEARNOS_BIND_ADDRESS`（默认 `0.0.0.0`；只对外发布 3000）
+
+### 2. 首次启动
+
+```bash
+docker compose --env-file .env.local up -d --build
+```
+
+- `web`：Next.js standalone 镜像，发布 `${LEARNOS_BIND_ADDRESS:-0.0.0.0}:3000`。它还把宿主机 `content/courses` 以只读方式挂到 `/workspace/content/courses`，仅用于管理员扫描；学生实际阅读的内容来自镜像，未部署的修改不会立即生效。
+- `updater`：只轮询 Supabase、执行固定操作，不监听端口；挂载 Docker Socket。
+- 容器内服务端 Supabase 使用 `http://host.docker.internal:54321`，浏览器仍使用 `NEXT_PUBLIC_SUPABASE_URL`。
+
+首次启动后先访问 `/admin/courses` 管理发布状态；部署本身不会删除课程或学习记录。
+
+### 3. 日常更新：复制目录 → 扫描 → 部署
+
+```bash
+cp -r content/courses/my-new-course content/courses/my-new-course-copy
+# 编辑 copy/course.json 的 slug/version 与内容
+```
+
+1. 打开 `/admin/courses`，点击「扫描更新」。扫描只读取本地 `content/courses/`，不触发构建。
+2. 确认「新课程 / 有更新 / 版本冲突 / 扫描失败」分类。版本号没变但源码变化会明确提示；已有学习记录的结构升级会阻止部署。
+3. 打开 `/admin/deployments`，查看待部署课程、当前课程版本和上一成功版本。
+4. 点击「编译并部署」。updater 依次执行：
+   - 固定源码快照（构建期间修改课程文件不会影响本次镜像）；
+   - `pnpm courses:prepare` / `pnpm courses:validate`；
+   - `docker compose build web`；
+   - 保存旧镜像可恢复引用；
+   - `pnpm courses:preflight` 兼容性检查；
+   - `pnpm courses:sync`；
+   - `docker compose up -d --no-deps web`；
+   - 健康检查（版本 + 镜像 + HTTP）；
+   - 记录成功版本与课程快照。
+5. 学生在原地址看到新课程/新内容；管理员在 `/admin/deployments` 看到准确的系统版本、课程版本、镜像摘要与日志。
+
+### 4. 失败、回滚与数据安全
+
+- **构建/校验失败**：不会替换正在运行的容器；`current` 镜像标签会恢复到旧镜像。
+- **启动/健康检查失败**：自动把上一镜像恢复为 `learnos-web:current` 并重启 web；任务标记为「已自动回滚」。
+- **手动回滚**：`/admin/deployments` → 「回滚到上一个版本」。updater 先检查目标版本的课程结构与当前数据库学习记录是否兼容；不兼容时拒绝，不会删除学生数据。
+- **保留策略**：web 镜像只保留当前与上一个成功版本；任务、日志、课程快照保存在 Supabase `deployment_jobs` / `deployment_state`。
+- **权限说明**：updater 拥有 Docker Socket 宿主级权限。这是单机管理员自用工具的明确取舍；它不接受任何用户提交的 Shell 命令，命令与参数都写死在 `deploy/updater/updater.mjs`。
+
+### 5. 常用命令
+
+```bash
+docker compose --env-file .env.local ps
+docker compose --env-file .env.local logs -f web updater
+docker compose --env-file .env.local down          # 停止，不删除数据库
+docker compose --env-file .env.local build web     # 手动构建（日常请用管理员页面）
+```
+
+> `.deployments/` 已加入 `.gitignore`。不要把 `.env.local`、服务端密钥或 Docker Socket 暴露到公网。生产环境仍建议在 3000 端口前加 TLS 反向代理，或只通过 VPN/内网访问。
+
 ## 课程内容工作流
 
 课程是仓库中的可信代码，新增课程只需新增插件目录与 `course.json`，无需修改核心 Registry：
 
 ```bash
 pnpm courses:prepare     # 扫描课程插件并生成 Registry（build/dev/typecheck 自动执行）
-pnpm courses:scan        # 输出课程版本/源码摘要，供部署候选比较
+pnpm courses:scan        # 输出课程版本/源码摘要，供部署候选比较（不访问 Git）
+pnpm courses:snapshot    # 输出完整固定快照（文件摘要、章节、Concept/Activity/Validator）
 pnpm courses:validate    # 校验 manifest、MDX/题库资源、最终测验、activity/validator 注册
+pnpm courses:preflight   # 只读检查新结构是否与已有学习记录兼容
 pnpm courses:sync        # 将元数据写入 courses/lessons，保留管理员发布状态
 pnpm courses:sync --publish  # 显式发布（种子/演示用途）
 ```
 
-- 新课程同步后默认是 `draft`，在 `/admin/courses` 发布。
+- 手动运行 `pnpm courses:sync` 时新课程默认是 `draft`，在 `/admin/courses` 发布。
+- 管理员「编译并部署」使用 `pnpm courses:sync --publish-new`：新课程自动发布，已有课程的发布状态保持不变，从而做到「复制 → 扫描 → 部署 → 学生可见」。
 - 已有 enrollment 的课程**不能**修改必修章节集合、顺序或类型；结构性升级使用新 slug。
 - 修改标题/简介/文案/题库（不改变结构）可原地同步。
+- 复制一个新的 `content/courses/<slug>` 目录后，`pnpm courses:prepare` 会自动注册插件；不需要修改核心 Registry。
+- Validator ID 在全局唯一；组件/验证器路径不允许通过符号链接逃出课程目录。
 
 详见 [`docs/course-authoring.md`](docs/course-authoring.md)。
 
@@ -183,29 +270,33 @@ pnpm exec playwright install chromium
 # 无 root 的 Linux 沙箱可参考“故障排查”
 ```
 
-E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、两门课程完整闭环、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
+E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、两门课程完整闭环、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
 
 ## 目录结构
 
 ```text
 app/
   (student)/            # /courses、/courses/[slug]、/learn/[courseId]、/me
-  (admin)/admin/        # /admin、/admin/students、/admin/students/[id]、/admin/courses、/admin/courses/[id]
-  api/                  # 28 个 REST 方法
+  (admin)/admin/        # /admin、/admin/students、/admin/students/[id]、/admin/courses、/admin/courses/[id]、/admin/deployments
+  api/                  # 业务 REST 方法 + /api/health + /api/admin/deployments/**
   login/
-components/             # 工作区、概念动画、原生互动组件、笔记、管理端与 UI
+components/             # 工作区、概念动画、原生互动组件、笔记、管理端、部署控制台与 UI
 lib/
   api/                  # 统一响应、错误码、Origin/CSRF、鉴权守卫
   auth/                 # 服务端会话、角色守卫、登录 Server Action
   content/              # manifest schema、内容加载、验证器注册表
+  deployments/          # 课程快照、扫描比较、部署类型
   learning/             # 同源 Learning SDK、React Context、状态保存 Hook
   activities/           # 互动模拟纯函数与 activityId 目录
-  services/             # 报名/进度/互动/测验/笔记/积分/报表
+  services/             # 报名/进度/互动/测验/笔记/积分/报表/部署
   supabase/             # browser/server/admin 客户端与中间件
-content/courses/        # 两门课程：course.json、MDX、题库、服务端验证器
-supabase/migrations/    # schema、RLS、事务函数
+content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器
+supabase/migrations/    # schema、RLS、事务函数、部署任务表
 tests/                  # unit、integration（RLS/事务）、e2e（Playwright）
-scripts/                # 课程同步/校验、种子、性能脚本、安全扫描
+scripts/                # 课程同步/校验/快照、种子、性能脚本、安全扫描
+deploy/updater/         # 最小更新执行器（Docker CLI + Node）
+docker-compose.yml      # web + updater
+Dockerfile              # web 的 deps/tools/builder/runner 多阶段镜像
 docs/                   # 规格、架构、API、课程制作、决策、截图
 ```
 
@@ -223,12 +314,13 @@ docs/                   # 规格、架构、API、课程制作、决策、截图
 ## 部署要点
 
 1. 使用托管 Supabase 或自建 Postgres/Auth，执行 `supabase db push` / 迁移。
-2. 配置服务端环境变量（`SUPABASE_SERVICE_ROLE_KEY` 仅服务端），构建 `pnpm build`，用 `pnpm start` 运行。
+2. 单机生产使用 `docker compose --env-file .env.local up -d --build`；日常课程更新走管理员 `/admin/deployments`。
 3. 用 `ADMIN_EMAIL` / `ADMIN_PASSWORD` 运行 `pnpm seed:admin`（或等价受控脚本）创建管理员；生产环境立即改密。
 4. 配置 SMTP 以启用密码重置邮件（本地用 Mailpit 查看）。
-5. 反向代理需保留 Cookie 安全属性；只需一个 Next.js 域名。
+5. 如使用反向代理，保留 Cookie 安全属性；本 Compose 只发布 3000 端口，updater 不监听端口。
+6. 不需要 Git Commit、GitHub Actions、镜像仓库或蓝绿部署；部署版本由 `YYYY.MM.DD-NN` 与镜像摘要记录。
 
-> 本仓库的验证均在**本地 Supabase + Docker** 上完成；未执行云端托管部署，也未配置真实 SMTP。
+> 本仓库的验证在**本地 Supabase + 单机 Docker Compose** 上完成；未执行云端托管、真实 SMTP 或第二台服务器重放。
 
 ## 故障排查
 
@@ -240,6 +332,12 @@ docs/                   # 规格、架构、API、课程制作、决策、截图
 - **E2E 浏览器启动失败（缺少 libnspr4 / 字体）**：优先 `pnpm exec playwright install --with-deps chromium`（需 root）。无 root 环境可把所需 `.deb` 解包到仓库内 `.pwlibs/`（已 gitignore），并放置 `fonts.conf`；`playwright.config.ts` 会自动注入 `LD_LIBRARY_PATH` / `FONTCONFIG_FILE`。
 - **开发服务器卡在 Starting**：本项目使用 `next dev --turbopack`（在 Node 26 + webpack dev 下曾出现挂起）。不要在 `pnpm dev` 运行时执行 `pnpm build`，否则需删除 `.next` 后重启。
 - **`pnpm test` 报无法连接数据库**：先 `pnpm db:start`，确认 `DATABASE_URL` 指向 54322。
+- **Docker 部署后登录失败**：确认 `SUPABASE_INTERNAL_URL` 在容器内可访问（默认 `http://host.docker.internal:54321`），且 Linux 上的 Compose 已配置 `extra_hosts: host.docker.internal:host-gateway`。
+- **updater 一直不领取任务**：`docker compose logs -f updater`；确认 Docker Socket 已挂载、`deployment_jobs` 迁移已应用、`SUPABASE_SERVICE_ROLE_KEY` 在容器内可用。
+- **健康检查失败并自动回滚**：查看 `/admin/deployments` 构建日志与 `docker compose logs web`；检查 `/api/health` 返回的 `LEARNOS_BUILD_VERSION` 是否为新版本。
+- **回滚被拒绝**：说明目标版本的课程结构与当前数据库学习记录不兼容。不要删除数据强行回滚；使用新 slug 发布结构升级。
+- **端口 3000 被占用**：先停止旧的 `pnpm start`/`next start` 进程，再 `docker compose up -d`。
+- **构建日志出现 `Docker Compose requires buildx plugin`**：updater 镜像未安装 buildx 时 Compose 会回退到经典构建器，构建、容器替换与回滚仍然正常；该警告不影响结果。
 - **课程同步报“拒绝改变必修结构”**：该课程已有学习记录。改文案可直接同步；结构性调整请使用新 slug。
 
 ## 已知限制（MVP 范围）

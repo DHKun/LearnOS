@@ -1,5 +1,7 @@
 import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { supabaseServerUrl } from "@/lib/supabase/config";
+
 /**
  * Server-only Supabase client with the secret (service role) key. It bypasses
  * RLS, so every caller MUST first authorise the acting user and resource.
@@ -13,7 +15,7 @@ export function createAdminClient() {
 
   if (cachedClient) return cachedClient;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = supabaseServerUrl();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key) {

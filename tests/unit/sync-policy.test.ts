@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildCourseUpdate } from "@/lib/content/sync-policy";
+import { buildCourseUpdate, initialCourseStatus } from "@/lib/content/sync-policy";
 
 const manifest = { version: "1.2.0", title: "仓库标题", description: "仓库简介" };
 
@@ -22,5 +22,11 @@ describe("course metadata sync policy", () => {
       content_version: "1.2.0",
       status: "published",
     });
+  });
+
+  it("手动同步新课程默认草稿，部署同步自动发布新课程", () => {
+    expect(initialCourseStatus({})).toBe("draft");
+    expect(initialCourseStatus({ publish: true })).toBe("published");
+    expect(initialCourseStatus({ publishNew: true })).toBe("published");
   });
 });

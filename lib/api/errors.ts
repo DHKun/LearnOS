@@ -26,6 +26,11 @@ export type ApiErrorCode =
   | "COMPLETION_NOT_ALLOWED"
   | "SUBMISSION_NOT_ALLOWED"
   | "NOT_A_QUIZ"
+  | "DEPLOYMENT_IN_PROGRESS"
+  | "DEPLOYMENT_CONFLICT"
+  | "DEPLOYMENT_NOT_AVAILABLE"
+  | "DEPLOYMENT_JOB_NOT_FOUND"
+  | "ROLLBACK_UNSAFE"
   | "INTERNAL_ERROR";
 
 const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
@@ -56,6 +61,11 @@ const STATUS_BY_CODE: Record<ApiErrorCode, number> = {
   COMPLETION_NOT_ALLOWED: 400,
   SUBMISSION_NOT_ALLOWED: 400,
   NOT_A_QUIZ: 400,
+  DEPLOYMENT_IN_PROGRESS: 409,
+  DEPLOYMENT_CONFLICT: 409,
+  DEPLOYMENT_NOT_AVAILABLE: 409,
+  DEPLOYMENT_JOB_NOT_FOUND: 404,
+  ROLLBACK_UNSAFE: 409,
   INTERNAL_ERROR: 500,
 };
 
@@ -78,6 +88,11 @@ const DEFAULT_MESSAGES: Partial<Record<ApiErrorCode, string>> = {
   SUBMISSION_NOT_ALLOWED: "该章节不接受实验提交",
   NOT_A_QUIZ: "该章节不是测验",
   VALIDATION_ERROR: "请求参数不合法",
+  DEPLOYMENT_IN_PROGRESS: "已有部署任务正在进行，请等待完成",
+  DEPLOYMENT_CONFLICT: "课程变更与已有学习记录冲突，已阻止部署",
+  DEPLOYMENT_NOT_AVAILABLE: "当前没有可回滚的上一个成功版本",
+  DEPLOYMENT_JOB_NOT_FOUND: "部署任务不存在",
+  ROLLBACK_UNSAFE: "回滚会破坏现有课程结构或学习记录，已拒绝",
 };
 
 export class ApiError extends Error {

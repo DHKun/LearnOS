@@ -12,7 +12,13 @@ import { getActivityDefinition } from "@/lib/activities/catalog";
 import { isConceptId } from "@/lib/education/concepts";
 import { getValidator } from "@/lib/content/validators.server";
 
-export const CONTENT_ROOT = path.join(process.cwd(), "content", "courses");
+/**
+ * Course source root. `LEARNOS_CONTENT_ROOT` lets tooling (deployment
+ * snapshots and tests) point at a fixed copy without touching the live tree.
+ */
+export const CONTENT_ROOT = process.env.LEARNOS_CONTENT_ROOT
+  ? path.resolve(process.env.LEARNOS_CONTENT_ROOT)
+  : path.join(process.cwd(), "content", "courses");
 
 
 export function courseDir(slug: string): string {

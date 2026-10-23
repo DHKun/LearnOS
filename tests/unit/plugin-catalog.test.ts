@@ -6,14 +6,20 @@ import { describe, expect, it } from "vitest";
 import { ACTIVITY_IDS, CONCEPT_IDS } from "@/lib/generated/course-catalog";
 
 describe("课程插件自动注册", () => {
-  it("生成目录包含两门旧课程的全部概念与活动", () => {
+  it("生成目录包含所有已安装课程的概念与活动", () => {
     expect([...CONCEPT_IDS].sort()).toEqual([
+      "http-retry-basics/deduplication",
+      "http-retry-basics/lost-response",
       "idempotency.deduplication",
       "idempotency.lost-response",
       "sql.data-vs-instruction",
       "sql.parameter-binding",
     ]);
-    expect([...ACTIVITY_IDS].sort()).toEqual(["idempotency-lab", "sql-injection-lab"]);
+    expect([...ACTIVITY_IDS].sort()).toEqual([
+      "http-retry-basics/retry-lab",
+      "idempotency-lab",
+      "sql-injection-lab",
+    ]);
   });
 
   it("生成物不含手工 Registry 路径，且组件文件位于课程目录内", () => {
@@ -23,6 +29,7 @@ describe("课程插件自动注册", () => {
     );
     expect(generated).toContain("content/courses/sql-injection-basics/");
     expect(generated).toContain("content/courses/idempotent-retries/");
+    expect(generated).toContain("content/courses/http-retry-basics/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

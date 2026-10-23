@@ -1,2 +1,4 @@
 allowBuilds:
   unrs-resolver: true
+  # tsx depends on esbuild; pnpm 12 refuses installs with ignored build scripts.
+  esbuild: true
