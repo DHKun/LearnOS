@@ -110,3 +110,25 @@ pnpm oidc:setup --check
   `curl -X DELETE "$SUPABASE_URL/auth/v1/admin/custom-providers/custom:floatctf" -H "Authorization: Bearer $SERVICE_ROLE_KEY" -H "apikey: $SERVICE_ROLE_KEY"`
 - 将 `FLOATCTF_OIDC_ENABLED=false`，登录页回到邮箱密码。
 - 保留 migration 与 profiles 不变；不影响已有用户 ID 与学习数据。
+
+## 验证证据（2026-10-23）
+
+| 检查项 | 命令 | 结果 |
+| --- | --- | --- |
+| Lint | `pnpm lint` | 0 error（1 条既有告警，notes-panel） |
+| 类型 | `pnpm typecheck` | 通过 |
+| 单元/集成 | `pnpm test` | 20 文件 / 124 测试通过（含 `tests/unit/oidc.test.ts`） |
+| RLS | `pnpm test:rls` | 9 测试通过（真实 PostgreSQL） |
+| 构建 | `pnpm build` | 通过 |
+| E2E | `pnpm test:e2e` | 20/20 通过 |
+| 管理员密码登录 | 真实 Supabase `token?grant_type=password` | HTTP 200 |
+| 公开邮箱注册 | `POST /auth/v1/signup` | HTTP 403「LearnOS 账号由管理员发放，或使用 FloatCTF 登录」 |
+| 管理员建号 | `POST /auth/v1/admin/users` | HTTP 200，profile 自动创建且 role=student |
+| 绑定页 | 真实浏览器访问 `/account/connections` | 渲染账号信息与绑定按钮 |
+| FloatCTF 协议 | Discovery/JWKS/PKCE/Token/UserInfo | 全部通过（见上文实测） |
+| 真实 SSO 浏览器登录 | Chromium 经 Supabase 至 FloatCTF | **失败**：CSP `form-action` 拦截 Supabase → LearnOS 最终跳转 |
+
+## 未完成项
+
+- 真实 SSO 的首次登录、重复登录、已有账号绑定、停用账号、失败回跳、退出重登：因阻塞 2 未能在浏览器中完成。
+- 生产部署：未部署。`FLOATCTF_OIDC_ENABLED=false`，线上行为与改动前一致。
