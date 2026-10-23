@@ -28,7 +28,14 @@ function redirect(request: Request, path: string): NextResponse {
     request.headers.get("x-forwarded-proto") ??
     (process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://") ? "https" : "http");
   const base = host ? `${proto}://${host}` : request.url;
-  return NextResponse.redirect(new URL(path, base));
+  const target = new URL(path, base);
+  // `new URL("//evil.example", base)` resolves to another origin, so pin the
+  // result back to the request origin before handing it to the browser.
+  const origin = new URL(base);
+  if (target.origin !== origin.origin) {
+    return NextResponse.redirect(new URL("/login?reason=oauth_failed", base));
+  }
+  return NextResponse.redirect(target);
 }
 
 /**
