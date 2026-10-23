@@ -2,7 +2,7 @@
   "slug": "idempotent-retries",
   "title": "重试与幂等：别让一次点击扣两次款",
   "description": "网络超时不代表请求没到。理解至少一次投递、超时歧义与幂等键，设计一个重试也不会重复扣款的支付流程。",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "lessons": [
     {
       "slug": "why-retries-duplicate",

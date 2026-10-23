@@ -3,7 +3,7 @@
   "slug": "http-from-zero",
   "title": "HTTP 协议入门：从一次请求开始",
   "description": "从浏览器地址栏出发，理解 URL、请求/响应、方法、状态码、Header 与 Cookie。章节内容按教学需要自由混合文字、动画、JS 模拟实验和章节知识检查。",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "plugins": {
     "concepts": [
       {

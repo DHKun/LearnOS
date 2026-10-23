@@ -2,7 +2,7 @@
   "slug": "http-retry-basics",
   "title": "HTTP 重试与幂等：一次请求只生效一次",
   "description": "从超时歧义出发，练习稳定幂等键、服务端去重与可控重试预算，避免重复扣款。",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "lessons": [
     {
       "slug": "why-retries-duplicate",

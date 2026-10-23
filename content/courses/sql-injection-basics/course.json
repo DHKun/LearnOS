@@ -2,7 +2,7 @@
   "slug": "sql-injection-basics",
   "title": "SQL 注入：从字符串拼接到参数化查询",
   "description": "从一个登录框出发，理解注入的成因、为什么转义总是慢一步，以及参数化查询与最小权限如何真正阻断它。",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "lessons": [
     {
       "slug": "where-injection-comes-from",
