@@ -25,9 +25,11 @@ export default async function LoginPage({
       ? "FloatCTF 登录未完成，请重试或使用邮箱密码登录。"
       : params.reason === "signup_closed"
         ? "FloatCTF 新用户准入暂未开放，请联系管理员创建账号。"
-        : params.reason === "oauth_denied"
-          ? "你已取消 FloatCTF 授权。"
-          : null;
+        : params.reason === "link_failed"
+          ? "FloatCTF 绑定未完成：请先登录 LearnOS 账号，再在「账号与登录方式」中重试。"
+          : params.reason === "oauth_denied"
+            ? "你已取消 FloatCTF 授权。"
+            : null;
   const showFloatctf = isFloatctfLoginEnabled();
 
   return (

@@ -96,6 +96,32 @@ pnpm oidc:verify
 
 2026-10-23 在本地的实测输出：`4/7 项通过`，未通过项为 issuer 约束、CSP 两跳、provider 配置不一致——与前文阻塞一致。
 
+## 验收测试
+
+`tests/e2e/floatctf-sso.spec.ts` 覆盖需求中的六类场景：
+
+| 场景 | 需要真实 IdP |
+| --- | --- |
+| 首次登录创建 student 账号 | 是 |
+| 重复登录复用同一用户与学习记录 | 是 |
+| 已有账号手动绑定后保留原用户 ID | 是 |
+| 停用账号无法进入受保护页面 | 是 |
+| 退出后重新登录进入同一账号 | 是 |
+| IdP 账号不被按邮箱自动合并 | 是 |
+| 授权失败 / 缺少 code / 绑定失败 / 非法 next 回跳 | 否（始终运行） |
+
+需要真实 IdP 的用例默认 `skipped`，启用条件：
+
+```bash
+E2E_FLOATCTF_SSO=1 \
+E2E_FLOATCTF_USERNAME=<IdP 测试账号> \
+E2E_FLOATCTF_PASSWORD=<密码> \
+FLOATCTF_OIDC_ENABLED=true \
+pnpm test:e2e
+```
+
+失败回跳的 4 个用例始终运行，防止 callback 错误路径回归。
+
 ## 配置步骤
 
 ```bash
