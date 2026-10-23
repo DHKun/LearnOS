@@ -571,8 +571,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `pnpm oidc:setup`：Discovery 校验 + 幂等 provider 配置。
 - [x] 真实 FloatCTF 的 Discovery/JWKS/PKCE/Token/UserInfo/`email_verified=false` 测试。
 - [x] 真实 Chromium 复现 GoTrue custom OIDC 与 FloatCTF CSP 的两项兼容性障碍。
+- [x] 真实 Supabase + 真实 FloatCTF 上跑通完整 SSO（11/11 用例），修复 Cookie 可读性与 client_secret_post 两项运行时问题。
 
-### 21.2 阻塞
+### 21.2 阻塞（生产启用前）
 
 - GoTrue v2.197 的 custom OIDC 在收到 ID Token 时不调用 UserInfo；FloatCTF 只在 UserInfo 提供 profile/email。
 - FloatCTF CSP 只允许 Supabase callback origin；Supabase 再跳转 LearnOS origin 被 Chrome `form-action` 拦截。

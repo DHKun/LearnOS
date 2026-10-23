@@ -2,7 +2,7 @@
 
 ## 状态
 
-**代码脚手架已就绪，生产入口默认关闭（`FLOATCTF_OIDC_ENABLED=false`）。**
+**代码与真实 SSO 已验证；生产入口默认关闭（`FLOATCTF_OIDC_ENABLED=false`），待 FloatCTF 修复 CSP 后开启。**
 
 在目标 Supabase Auth `gotrue:v2.197.0` 与 FloatCTF 当前 `main` 上完成真实协议测试后，发现两个必须由 FloatCTF 或 Supabase Auth 侧修复的兼容性障碍。本文保留复现步骤与安全实现，避免用伪造邮箱验证、直信 ID Token 访问 RLS 或自建 JWT 绕过。
 
@@ -32,6 +32,27 @@
 - `pnpm oidc:setup`：Discovery 校验 + 幂等创建/更新 `custom:floatctf`。
 - Supabase 配置：`enable_manual_linking=true`、邮箱确认开启（防止未验证邮箱自动合并）、OIDC 入口默认关闭。
 - profile 触发器支持从 `name/preferred_username/nickname/sub` 生成显示名。
+
+## 真实 SSO 验证结果（2026-10-23）
+
+在真实 Supabase（GoTrue v2.197）+ 真实 FloatCTF（本地实例，测试用 HTTPS 隧道）上，用真实 Chromium 跑通了完整链路：
+
+```text
+E2E_FLOATCTF_SSO=1 E2E_FLOATCTF_USERNAME=1000000 E2E_FLOATCTF_PASSWORD=testuser \
+FLOATCTF_OIDC_ENABLED=true E2E_BASE_URL=http://127.0.0.1:3010 pnpm test:e2e
+→ 31 passed（含 11 个 SSO 用例，无 skip）
+```
+
+覆盖：首次登录创建 student、重复登录复用同一用户、已有账号手动绑定保留原 ID、停用账号被拒、IdP 拒绝/缺少 code/绑定失败回跳、退出重登、不被按邮箱自动合并。
+
+> 该验证使用了**仅测试用、未提交**的 FloatCTF 补丁：在登录页 `form-action` 追加 LearnOS origin。生产仍必须先修复上游 CSP。
+
+## 两个已定位的上游集成约束
+
+1. **FloatCTF 客户端必须使用 `client_secret_post`。**
+   GoTrue 的 oauth2 客户端按库默认顺序尝试认证；FloatCTF 的 `parse_basic` 会对 Basic 凭据做表单解码（`+` → 空格），当 secret 的 Base64 含 `+` 时会损坏凭据并返回 `invalid_client`。改用 `client_secret_post` 后 token 交换正常。
+2. **Supabase 会话 Cookie 必须可被浏览器 JS 读取。**
+   `@supabase/ssr` 的浏览器客户端需要读取会话 Cookie 才能发起 `linkIdentity`。此前服务端设置 `httpOnly: true`，导致浏览器以匿名 key 调用，GoTrue 返回 `bad_jwt: missing sub claim`。已改为 `httpOnly: false`（与 Supabase SSR 约定一致）。
 
 ## 实测结果（2026-10-23）
 
@@ -173,12 +194,13 @@ pnpm oidc:setup --check
 | 管理员建号 | `POST /auth/v1/admin/users` | HTTP 200，profile 自动创建且 role=student |
 | 绑定页 | 真实浏览器访问 `/account/connections` | 渲染账号信息与绑定按钮 |
 | FloatCTF 协议 | Discovery/JWKS/PKCE/Token/UserInfo | 全部通过（见上文实测） |
-| 真实 SSO 浏览器登录 | Chromium 经 Supabase 至 FloatCTF | **失败**：CSP `form-action` 拦截 Supabase → LearnOS 最终跳转 |
+| 真实 SSO 浏览器登录 | Chromium 经 Supabase 至 FloatCTF | **通过**（测试补丁修复 CSP 后；11/11 SSO 用例） |
 
 ## 未完成项
 
-- 真实 SSO 的首次登录、重复登录、已有账号绑定、停用账号、失败回跳、退出重登：因阻塞 2 未能在浏览器中完成。
 - 生产部署：未部署。`FLOATCTF_OIDC_ENABLED=false`，线上行为与改动前一致。
+- 生产启用前必须：FloatCTF 修复 `form-action` 两跳（把 LearnOS origin 纳入），并将客户端 `token_endpoint_auth_method` 设为 `client_secret_post`。
+- 本地验证依赖临时 HTTPS 隧道与测试补丁，不可作为生产配置。
 
 ## 对照实验：仅修补 CSP 后的链路结果（2026-10-23）
 

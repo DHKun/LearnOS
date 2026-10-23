@@ -17,7 +17,9 @@ export async function createClient() {
       cookieOptions: {
         path: "/",
         sameSite: "lax",
-        httpOnly: true,
+        // The browser client (manual identity linking, sign-out) must read this
+        // cookie; @supabase/ssr only supports JS-readable auth cookies.
+        httpOnly: false,
         secure: (process.env.NEXT_PUBLIC_APP_URL ?? "").startsWith("https://"),
       },
       cookies: {

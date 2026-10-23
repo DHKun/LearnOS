@@ -400,3 +400,15 @@
 4. **不做邮箱自动合并**：OIDC scope 不请求 `email`，Supabase 侧开启邮箱确认，避免 `email_verified=false` 被当作已验证触发自动关联。
 
 **影响**：`docs/oidc-floatctf.md` 记录复现与验证方式；`tests/unit/callback-redirect.test.ts`、`tests/unit/oidc-adversarial.test.ts`、`tests/e2e/floatctf-sso.spec.ts` 覆盖上述边界。剩余风险仍是上游 CSP 两跳阻塞，不在此决定范围内。
+
+## D47 — SSO 实测暴露的两处运行时约束
+
+**背景**：在真实 Supabase + 真实 FloatCTF 上跑通 SSO 前，遇到两个只在真实浏览器/真实 token 交换中出现的问题。
+
+**决定**：
+
+1. **Supabase 会话 Cookie 改为浏览器可读（`httpOnly: false`）**。`@supabase/ssr` 的浏览器客户端需要读取会话 Cookie 才能执行 `linkIdentity` 等操作；设为 `httpOnly` 会让浏览器退化为匿名请求，GoTrue 返回 `bad_jwt: missing sub claim`。安全性由 CSP、SameSite=Lax 与服务端校验承担。
+2. **FloatCTF 客户端登记为 `client_secret_post`**。FloatCTF 的 Basic 凭据解析会对 Base64 做表单解码，secret 的 Base64 含 `+` 时被替换为空格，导致 `invalid_client`；`client_secret_post` 规避该上游缺陷。
+3. 验收脚本在真实 IdP 下运行 11 个用例（6 类主场景 + 5 个失败路径），全部通过；测试补丁仅用于本地 CSP 验证，不进入提交。
+
+**影响**：SSO 产品路径已验证可用；生产启用仍依赖 FloatCTF 修复 CSP 两跳。Cookie 可读性变化对所有登录方式生效，需在安全评审中记录。

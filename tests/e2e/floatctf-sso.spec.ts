@@ -30,6 +30,12 @@ const enabled =
 
 test.describe.configure({ mode: "serial" });
 
+// Free HTTPS tunnels used for local acceptance show an interstitial to browsers;
+// this header is only set when the live-IdP suite is explicitly enabled.
+test.use({
+  extraHTTPHeaders: enabled ? { "X-Pinggy-No-Screen": "1" } : {},
+});
+
 const skipReason =
   "需要真实 FloatCTF 环境：设置 E2E_FLOATCTF_SSO=1、E2E_FLOATCTF_USERNAME/PASSWORD 并启用 FLOATCTF_OIDC_ENABLED";
 
@@ -41,12 +47,18 @@ async function completeIdpPages(page: Page) {
       await page.locator('input[name="username"]').fill(process.env.E2E_FLOATCTF_USERNAME!);
       await page.locator('input[name="password"]').fill(process.env.E2E_FLOATCTF_PASSWORD!);
       await page.getByRole("button", { name: "登录", exact: true }).click();
-      await page.waitForLoadState("domcontentloaded");
+      // Wait for the IdP to actually leave the login page; a bare load-state
+      // wait can resolve before navigation and cause a duplicate submission.
+      await page
+        .waitForURL((url) => !url.pathname.includes("/oauth/login"), { timeout: 30_000 })
+        .catch(() => undefined);
       continue;
     }
     if (url.includes("/oauth/consent")) {
       await page.getByRole("button", { name: "允许" }).click();
-      await page.waitForLoadState("domcontentloaded");
+      await page
+        .waitForURL((url) => !url.pathname.includes("/oauth/consent"), { timeout: 30_000 })
+        .catch(() => undefined);
       continue;
     }
     return;
@@ -115,13 +127,30 @@ test.describe("FloatCTF 单一登录", () => {
   test("已有账号手动绑定后保留原用户 ID", async ({ page }) => {
     const student = await createTestStudent("sso-link");
     try {
+      // One IdP test account can only be linked to one Supabase user. Clear any
+      // earlier SSO user from the preceding scenarios so this test exercises the
+      // link path rather than the "already linked" rejection.
+      const db = serviceClient();
+      const { data: users } = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
+      for (const candidate of users?.users ?? []) {
+        const isFloatctf =
+          candidate.app_metadata?.provider === "custom:floatctf" ||
+          candidate.identities?.some((identity) => identity.provider === "custom:floatctf");
+        if (isFloatctf && candidate.id !== student.id) {
+          await db.auth.admin.deleteUser(candidate.id);
+        }
+      }
       await login(page, student.email, student.password);
       await page.goto("/account/connections");
       await page.getByRole("button", { name: "绑定 FloatCTF 账号" }).click();
-      await page.waitForURL(/\/auth\/callback/, { timeout: 60_000 });
+      // linkIdentity sends the browser to the IdP first; the Supabase callback
+      // only happens after the user approves there.
+      await page.waitForURL((url) => !url.pathname.startsWith("/account/connections"), {
+        timeout: 60_000,
+      });
       await completeIdpPages(page);
       await page.waitForURL(/\/account\/connections/, { timeout: 60_000 });
-      await expect(page.getByText("FloatCTF 已绑定")).toBeVisible();
+      await expect(page.getByText("FloatCTF 已绑定").first()).toBeVisible();
       expect(await currentUserId(page)).toBe(student.id);
     } finally {
       await deleteTestStudent(student.id);
