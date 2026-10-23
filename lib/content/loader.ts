@@ -28,6 +28,12 @@ export function courseDir(slug: string): string {
   return path.join(CONTENT_ROOT, slug);
 }
 
+// The deployed image has immutable course content; cache manifest parsing and
+// MDX reads per process. Development keeps reading from disk so edits show up.
+const IS_PRODUCTION = process.env.NODE_ENV === "production" && !process.env.LEARNOS_CONTENT_ROOT;
+const courseCache = new Map<string, LoadedCourse>();
+const sourceCache = new Map<string, string>();
+
 export function listCourseSlugs(): string[] {
   if (!fs.existsSync(CONTENT_ROOT)) return [];
   return fs
@@ -74,6 +80,10 @@ export type LoadedCourse = {
 
 /** Load and validate a single course from disk. Throws on invalid content. */
 export function loadCourse(slug: string): LoadedCourse {
+  if (IS_PRODUCTION) {
+    const cached = courseCache.get(slug);
+    if (cached) return cached;
+  }
   const dir = courseDir(slug);
   const manifestPath = path.join(dir, "course.json");
 
@@ -136,7 +146,9 @@ export function loadCourse(slug: string): LoadedCourse {
     }
   }
 
-  return { slug, dir, manifest: parsed.data, files, blockFiles };
+  const loaded = { slug, dir, manifest: parsed.data, files, blockFiles };
+  if (IS_PRODUCTION) courseCache.set(slug, loaded);
+  return loaded;
 }
 
 function validateArticleMdx(course: LoadedCourse, lesson: ArticleLessonManifest): void {
@@ -162,9 +174,16 @@ export async function loadAllCourses(): Promise<LoadedCourse[]> {
 }
 
 export function readArticleSource(course: LoadedCourse, lesson: LessonManifest): string {
+  const key = `${course.slug}::${lesson.slug}`;
+  if (IS_PRODUCTION) {
+    const cached = sourceCache.get(key);
+    if (cached !== undefined) return cached;
+  }
   const file = course.files[lesson.slug];
   if (!file) throw new Error(`课程 ${course.slug} 缺少章节 ${lesson.slug} 的资源`);
-  return fs.readFileSync(file, "utf8");
+  const source = fs.readFileSync(file, "utf8");
+  if (IS_PRODUCTION) sourceCache.set(key, source);
+  return source;
 }
 
 export function readBlockQuizFile(

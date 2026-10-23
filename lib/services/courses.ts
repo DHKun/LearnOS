@@ -24,6 +24,44 @@ const LESSON_COLUMNS =
 const ENROLLMENT_COLUMNS =
   "id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at";
 
+type CourseWithLessons = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  status: "draft" | "published" | "archived";
+  content_version: string;
+  lessons?: LessonRow[];
+};
+
+// Course structure + lesson metadata is static between deploys. Cache it for a
+// short TTL so every learn-page render does not re-fetch the same nested rows;
+// admin metadata edits show up within the TTL.
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const COURSE_CACHE_TTL_MS = 15_000;
+const courseCache = new Map<string, { at: number; row: CourseWithLessons }>();
+
+function readCachedCourse(key: string): CourseWithLessons | null {
+  if (!IS_PRODUCTION) return null;
+  const hit = courseCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > COURSE_CACHE_TTL_MS) {
+    courseCache.delete(key);
+    return null;
+  }
+  return hit.row;
+}
+
+function writeCachedCourse(key: string, row: CourseWithLessons): CourseWithLessons {
+  if (IS_PRODUCTION) courseCache.set(key, { at: Date.now(), row });
+  return row;
+}
+
+/** Admin metadata/status changes must not wait for the short TTL. */
+export function invalidateCourseCache(): void {
+  courseCache.clear();
+}
+
 function chapterBlocks(config: Record<string, unknown>): ChapterBlockSummary[] | undefined {
   if (!Array.isArray(config.blocks)) return undefined;
   const blocks: ChapterBlockSummary[] = [];
@@ -158,47 +196,26 @@ export async function listStudentCourses(studentId: string): Promise<CourseListI
   });
 }
 
-export async function getCourseDetailBySlug(
-  slug: string,
-  studentId: string,
-): Promise<CourseDetail | null> {
-  const db = createAdminClient();
-  const { data: course, error } = await db
-    .from("courses")
-    .select(
-      `id,slug,title,description,status,content_version,lessons(${LESSON_COLUMNS})`,
-    )
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!course) return null;
-
-  const enrollmentResult = await db
-    .from("enrollments")
-    .select(`${ENROLLMENT_COLUMNS},lesson_progress(lesson_id,status,completed_at)`)
-    .eq("course_id", course.id)
-    .eq("student_id", studentId)
-    .maybeSingle();
-
-  if (enrollmentResult.error) throw enrollmentResult.error;
-
-  const lessons = (
-    ((course as unknown as { lessons?: LessonRow[] }).lessons ?? []) as LessonRow[]
-  )
-    .slice()
-    .sort((a, b) => a.position - b.position);
-  const enrollmentRow = enrollmentResult.data as unknown as
+function assembleCourseDetail(
+  course: {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    status: "draft" | "published" | "archived";
+    content_version: string;
+    lessons?: LessonRow[];
+  },
+  enrollmentRow:
     | (EnrollmentRow & {
         lesson_progress?: { lesson_id: string; status: string; completed_at: string | null }[];
       })
-    | null;
-  const enrollment = enrollmentRow as EnrollmentRow | null;
-
-  if (course.status !== "published" && !enrollment) return null;
+    | null,
+): CourseDetail | null {
+  const lessons = (course.lessons ?? []).slice().sort((a, b) => a.position - b.position);
+  if (course.status !== "published" && !enrollmentRow) return null;
 
   const progressRows = enrollmentRow?.lesson_progress ?? [];
-
   const completed = new Set(
     progressRows.filter((row) => row.status === "completed").map((row) => row.lesson_id),
   );
@@ -217,9 +234,44 @@ export async function getCourseDetailBySlug(
       contentVersion: course.content_version,
     },
     lessons: lessons.map(toLessonSummary),
-    myEnrollment: enrollment ? mapEnrollment(enrollment, progress) : null,
+    myEnrollment: enrollmentRow ? mapEnrollment(enrollmentRow, progress) : null,
     myLessonProgress: toProgressMap(lessons, progressRows),
   };
+}
+
+export async function getCourseDetailBySlug(
+  slug: string,
+  studentId: string,
+): Promise<CourseDetail | null> {
+  const db = createAdminClient();
+  const cacheKey = `slug:${slug}`;
+  let course = readCachedCourse(cacheKey);
+  if (!course) {
+    const { data, error } = await db
+      .from("courses")
+      .select(
+        `id,slug,title,description,status,content_version,lessons(${LESSON_COLUMNS})`,
+      )
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    course = writeCachedCourse(cacheKey, data as unknown as CourseWithLessons);
+  }
+
+  const enrollmentResult = await db
+    .from("enrollments")
+    .select(`${ENROLLMENT_COLUMNS},lesson_progress(lesson_id,status,completed_at)`)
+    .eq("course_id", course.id)
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  if (enrollmentResult.error) throw enrollmentResult.error;
+
+  return assembleCourseDetail(
+    course as unknown as Parameters<typeof assembleCourseDetail>[0],
+    enrollmentResult.data as unknown as Parameters<typeof assembleCourseDetail>[1],
+  );
 }
 
 export async function getCurrentEnrollment(studentId: string): Promise<CurrentEnrollment | null> {
@@ -429,13 +481,37 @@ export async function getCourseDetailById(
   studentId: string,
 ): Promise<CourseDetail | null> {
   const db = createAdminClient();
-  const { data: course, error } = await db
-    .from("courses")
-    .select("slug")
-    .eq("id", courseId)
-    .maybeSingle();
+  const cacheKey = `id:${courseId}`;
+  const cached = readCachedCourse(cacheKey);
+  // Fetch the course and enrollment in parallel; the enrollment is keyed by
+  // course id, so this avoids the previous extra slug round trip.
+  const [courseResult, enrollmentResult] = await Promise.all([
+    cached
+      ? Promise.resolve({ data: cached, error: null })
+      : db
+          .from("courses")
+          .select(
+            `id,slug,title,description,status,content_version,lessons(${LESSON_COLUMNS})`,
+          )
+          .eq("id", courseId)
+          .maybeSingle(),
+    db
+      .from("enrollments")
+      .select(`${ENROLLMENT_COLUMNS},lesson_progress(lesson_id,status,completed_at)`)
+      .eq("course_id", courseId)
+      .eq("student_id", studentId)
+      .maybeSingle(),
+  ]);
 
-  if (error) throw error;
-  if (!course) return null;
-  return getCourseDetailBySlug(course.slug, studentId);
+  if (courseResult.error) throw courseResult.error;
+  if (enrollmentResult.error) throw enrollmentResult.error;
+  if (!courseResult.data) return null;
+  if (!cached) {
+    writeCachedCourse(cacheKey, courseResult.data as unknown as CourseWithLessons);
+  }
+
+  return assembleCourseDetail(
+    courseResult.data as unknown as Parameters<typeof assembleCourseDetail>[0],
+    enrollmentResult.data as unknown as Parameters<typeof assembleCourseDetail>[1],
+  );
 }

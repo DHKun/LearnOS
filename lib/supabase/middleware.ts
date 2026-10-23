@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { getVerifiedUserId } from "@/lib/supabase/claims";
 import { supabaseServerUrl } from "@/lib/supabase/config";
 
 const PROTECTED_PREFIXES = ["/courses", "/learn", "/me", "/admin"];
@@ -33,15 +34,13 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getVerifiedUserId(supabase);
 
   const { pathname } = request.nextUrl;
   const isProtected =
     pathname === "/" || PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-  if (!user && isProtected) {
+  if (!userId && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";

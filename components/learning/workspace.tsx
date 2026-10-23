@@ -78,11 +78,11 @@ export function LearningWorkspace({
   return (
     <div
       className={cn(
-        "space-y-4 pb-24 transition-[padding] duration-200 lg:pb-16",
+        "space-y-4 pb-24 lg:pb-16",
         notesOpen && "lg:pr-[23rem]",
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 py-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <Button
             type="button"
@@ -147,7 +147,7 @@ export function LearningWorkspace({
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-black/40"
             aria-label="关闭章节目录遮罩"
             onClick={() => setMobileNavOpen(false)}
           />
@@ -194,40 +194,37 @@ export function LearningWorkspace({
       {notesOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           aria-label="关闭笔记遮罩"
           onClick={closeNotes}
         />
       )}
 
-      <aside
-        id="chapter-notes-panel"
-        data-testid="notes-panel"
-        aria-label="章节笔记"
-        aria-hidden={!notesOpen}
-        className={cn(
-          "fixed inset-y-0 right-0 z-50 flex w-[min(94vw,26rem)] flex-col border-l border-border bg-card shadow-xl transition-transform duration-200 lg:top-14 lg:w-[23rem]",
-          notesOpen ? "translate-x-0" : "pointer-events-none invisible translate-x-full",
-        )}
-      >
-        <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">笔记</p>
-            <p className="text-[11px] text-muted-foreground">边读边记 · 自动保存 · 仅自己可见</p>
+      {notesOpen && (
+        <aside
+          id="chapter-notes-panel"
+          data-testid="notes-panel"
+          aria-label="章节笔记"
+          className="fixed inset-y-0 right-0 z-50 flex w-[min(94vw,26rem)] flex-col border-l border-border bg-card shadow-xl lg:top-14 lg:w-[23rem]"
+        >
+          <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+            <div>
+              <p className="text-sm font-medium">笔记</p>
+              <p className="text-[11px] text-muted-foreground">边读边记 · 自动保存 · 仅自己可见</p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={closeNotes}
+              aria-label="关闭笔记"
+            >
+              <X className="size-4" />
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={closeNotes}
-            aria-label="关闭笔记"
-            tabIndex={notesOpen ? 0 : -1}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">{notes}</div>
-      </aside>
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">{notes}</div>
+        </aside>
+      )}
     </div>
   );
 }

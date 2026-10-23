@@ -184,8 +184,10 @@ export function ChapterLearningProvider({
       if (result.chapterCompleted || result.lessonStatus === "completed") {
         setChapterCompleted(true);
       }
-      // Refresh server-rendered navigation/progress once the result is known.
-      if (result.passed || result.chapterCompleted || result.duplicate) router.refresh();
+      // A passing block only changes server-rendered navigation/progress when
+      // it actually completes the chapter. Skip the full page refresh when
+      // another required block is still pending.
+      if (result.chapterCompleted || result.lessonStatus === "completed") router.refresh();
       return result;
     },
     [blockResults, blocks, enrollmentId, lessonId, router],

@@ -21,10 +21,21 @@ export type PublicChapterBlock = ChapterBlockSummary & {
   }[];
 };
 
+const IS_PRODUCTION = process.env.NODE_ENV === "production" && !process.env.LEARNOS_CONTENT_ROOT;
+const blockCache = new Map<
+  string,
+  { blocks: PublicChapterBlock[]; completion: ChapterCompletionSummary }
+>();
+
 export function resolveChapterBlocks(
   course: LoadedCourse,
   lesson: ArticleLessonManifest,
 ): { blocks: PublicChapterBlock[]; completion: ChapterCompletionSummary } {
+  const cacheKey = `${course.slug}::${lesson.slug}`;
+  if (IS_PRODUCTION) {
+    const cached = blockCache.get(cacheKey);
+    if (cached) return cached;
+  }
   const blocks = chapterBlocks(lesson).map((block) => {
     if (block.kind === "simulation") {
       const activity = getActivityDefinition(block.activityId);
@@ -46,13 +57,15 @@ export function resolveChapterBlocks(
     };
   });
   const completion = resolveChapterCompletion(lesson);
-  return {
+  const resolved = {
     blocks,
     completion: {
       mode: completion.mode,
       requiredBlocks: completion.requiredBlocks,
     },
   };
+  if (IS_PRODUCTION) blockCache.set(cacheKey, resolved);
+  return resolved;
 }
 
 export type { ResolvedChapterCompletion };

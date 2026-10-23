@@ -1,3 +1,4 @@
+import { getVerifiedUserId } from "@/lib/supabase/claims";
 import { createClient } from "@/lib/supabase/server";
 import { ApiError } from "@/lib/api/errors";
 import type { Role, SessionProfile } from "@/lib/auth/session";
@@ -5,16 +6,13 @@ import type { Role, SessionProfile } from "@/lib/auth/session";
 /** Authenticate an API request from the Supabase cookie session. */
 export async function requireUser(): Promise<SessionProfile> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw new ApiError("UNAUTHENTICATED");
+  const userId = await getVerifiedUserId(supabase);
+  if (!userId) throw new ApiError("UNAUTHENTICATED");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("user_id,email,display_name,role,disabled_at")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (!profile) throw new ApiError("UNAUTHENTICATED");

@@ -1,5 +1,6 @@
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { invalidateCourseCache } from "@/lib/services/courses";
 import { supabaseServerUrl } from "@/lib/supabase/config";
 import { isOnline } from "@/lib/services/shared";
 import type {
@@ -468,6 +469,7 @@ export async function updateCourse(
 
   const { error: updateError } = await db.from("courses").update(update).eq("id", courseId);
   if (updateError) mapDatabaseError(updateError);
+  invalidateCourseCache();
 }
 
 export async function listCourseStudents(

@@ -49,6 +49,68 @@ export function KnowledgeCheck({ blockId }: { blockId: string }) {
   );
 }
 
+type PublicQuestion = NonNullable<PublicChapterBlock["questions"]>[number];
+
+const QuestionCard = React.memo(function QuestionCard({
+  question,
+  index,
+  namePrefix,
+  selected,
+  disabled,
+  onSelect,
+}: {
+  question: PublicQuestion;
+  index: number;
+  namePrefix: string;
+  selected: AnswerValue | undefined;
+  disabled: boolean;
+  onSelect: (questionId: string, optionId: string, multiple: boolean) => void;
+}) {
+  const multiple = question.type === "multiple";
+  return (
+    <div
+      data-question-id={question.id}
+      className="rounded-lg border border-border p-3"
+    >
+      <p className="text-sm font-medium">
+        <span className="mr-2 font-mono text-xs text-muted-foreground">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        {question.prompt}
+      </p>
+      <p className="mt-1 text-[11px] text-muted-foreground">{multiple ? "多选" : "单选"}</p>
+      <div className="mt-2 grid gap-2">
+        {question.options.map((option) => {
+          const checked = multiple
+            ? Array.isArray(selected) && selected.includes(option.id)
+            : selected === option.id;
+          return (
+            <label
+              key={option.id}
+              className={cn(
+                "flex cursor-pointer items-start gap-2 rounded-md border border-border px-3 py-2 text-sm",
+                checked && "border-primary/50 bg-primary/5",
+                disabled && "cursor-default opacity-80",
+              )}
+            >
+              <input
+                type={multiple ? "checkbox" : "radio"}
+                name={`${namePrefix}-${question.id}`}
+                value={option.id}
+                checked={checked}
+                disabled={disabled}
+                onChange={() => onSelect(question.id, option.id, multiple)}
+                className="mt-0.5 size-4 accent-[var(--primary)]"
+              />
+              <span>{option.label}</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
 function KnowledgeCheckInner({ block }: { block: PublicChapterBlock }) {
   const chapter = useChapterLearning();
   const { sdk, readOnly } = useLearning();
@@ -62,20 +124,23 @@ function KnowledgeCheckInner({ block }: { block: PublicChapterBlock }) {
   const passed = chapter.blockResults[block.id]?.passed === true;
   const questions = block.questions ?? [];
 
-  function select(questionId: string, optionId: string, multiple: boolean) {
-    if (readOnly) return;
-    setState((current) => {
-      const existing = current.answers[questionId];
-      const next = multiple
-        ? Array.isArray(existing)
-          ? existing.includes(optionId)
-            ? existing.filter((id) => id !== optionId)
-            : [...existing, optionId]
-          : [optionId]
-        : optionId;
-      return { ...current, answers: { ...current.answers, [questionId]: next } };
-    });
-  }
+  const select = React.useCallback(
+    (questionId: string, optionId: string, multiple: boolean) => {
+      if (readOnly) return;
+      setState((current) => {
+        const existing = current.answers[questionId];
+        const next = multiple
+          ? Array.isArray(existing)
+            ? existing.includes(optionId)
+              ? existing.filter((id) => id !== optionId)
+              : [...existing, optionId]
+            : [optionId]
+          : optionId;
+        return { ...current, answers: { ...current.answers, [questionId]: next } };
+      });
+    },
+    [readOnly, setState],
+  );
 
   async function submit() {
     if (pending || readOnly || passed) return;
@@ -119,55 +184,17 @@ function KnowledgeCheckInner({ block }: { block: PublicChapterBlock }) {
       </div>
 
       <div className="mt-4 space-y-4">
-        {questions.map((question, index) => {
-          const multiple = question.type === "multiple";
-          const selected = state.answers[question.id];
-          return (
-            <div
-              key={question.id}
-              data-question-id={question.id}
-              className="rounded-lg border border-border p-3"
-            >
-              <p className="text-sm font-medium">
-                <span className="mr-2 font-mono text-xs text-muted-foreground">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                {question.prompt}
-              </p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {multiple ? "多选" : "单选"}
-              </p>
-              <div className="mt-2 grid gap-2">
-                {question.options.map((option) => {
-                  const checked = multiple
-                    ? Array.isArray(selected) && selected.includes(option.id)
-                    : selected === option.id;
-                  return (
-                    <label
-                      key={option.id}
-                      className={cn(
-                        "flex cursor-pointer items-start gap-2 rounded-md border border-border px-3 py-2 text-sm",
-                        checked && "border-primary/50 bg-primary/5",
-                        (readOnly || passed) && "cursor-default opacity-80",
-                      )}
-                    >
-                      <input
-                        type={multiple ? "checkbox" : "radio"}
-                        name={`${block.id}-${question.id}`}
-                        value={option.id}
-                        checked={checked}
-                        disabled={readOnly || passed}
-                        onChange={() => select(question.id, option.id, multiple)}
-                        className="mt-0.5 size-4 accent-[var(--primary)]"
-                      />
-                      <span>{option.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+        {questions.map((question, index) => (
+          <QuestionCard
+            key={question.id}
+            question={question}
+            index={index}
+            namePrefix={block.id}
+            selected={state.answers[question.id]}
+            disabled={readOnly || passed}
+            onSelect={select}
+          />
+        ))}
       </div>
 
       {feedback && (

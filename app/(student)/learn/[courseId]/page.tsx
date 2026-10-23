@@ -46,6 +46,20 @@ export default async function LearnPage({
   const { lessons, course, myLessonProgress } = detail;
   if (lessons.length === 0) notFound();
 
+  // The directory and pager only need light lesson metadata. Keeping blocks
+  // and completion rules out of their props reduces the RSC payload sent on
+  // every chapter navigation.
+  const navLessons = lessons.map((lesson) => ({
+    id: lesson.id,
+    slug: lesson.slug,
+    title: lesson.title,
+    type: lesson.type,
+    position: lesson.position,
+    required: lesson.required,
+    completionPolicy: lesson.completionPolicy,
+    ...(lesson.unit ? { unit: lesson.unit } : {}),
+  }));
+
   const requested = query.lesson ? lessons.find((lesson) => lesson.id === query.lesson) : undefined;
   const currentFromEnrollment = enrollment.currentLessonId
     ? lessons.find((lesson) => lesson.id === enrollment.currentLessonId)
@@ -72,9 +86,11 @@ export default async function LearnPage({
   };
   let blockResults: Awaited<ReturnType<typeof getBlockResults>> = {};
   let initialState: Awaited<ReturnType<typeof getStateForEnrollment>> | null = null;
+  let initialNote: Awaited<ReturnType<typeof getNote>> | undefined;
 
   if (!abandoned) {
-    initialState = await getStateForEnrollment(enrollment.id, current.id);
+    // Manifest/MDX parsing is synchronous and cached in production; run the
+    // three independent database reads concurrently instead of serially.
     const loaded = loadCourse(course.slug);
     const manifestLesson = loaded.manifest.lessons.find((lesson) => lesson.slug === current.slug);
     if (!manifestLesson) notFound();
@@ -83,9 +99,18 @@ export default async function LearnPage({
     const resolved = resolveChapterBlocks(loaded, manifestLesson);
     chapterBlocks = resolved.blocks;
     chapterCompletion = resolved.completion;
-    blockResults = await getBlockResults(enrollment.id, current.id);
+
+    const [stateResult, resultsResult, noteResult] = await Promise.all([
+      getStateForEnrollment(enrollment.id, current.id),
+      chapterBlocks.length > 0
+        ? getBlockResults(enrollment.id, current.id)
+        : Promise.resolve({}),
+      getNote(student.id, current.id),
+    ]);
+    initialState = stateResult;
+    blockResults = resultsResult;
+    initialNote = noteResult;
   }
-  const initialNote = abandoned ? undefined : await getNote(student.id, current.id);
 
   const hasRequiredBlocks = chapterCompletion.mode !== "manual";
   const completionHint = readOnly
@@ -105,7 +130,7 @@ export default async function LearnPage({
         <LessonNav
           courseId={course.id}
           courseTitle={course.title}
-          lessons={lessons}
+          lessons={navLessons}
           currentLessonId={current.id}
           progress={enrollment.progress}
           lessonProgress={myLessonProgress}
@@ -126,7 +151,7 @@ export default async function LearnPage({
           <LessonPager
             courseId={course.id}
             courseSlug={course.slug}
-            lessons={lessons}
+            lessons={navLessons}
             currentLessonId={current.id}
             courseCompleted={enrollment.status === "completed"}
           />

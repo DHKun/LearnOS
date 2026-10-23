@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, CirclePlay } from "lucide-react";
 
 import { LessonOutline } from "@/components/learning/lesson-outline";
+import { PrefetchOnHover } from "@/components/learning/prefetch-on-hover";
 import { LinkPending } from "@/components/link-pending";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ export function LessonNav({
   lessonProgress: MyLessonProgress;
   outline?: LessonHeading[];
 }) {
+  const currentIndex = lessons.findIndex((lesson) => lesson.id === currentLessonId);
   return (
     <div className="space-y-4">
       <section className="rounded-xl border border-border bg-card p-4" aria-label="课程信息">
@@ -66,6 +68,7 @@ export function LessonNav({
           </h2>
           <span className="text-[11px] text-muted-foreground">共 {lessons.length} 章</span>
         </div>
+        <PrefetchOnHover>
         <ol>
           {lessons.map((lesson, index) => {
             const status: LessonProgressStatus = lessonProgress[lesson.id]?.status ?? "not_started";
@@ -86,7 +89,10 @@ export function LessonNav({
                 )}
                 <Link
                   href={`/learn/${courseId}?lesson=${lesson.id}`}
-                  prefetch
+                  // Prefetch only the next chapter automatically. Other
+                  // chapters are prefetched on hover/touchstart, so the first
+                  // load no longer fires a concurrent RSC render per chapter.
+                  prefetch={index === currentIndex + 1}
                   aria-current={active ? "page" : undefined}
                   data-status={displayStatus}
                   className={cn(
@@ -129,6 +135,7 @@ export function LessonNav({
             );
           })}
         </ol>
+        </PrefetchOnHover>
       </nav>
 
       <LessonOutline headings={outline} />

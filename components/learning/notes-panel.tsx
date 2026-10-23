@@ -11,6 +11,26 @@ import type { NoteData } from "@/lib/types";
 
 const MAX_BYTES = 64 * 1024;
 
+/** Count UTF-8 bytes without allocating a Uint8Array on every keystroke. */
+function utf8ByteLength(value: string): number {
+  let bytes = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code < 0x80) bytes += 1;
+    else if (code < 0x800) bytes += 2;
+    else if (code >= 0xd800 && code <= 0xdbff && index + 1 < value.length) {
+      const next = value.charCodeAt(index + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        bytes += 4;
+        index += 1;
+      } else {
+        bytes += 3;
+      }
+    } else bytes += 3;
+  }
+  return bytes;
+}
+
 export function NotesPanel({
   lessonId,
   lessonTitle,
@@ -73,6 +93,9 @@ export function NotesPanel({
         (draft.at ?? 0) > serverAt
       ) {
         setContent(draft.content);
+        // A restored draft is newer than the server copy and must not be
+        // overwritten when the lazy note fetch resolves.
+        dirtyRef.current = true;
         setStatus("idle");
       } else if (draft) {
         window.localStorage.removeItem(draftKey);
@@ -182,7 +205,6 @@ export function NotesPanel({
     }
 
     let active = true;
-    dirtyRef.current = false;
     setStatus("idle");
     setError(null);
     apiFetch<NoteData>(`/api/notes/${lessonId}`)
@@ -208,12 +230,20 @@ export function NotesPanel({
 
   React.useEffect(() => {
     if (content === savedContent) return;
-    persistDraft(content);
-    const timer = setTimeout(() => void save(content), 900);
+    // Keep the keystroke path free of synchronous localStorage writes. The
+    // draft is persisted together with the debounced server save, and the
+    // pagehide/unmount cleanup still flushes immediately.
+    const timer = setTimeout(() => {
+      persistDraft(content);
+      void save(content);
+    }, 900);
     return () => clearTimeout(timer);
   }, [content, persistDraft, save, savedContent]);
 
-  const bytes = new TextEncoder().encode(content).length;
+  // Byte counting is only needed for the limit hint; defer it so long notes
+  // never block the textarea's keystroke rendering.
+  const deferredContent = React.useDeferredValue(content);
+  const bytes = React.useMemo(() => utf8ByteLength(deferredContent), [deferredContent]);
   const overLimit = bytes > MAX_BYTES;
 
   return (
@@ -250,6 +280,7 @@ export function NotesPanel({
         <p className="truncate text-xs text-muted-foreground">{lessonTitle} · 仅自己可见</p>
       </CardHeader>
       <CardContent className="space-y-2">
+        {!ready && <p className="text-xs text-muted-foreground">正在加载笔记…</p>}
         {mode === "edit" ? (
           <Textarea
             value={content}

@@ -135,9 +135,10 @@ test.describe("小屏幕浮动笔记", () => {
 
       // 移动端使用右侧抽屉，关闭后正文恢复。
       await toggle.click();
-      await expect(page.getByTestId("notes-panel")).toBeVisible();
-      await page.getByRole("button", { name: "关闭笔记" }).first().click();
-      await expect(page.getByTestId("notes-panel")).toBeHidden();
+      const panel = page.getByTestId("notes-panel");
+      await expect(panel).toBeVisible();
+      await panel.getByRole("button", { name: "关闭笔记", exact: true }).click();
+      await expect(panel).toBeHidden();
     } finally {
       await deleteTestStudent(student.id);
     }

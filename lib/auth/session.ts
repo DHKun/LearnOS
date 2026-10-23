@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 
+import { getVerifiedUserId } from "@/lib/supabase/claims";
 import { createClient } from "@/lib/supabase/server";
 
 export type Role = "student" | "admin";
@@ -32,16 +33,13 @@ function toProfile(row: {
 /** Request-scoped session lookup. Returns null when unauthenticated. */
 export const getSessionProfile = cache(async (): Promise<SessionProfile | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
+  const userId = await getVerifiedUserId(supabase);
+  if (!userId) return null;
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("user_id,email,display_name,role,disabled_at")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (!profile) return null;
