@@ -5,7 +5,14 @@
  * the command fails loudly instead of letting a broken login ship. Exits non-zero
  * on the first hard failure and prints a remediation hint for each check.
  */
+import dns from "node:dns";
+
 import "../env";
+
+// The verification host may publish AAAA records that are unreachable in some
+// CI/container networks; prefer IPv4 so a single failed family cannot abort the
+// probe.
+dns.setDefaultResultOrder("ipv4first");
 
 type Check = { name: string; ok: boolean; detail: string; fix?: string };
 
@@ -43,6 +50,23 @@ function isPrivateOrLoopback(hostname: string): boolean {
   return false;
 }
 
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  attempts = 3,
+): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await fetch(url, init);
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 function base64Url(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64url");
 }
@@ -78,7 +102,7 @@ async function probeFormAction(
     // FloatCTF binds the authorization transaction to a browser cookie; without
     // it the login page returns 400 instead of the CSP we need to inspect.
     const cookie = [...jar].map(([name, value]) => `${name}=${value}`).join("; ");
-    response = await fetch(current, {
+    response = await fetchWithRetry(current, {
       redirect: "manual",
       headers: cookie ? { Cookie: cookie } : undefined,
     });

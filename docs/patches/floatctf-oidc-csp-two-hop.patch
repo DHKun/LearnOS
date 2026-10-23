@@ -1,0 +1,162 @@
+From: LearnOS integration verification
+Subject: OIDC: allow the RP app origin in CSP form-action
+
+FloatCTF currently derives form-action only from redirect_uri. Providers behind
+an intermediary (Supabase Auth) do a second redirect to the application, which
+Chrome blocks because the final origin is not allowlisted.
+
+--- a/apps/api/src/modules/identity/oidc/api/pages.rs	2026-10-23 09:13:05.000000000 -0400
++++ b/apps/api/src/modules/identity/oidc/api/pages.rs	2026-10-23 13:00:37.430377081 -0400
+@@ -27,13 +27,14 @@
+ 
+ /// 渲染页面并附带安全响应头。
+ ///
+-/// `form_target_origin`：表单提交后可能 302 去往的 RP origin。Chrome 对 `form-action`
+-/// 也校验重定向目标，因此必须把该 origin 加入白名单，否则授权完成后的跳转会被拦截。
++/// `form_action_origins`：表单提交后可能 302 去往的所有 RP origin。Chrome 对
++/// `form-action` 也校验重定向目标，因此必须把每个可能落点加入白名单，否则授权完成后的
++/// 跳转会被拦截。Supabase 等中间层会先回到自己的 callback，再跳转到应用，故需要两个 origin。
+ pub fn html(
+     status: StatusCode,
+     template: &str,
+     ctx: impl Serialize,
+-    form_target_origin: Option<&str>,
++    form_action_origins: &[String],
+ ) -> HttpResponse {
+     let body = match env().get_template(template).and_then(|t| t.render(ctx)) {
+         Ok(body) => body,
+@@ -44,10 +45,13 @@
+                 .body("internal error");
+         }
+     };
+-    let form_action = match form_target_origin {
+-        Some(origin) => format!("'self' {origin}"),
+-        None => "'self'".to_string(),
+-    };
++    let mut sources = vec!["'self'".to_string()];
++    for origin in form_action_origins {
++        if !sources.iter().any(|existing| existing == origin) {
++            sources.push(origin.clone());
++        }
++    }
++    let form_action = sources.join(" ");
+     HttpResponse::build(status)
+         .content_type("text/html; charset=utf-8")
+         .insert_header((
+@@ -72,7 +76,7 @@
+         StatusCode::from_u16(status).unwrap_or(StatusCode::BAD_REQUEST),
+         "error.html",
+         minijinja::context! { message => message },
+-        None,
++        &[],
+     )
+ }
+ 
+@@ -115,6 +119,27 @@
+     }
+ }
+ 
++/// 允许表单重定向到的 RP origin 集合（去重，保持稳定顺序）。
++///
++/// `redirect_uri` 是 OAuth 直接回跳点；`homepage_url` 覆盖 Supabase 这类
++/// 「先回自己的 callback、再跳应用」的中间层，避免最终跳转被 CSP 拦截。
++pub fn form_action_origins(
++    redirect_uri: Option<&str>,
++    homepage_url: Option<&str>,
++) -> Vec<String> {
++    let mut origins = Vec::new();
++    for origin in [redirect_uri, homepage_url]
++        .into_iter()
++        .flatten()
++        .filter_map(origin_of)
++    {
++        if !origins.contains(&origin) {
++            origins.push(origin);
++        }
++    }
++    origins
++}
++
+ /// 回调地址的 origin（用于 CSP form-action）与展示用主机名。
+ pub fn origin_of(url: &str) -> Option<String> {
+     url::Url::parse(url)
+@@ -164,7 +189,7 @@
+             StatusCode::OK,
+             "error.html",
+             minijinja::context! { message => "x" },
+-            Some("https://rp.example.com"),
++            &["https://rp.example.com".to_string()],
+         );
+         let csp = resp
+             .headers()
+@@ -185,4 +210,28 @@
+             "https://rp.example.com:8443"
+         );
+     }
++
++    #[test]
++    fn csp_covers_callback_and_app_homepage_without_duplicates() {
++        let origins = form_action_origins(
++            Some("https://supabase.example.com/auth/v1/callback"),
++            Some("https://learn.example.com/account"),
++        );
++        assert_eq!(
++            origins,
++            vec![
++                "https://supabase.example.com".to_string(),
++                "https://learn.example.com".to_string()
++            ]
++        );
++
++        let same = form_action_origins(
++            Some("https://learn.example.com/auth/callback"),
++            Some("https://learn.example.com/"),
++        );
++        assert_eq!(same, vec!["https://learn.example.com".to_string()]);
++
++        let none = form_action_origins(None, None);
++        assert!(none.is_empty());
++    }
+ }
+--- a/apps/api/src/modules/identity/oidc/api/protocol.rs	2026-10-23 09:13:05.000000000 -0400
++++ b/apps/api/src/modules/identity/oidc/api/protocol.rs	2026-10-23 12:59:22.965482355 -0400
+@@ -249,6 +249,10 @@
+     let prompt = crate::modules::identity::oidc::domain::authorize::Prompt::from_values(
+         &scope::from_json(&txn.prompt),
+     );
++    let redirect_origin = pages::origin_of(&txn.redirect_uri);
++    let homepage_origin = client.homepage_url.as_deref().and_then(pages::origin_of);
++    let form_action_origins =
++        pages::form_action_origins(redirect_origin.as_deref(), homepage_origin.as_deref());
+     pages::html(
+         status,
+         "login.html",
+@@ -262,7 +266,7 @@
+             error => error,
+             reauth => prompt.login || txn.max_age.is_some(),
+         },
+-        pages::origin_of(&txn.redirect_uri).as_deref(),
++        &form_action_origins,
+     )
+ }
+ 
+@@ -533,6 +537,10 @@
+         .iter()
+         .filter_map(|s| pages::scope_item(s, previously.contains(s)))
+         .collect();
++    let redirect_origin = pages::origin_of(&txn.redirect_uri);
++    let homepage_origin = client.homepage_url.as_deref().and_then(pages::origin_of);
++    let form_action_origins =
++        pages::form_action_origins(redirect_origin.as_deref(), homepage_origin.as_deref());
+     pages::html(
+         StatusCode::OK,
+         "consent.html",
+@@ -545,7 +553,7 @@
+             user_display => format!("{}（@{}）", user.nickname, user.username),
+             scopes => items,
+         },
+-        pages::origin_of(&txn.redirect_uri).as_deref(),
++        &form_action_origins,
+     )
+ }
+ 

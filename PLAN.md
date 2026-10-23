@@ -572,6 +572,7 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 真实 FloatCTF 的 Discovery/JWKS/PKCE/Token/UserInfo/`email_verified=false` 测试。
 - [x] 真实 Chromium 复现 GoTrue custom OIDC 与 FloatCTF CSP 的两项兼容性障碍。
 - [x] 真实 Supabase + 真实 FloatCTF 上跑通完整 SSO（11/11 用例），修复 Cookie 可读性与 client_secret_post 两项运行时问题。
+- [x] 提供 FloatCTF CSP 两跳修复补丁（`docs/patches/`），`cargo test --lib` 446 passed，`oidc:verify` 7/7。
 
 ### 21.2 阻塞（生产启用前）
 

@@ -2,7 +2,7 @@
 
 ## 状态
 
-**代码与真实 SSO 已验证；生产入口默认关闭（`FLOATCTF_OIDC_ENABLED=false`），待 FloatCTF 修复 CSP 后开启。**
+**代码与真实 SSO 已验证（7/7 自检、11/11 SSO 用例）；生产入口默认关闭（`FLOATCTF_OIDC_ENABLED=false`），启用前需把本仓库提供的 FloatCTF CSP 补丁合并到上游并完成正式部署。**
 
 在目标 Supabase Auth `gotrue:v2.197.0` 与 FloatCTF 当前 `main` 上完成真实协议测试后，发现两个必须由 FloatCTF 或 Supabase Auth 侧修复的兼容性障碍。本文保留复现步骤与安全实现，避免用伪造邮箱验证、直信 ID Token 访问 RLS 或自建 JWT 绕过。
 
@@ -45,7 +45,7 @@ FLOATCTF_OIDC_ENABLED=true E2E_BASE_URL=http://127.0.0.1:3010 pnpm test:e2e
 
 覆盖：首次登录创建 student、重复登录复用同一用户、已有账号手动绑定保留原 ID、停用账号被拒、IdP 拒绝/缺少 code/绑定失败回跳、退出重登、不被按邮箱自动合并。
 
-> 该验证使用了**仅测试用、未提交**的 FloatCTF 补丁：在登录页 `form-action` 追加 LearnOS origin。生产仍必须先修复上游 CSP。
+> 该验证使用的是本仓库 `docs/patches/floatctf-oidc-csp-two-hop.patch` 中的**完整补丁**（非临时环境变量 hack）。补丁已用 `cargo test -p floatctf --lib` 验证：446 passed，且 `patch --dry-run` 可干净应用。生产仍必须先合并该补丁。
 
 ## 两个已定位的上游集成约束
 
@@ -93,10 +93,20 @@ Content Security Policy directive:
 
 **决定性约束（已核对 GoTrue 源码）**：`utilities.ValidateOAuthURL` 同时要求 `https`、主机不是 `localhost/127.0.0.1/::1/0.0.0.0`、解析结果不是 loopback/RFC1918/链路本地；并且 `ssrfProtectedTransport.RoundTrip` 会在**每次** discovery/JWKS 请求时重新校验。FloatCTF 则只允许 loopback 使用 http。两者叠加后，**本地不存在任何可同时满足的 issuer**——GoTrue 拒绝 loopback，FloatCTF 拒绝公网 http。因此真实 SSO 只能在公网 HTTPS 环境验证。
 
-## 解除阻塞所需变更（二选一）
+## 解除阻塞所需变更
 
-1. **FloatCTF（推荐）**：CSP `form-action` 增加 RP 最终回跳 origin（LearnOS 的 `/auth/callback` origin），并可选在 ID Token 中加入 `preferred_username/nickname`（不要加入未验证 email 以避免自动合并）。
-2. **Supabase Auth**：升级/补丁 GoTrue 使其对 custom OIDC 调用 UserInfo；同时仍需解决 FloatCTF CSP 的两跳回调问题，或在 Supabase callback 与 LearnOS 之间改为同源不跳转的方案。
+**已提供可应用补丁**：`docs/patches/floatctf-oidc-csp-two-hop.patch`
+
+```bash
+cd /path/to/floatctf
+git apply /path/to/LearnOS/docs/patches/floatctf-oidc-csp-two-hop.patch
+cargo test -p floatctf --lib   # 446 passed
+cargo build -p floatctf
+```
+
+补丁把 `form-action` 从「仅 redirect_uri」扩展为「redirect_uri + 已登记的 client homepage_url」，并去重、保持稳定顺序。客户端需把 `homepage_url` 设为 LearnOS 的公开 origin。
+
+替代方案（不推荐）：升级/补丁 GoTrue 使其对 custom OIDC 调用 UserInfo；这解决不了 CSP 两跳，仍需本补丁或改变回调链路。
 
 在任一项完成前，不应把 `FLOATCTF_OIDC_ENABLED` 设为 true。
 
@@ -115,7 +125,7 @@ pnpm oidc:verify
 5. CSP `form-action` 是否覆盖「Supabase 回调 → LearnOS」两跳；
 6. Supabase 中 `custom:floatctf` 的 enabled/issuer/client_id 是否与本应用一致。
 
-2026-10-23 在本地的实测输出：未打补丁时 `4/7`，CSP 项 FAIL；给 FloatCTF 的 `form-action` 加入 LearnOS origin 后同一命令变为 `5/7`，CSP 项 PASS。
+2026-10-23 实测：未打补丁时 CSP 项 FAIL；应用 `floatctf-oidc-csp-two-hop.patch` 后 `pnpm oidc:verify` 为 **7/7 全绿**，并跑通真实 SSO 11/11。
 
 ## 验收测试
 
