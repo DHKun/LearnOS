@@ -43,6 +43,75 @@ function isPrivateOrLoopback(hostname: string): boolean {
   return false;
 }
 
+function base64Url(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString("base64url");
+}
+
+/**
+ * Fetch the IdP's real login page and read its `form-action` allowlist.
+ *
+ * The browser submits the login/consent form on the IdP origin and is then
+ * redirected twice (IdP -> Supabase callback -> LearnOS). Chrome applies
+ * form-action to the final redirect target, so both origins must be allowed.
+ */
+async function probeFormAction(
+  issuerUrl: string,
+  clientId: string,
+  redirectUri: string,
+): Promise<{ allowed: string[]; finalUrl: string; status: number } | null> {
+  const authorize = new URL(`${issuerUrl}/oauth/authorize`);
+  const params: Record<string, string> = {
+    response_type: "code",
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    scope: "openid profile",
+    state: base64Url(crypto.getRandomValues(new Uint8Array(16))),
+    code_challenge: base64Url(crypto.getRandomValues(new Uint8Array(32))),
+    code_challenge_method: "S256",
+  };
+  for (const [key, value] of Object.entries(params)) authorize.searchParams.set(key, value);
+
+  let current = authorize.toString();
+  let response: Response | null = null;
+  const jar = new Map<string, string>();
+  for (let hop = 0; hop < 4; hop += 1) {
+    // FloatCTF binds the authorization transaction to a browser cookie; without
+    // it the login page returns 400 instead of the CSP we need to inspect.
+    const cookie = [...jar].map(([name, value]) => `${name}=${value}`).join("; ");
+    response = await fetch(current, {
+      redirect: "manual",
+      headers: cookie ? { Cookie: cookie } : undefined,
+    });
+    for (const raw of response.headers.getSetCookie?.() ?? []) {
+      const [pair] = raw.split(";");
+      const index = pair.indexOf("=");
+      if (index > 0) jar.set(pair.slice(0, index), pair.slice(index + 1));
+    }
+    const location = response.headers.get("location");
+    if (!location) break;
+    const next = new URL(location, current);
+    if (next.origin !== new URL(issuerUrl).origin) break;
+    current = next.toString();
+  }
+  if (!response) return null;
+
+  const csp = response.headers.get("content-security-policy") ?? "";
+  const directive = csp
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.toLowerCase().startsWith("form-action"));
+  if (!directive) return { allowed: [], finalUrl: current, status: response.status };
+
+  const allowed = directive
+    .replace(/^form-action/i, "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => (token === "'self'" ? new URL(issuerUrl).origin : token));
+
+  return { allowed, finalUrl: current, status: response.status };
+}
+
 async function main() {
   if (!issuer || !clientId || !clientSecret) {
     console.error("缺少 FLOATCTF_OIDC_ISSUER / CLIENT_ID / CLIENT_SECRET");
@@ -114,19 +183,42 @@ async function main() {
     });
   }
 
-  // 5. The known structural blocker: FloatCTF derives CSP form-action from the
-  //    registered redirect_uri only, while Supabase adds a second hop to the app.
+  // 5. The structural blocker: FloatCTF derives form-action from the registered
+  //    redirect_uri only, while Supabase adds a second hop to the app. Probe the
+  //    live page so this turns green automatically once the IdP is fixed.
   const callbackUrl = `${supabaseUrl}/auth/v1/callback`;
   const appOrigin = new URL(appUrl).origin;
   const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : "";
-  record({
-    name: "CSP form-action 覆盖两跳回跳",
-    ok: false,
-    detail: `FloatCTF 只允许 ${supabaseOrigin}；Supabase 还会跳转到 ${appOrigin}`,
-    fix:
-      "需要 FloatCTF 把 LearnOS 的 origin 纳入 form-action（读取已登记的 client homepage_url）。" +
-      "否则浏览器会拦截最终跳转，登录无法完成。",
-  });
+  if (!supabaseUrl) {
+    record({
+      name: "CSP form-action 覆盖两跳回跳",
+      ok: false,
+      detail: "缺少 SUPABASE_INTERNAL_URL/NEXT_PUBLIC_SUPABASE_URL，无法探测",
+    });
+  } else {
+    try {
+      const probe = await probeFormAction(issuer, clientId, callbackUrl);
+      const allowed = probe?.allowed ?? [];
+      const coversApp = allowed.includes(appOrigin);
+      const coversCallback = allowed.includes(supabaseOrigin);
+      record({
+        name: "CSP form-action 覆盖两跳回跳",
+        ok: coversApp && coversCallback,
+        detail: probe
+          ? `HTTP ${probe.status}；允许 [${allowed.join(", ")}]；需要 ${supabaseOrigin} + ${appOrigin}`
+          : "未能取得登录页 CSP",
+        fix:
+          "FloatCTF 目前只把 redirect_uri origin 写入 form-action；" +
+          "需把 LearnOS 的 origin 也纳入（例如读取登记的 client homepage_url）。",
+      });
+    } catch (error) {
+      record({
+        name: "CSP form-action 覆盖两跳回跳",
+        ok: false,
+        detail: `探测失败：${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+  }
 
   // 6. Provider must exist in Supabase and match what this app expects.
   if (supabaseUrl && serviceKey) {

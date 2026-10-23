@@ -94,7 +94,7 @@ pnpm oidc:verify
 5. CSP `form-action` 是否覆盖「Supabase 回调 → LearnOS」两跳；
 6. Supabase 中 `custom:floatctf` 的 enabled/issuer/client_id 是否与本应用一致。
 
-2026-10-23 在本地的实测输出：`4/7 项通过`，未通过项为 issuer 约束、CSP 两跳、provider 配置不一致——与前文阻塞一致。
+2026-10-23 在本地的实测输出：未打补丁时 `4/7`，CSP 项 FAIL；给 FloatCTF 的 `form-action` 加入 LearnOS origin 后同一命令变为 `5/7`，CSP 项 PASS。
 
 ## 验收测试
 
