@@ -68,6 +68,10 @@ Content Security Policy directive:
 
 用三端口最小页面独立复现：Chrome 对表单 POST 后的跨源重定向目标也执行 `form-action` 校验。直接访问本地 FloatCTF HTTPS 端口同样复现，排除 Pinggy/隧道伪影。
 
+**该 CSP 由 `txn.redirect_uri` 推导，而 Supabase 传给 FloatCTF（经 GoTrue）的 `redirect_uri` 是 `<Supabase>/auth/v1/callback`。**换句话说，只要 Supabase 在中间再做一跳「callback → LearnOS」，FloatCTF 的 CSP 就无法覆盖最终 origin。修复需要 FloatCTF 把 LearnOS origin 纳入 `form-action`（例如读取并校验客户端登记的 homepage_url，或支持 Supabase 的 `redirect_to`），这是上游改动。
+
+补充：本地无法绕开此点做自测——GoTrue 会拒绝 loopback/私有地址作为 custom provider issuer（`URL cannot resolve to private network addresses`；`URL must use HTTPS`），所以真实 SSO 只能在公网 HTTPS issuer 上验证。
+
 ## 解除阻塞所需变更（二选一）
 
 1. **FloatCTF（推荐）**：CSP `form-action` 增加 RP 最终回跳 origin（LearnOS 的 `/auth/callback` origin），并可选在 ID Token 中加入 `preferred_username/nickname`（不要加入未验证 email 以避免自动合并）。
