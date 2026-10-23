@@ -38,6 +38,9 @@ type ChapterContextValue = {
   blocks: PublicChapterBlock[];
   completion: ChapterCompletionSummary;
   blockResults: Record<string, BlockResultSummary>;
+  /** Server-authoritative chapter completion, reflected optimistically after submit. */
+  chapterCompleted: boolean;
+  markChapterCompleted(): void;
   saveBlockState(blockId: string, state: LearningState): Promise<{ version: number }>;
   getBlockState(blockId: string, kind: BlockKind): LearningState | null;
   submitBlock(blockId: string, submission: Record<string, unknown>): Promise<BlockSubmitResult>;
@@ -65,6 +68,7 @@ export function ChapterLearningProvider({
   blocks,
   completion,
   blockResults: initialBlockResults,
+  completed: initialCompleted,
   children,
 }: {
   lessonId: string;
@@ -75,6 +79,7 @@ export function ChapterLearningProvider({
   blocks: PublicChapterBlock[];
   completion: ChapterCompletionSummary;
   blockResults: Record<string, BlockResultSummary>;
+  completed: boolean;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -84,11 +89,37 @@ export function ChapterLearningProvider({
   const [version, setVersion] = React.useState(initialVersion);
   const [blockResults, setBlockResults] =
     React.useState<Record<string, BlockResultSummary>>(initialBlockResults);
+  const [chapterCompleted, setChapterCompleted] = React.useState(initialCompleted);
   const [client] = React.useState(
     () => new LearningClient({ lessonId, enrollmentId, initialVersion }),
   );
 
   stateRef.current = state;
+
+  // After `router.refresh()` the server may know more than the initial render
+  // (another tab, a navigation, or an auto-completed chapter). Merge downwards
+  // so locally-known pass results and completion are never lost.
+  React.useEffect(() => {
+    setBlockResults((current) => {
+      const merged = { ...current };
+      for (const [blockId, result] of Object.entries(initialBlockResults)) {
+        const existing = merged[blockId];
+        merged[blockId] =
+          existing?.passed === true
+            ? { ...result, ...existing, passed: true }
+            : result;
+      }
+      return merged;
+    });
+  }, [initialBlockResults]);
+
+  React.useEffect(() => {
+    if (initialCompleted) setChapterCompleted(true);
+  }, [initialCompleted]);
+
+  const markChapterCompleted = React.useCallback(() => {
+    setChapterCompleted(true);
+  }, []);
 
   React.useEffect(() => {
     if (readOnly) return;
@@ -148,7 +179,13 @@ export function ChapterLearningProvider({
             (result.passed ? new Date().toISOString() : null),
         },
       }));
-      if (result.passed || result.chapterCompleted) router.refresh();
+      // Completion is decided by the server transaction. Mirror only that
+      // returned status so the chapter UI updates without a page reload.
+      if (result.chapterCompleted || result.lessonStatus === "completed") {
+        setChapterCompleted(true);
+      }
+      // Refresh server-rendered navigation/progress once the result is known.
+      if (result.passed || result.chapterCompleted || result.duplicate) router.refresh();
       return result;
     },
     [blockResults, blocks, enrollmentId, lessonId, router],
@@ -178,6 +215,8 @@ export function ChapterLearningProvider({
       blocks,
       completion,
       blockResults,
+      chapterCompleted,
+      markChapterCompleted,
       saveBlockState,
       getBlockState,
       submitBlock,
@@ -186,10 +225,12 @@ export function ChapterLearningProvider({
     [
       blockResults,
       blocks,
+      chapterCompleted,
       completion,
       enrollmentId,
       getBlockState,
       lessonId,
+      markChapterCompleted,
       readOnly,
       refreshBlockState,
       saveBlockState,

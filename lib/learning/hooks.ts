@@ -24,6 +24,7 @@ export function useActivityState<T extends LearningState>(
   const [error, setError] = React.useState<string | null>(null);
   const [conflict, setConflict] = React.useState(false);
   const firstRender = React.useRef(true);
+  const conflictRef = React.useRef(false);
 
   React.useEffect(() => {
     if (readOnly) return;
@@ -31,17 +32,22 @@ export function useActivityState<T extends LearningState>(
       firstRender.current = false;
       return;
     }
+    // A stale version must stay visible until the student explicitly reloads;
+    // a late-arriving retry must not mask the conflict as a successful save.
+    if (conflictRef.current) return;
 
     setStatus("saving");
     setError(null);
     void sdk
       .saveState(state)
       .then(() => {
+        if (conflictRef.current) return;
         setStatus("saved");
         setConflict(false);
       })
       .catch((caught) => {
         if (caught instanceof ApiClientError && caught.code === "STATE_VERSION_CONFLICT") {
+          conflictRef.current = true;
           setStatus("conflict");
           setConflict(true);
           setError("实验状态已在其他页面更新，请重新加载后再继续。");
@@ -54,6 +60,7 @@ export function useActivityState<T extends LearningState>(
 
   const reload = React.useCallback(async () => {
     const snapshot = await sdk.refreshState();
+    conflictRef.current = false;
     setState(snapshot.state ? normalize(snapshot.state) : initial);
     setConflict(false);
     setStatus("idle");

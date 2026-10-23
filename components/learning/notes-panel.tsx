@@ -217,7 +217,10 @@ export function NotesPanel({
   const overLimit = bytes > MAX_BYTES;
 
   return (
-    <Card className="flex h-fit flex-col xl:sticky xl:top-20" data-note-ready={ready ? "true" : "false"}>
+    <Card
+      className="flex h-fit flex-col border-0 bg-transparent shadow-none"
+      data-note-ready={ready ? "true" : "false"}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-base">章节笔记</CardTitle>

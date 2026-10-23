@@ -74,6 +74,10 @@ export default async function LearnPage({
   const readOnly = enrollment.status === "completed";
   const abandoned = enrollment.status === "abandoned";
   const completedCurrent = myLessonProgress[current.id]?.status === "completed";
+  const currentIndex = lessons.findIndex((lesson) => lesson.id === current.id);
+  const nextLesson = currentIndex >= 0 && currentIndex < lessons.length - 1
+    ? lessons[currentIndex + 1]
+    : null;
   const TypeIcon = TYPE_ICON[current.type];
 
   let articleSource: string | null = null;
@@ -221,6 +225,7 @@ export default async function LearnPage({
                 blocks={chapterBlocks}
                 completion={chapterCompletion}
                 blockResults={blockResults}
+                completed={completedCurrent}
               >
                 <div className="rounded-xl border border-border bg-card p-5 sm:p-8">
                   <ArticleView source={articleSource} />
@@ -233,6 +238,8 @@ export default async function LearnPage({
                   blockResults={blockResults}
                   completed={completedCurrent}
                   readOnly={readOnly}
+                  courseId={course.id}
+                  nextLesson={nextLesson}
                 />
               </ChapterLearningProvider>
             )}

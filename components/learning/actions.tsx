@@ -107,10 +107,12 @@ export function CompleteLessonButton({
   lessonId,
   enrollmentId,
   completed,
+  onCompleted,
 }: {
   lessonId: string;
   enrollmentId: string;
   completed: boolean;
+  onCompleted?: () => void;
 }) {
   const router = useRouter();
   const [pending, setPending] = React.useState(false);
@@ -123,15 +125,19 @@ export function CompleteLessonButton({
 
   async function complete() {
     if (pending || done) return;
-    // Optimistic: reflect completion immediately, revert on failure.
-    setDone(true);
+    // Reflect completion only after the server transaction succeeds. An
+    // optimistic label could invite the student to navigate away and abort
+    // the request before the chapter/points are recorded.
     setPending(true);
     setError(null);
     try {
       await apiFetch(`/api/lessons/${lessonId}/complete`, {
         method: "POST",
+        keepalive: true,
         body: JSON.stringify({ enrollmentId }),
       });
+      setDone(true);
+      onCompleted?.();
       router.refresh();
     } catch (caught) {
       setDone(false);

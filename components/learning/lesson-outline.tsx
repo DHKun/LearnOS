@@ -43,13 +43,14 @@ export function LessonOutline({ headings }: { headings: LessonHeading[] }) {
 
   return (
     <nav
-      aria-label="本章节大纲"
-      className="hidden rounded-xl border border-border bg-card lg:sticky lg:top-20 lg:block"
+      aria-label="本章小节目录"
+      className="hidden overflow-hidden rounded-xl border border-dashed border-border/80 bg-muted/20 lg:block"
     >
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-          本章节大纲
-        </p>
+      <div className="flex items-center justify-between border-b border-dashed border-border/80 px-4 py-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">当前章节</p>
+          <p className="text-[12px] font-medium text-foreground">本章小节目录</p>
+        </div>
         <span className="font-mono text-[10px] text-muted-foreground">{headings.length}</span>
       </div>
       <ol className="max-h-[calc(100vh-12rem)] space-y-0.5 overflow-y-auto p-2">
