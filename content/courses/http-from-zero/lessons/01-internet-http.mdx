@@ -1,0 +1,31 @@
+## 互联网是一组约定
+
+浏览器和服务器并不共享内存。它们通过一条条消息协作：浏览器说“我想要什么”，服务器回答“结果是什么”。HTTP 就是这套请求/响应消息的格式约定。
+
+<Callout type="note" title="先记住一个画面">
+  客户端发起**请求**，服务器返回**响应**。请求和响应都由“起始行 + Header + 可选 Body”组成。
+</Callout>
+
+## 从地址到资源
+
+```text
+https://example.test/users/1
+└──┬──┘   └────┬─────┘ └──┬──┘
+ 协议         主机        路径
+```
+
+<svg viewBox="0 0 640 200" role="img" aria-label="浏览器通过互联网访问服务器的示意图" className="my-6 w-full rounded-xl border border-border bg-card p-4">
+  <rect x="20" y="60" width="150" height="80" rx="12" fill="none" stroke="currentColor" />
+  <text x="95" y="105" textAnchor="middle" fontSize="14" fill="currentColor">浏览器</text>
+  <rect x="470" y="60" width="150" height="80" rx="12" fill="none" stroke="currentColor" />
+  <text x="545" y="105" textAnchor="middle" fontSize="14" fill="currentColor">服务器</text>
+  <line x1="170" y1="100" x2="470" y2="100" stroke="currentColor" strokeDasharray="6 6" />
+  <text x="320" y="88" textAnchor="middle" fontSize="12" fill="currentColor">请求 GET /users/1</text>
+  <text x="320" y="126" textAnchor="middle" fontSize="12" fill="currentColor">响应 200 + JSON</text>
+</svg>
+
+HTTP 不要求浏览器和服务器使用同一种编程语言，也不要求它们在同一台机器上。只要双方遵守消息格式，就能互操作。
+
+## 为什么先学 HTTP
+
+后面的 URL、方法、状态码、Header、Cookie，都是这套消息格式的不同部分。理解它们之间的关系，比记住术语更重要。

@@ -26,7 +26,8 @@
 - UI：**Tailwind CSS + shadcn/ui**，桌面优先、窄屏可用，支持 light/dark。ASCII 可做主题扩展，但不作为上线阻塞项。
 - 数据：**Supabase Auth + PostgreSQL + Supabase Storage**；通过 `@supabase/ssr` 管理 Cookie 会话。
 - 输入校验：**Zod**；数据操作需行级授权；关键写操作使用数据库事务、唯一约束和幂等键。
-- 课程：每门课程是 `content/courses/<slug>/` 插件；Manifest v2 声明 concepts/activities/validators，`pnpm courses:prepare` 自动生成 Registry，禁止手工维护注册表。
+- 课程：每门课程是 `content/courses/<slug>/` 插件；Manifest v2 保持兼容，v3 增加章节内 `blocks` / `completion`。`pnpm courses:prepare` 自动生成 Registry，禁止手工维护注册表。
+- 章节模型：Course → Chapter（`lessons`）→ Block。MDX 负责文字/图片/动画/实验/题目的顺序与排版；Manifest 只声明需要验证的 simulation/question Block 及完成规则。纯文字、纯动画、纯实验、纯题目章节均合法。
 - 互动：主应用内原生 React 组件 + 同源认证 Learning SDK；后端核准完成状态及积分。不得使用 iframe、postMessage 或独立 Labs 站点。
 - 教学：抽象概念优先使用「生活类比 → 动画解释 → 自由探索 → 即时反馈 → 知识检查 → 原理总结」。动画必须有暂停/重播/单步/静态替代，并支持 reduced-motion；动画播放本身不产生积分。
 - 本地包管理：优先 **pnpm**，提交 lockfile；测试框架使用与 Next.js 兼容的轻量组合，可选 Vitest + Playwright。
@@ -94,6 +95,8 @@ docs/                   # 规格、架构、API、课程制作、决策
 
 - 心跳 `last_seen_at` 与有效交互 `last_interaction_at` 分开；后台区分「课程进行中」和「最近在线」。
 - `activity_events.id` 去重；`activity_states` 用 `expectedVersion` 乐观锁，冲突 `409 STATE_VERSION_CONFLICT`。
+- 混合章节的 Block 状态使用 `{ schemaVersion: 2, blocks: { [blockId]: ... } }` 命名空间，多个 Concept/Simulation/KnowledgeCheck 不得互相覆盖；统一通过 `useBlockState` / block-scoped Learning SDK 保存。
+- 正式 Block 结果写入 `block_attempts` / `block_results`；只有服务端 validator 或题库评分能产生 `passed`。`save_block_result` 负责幂等、章节完成判定与首次 +10 积分事务。
 - SDK `complete` 的自报告只能满足允许的 `reported` 策略；`server_validated` 章节必须使用服务端校验器。
 - Quiz 正确答案及评分器保留在服务端；不传给浏览器或互动组件。
 - 每 Lesson 首次完成 **+10**，课程最终测验首次通过额外 **+50**；重复完成、重放、并发、刷新都不重复发分。
@@ -103,7 +106,7 @@ docs/                   # 规格、架构、API、课程制作、决策
 ### 6.3 课程版本管理
 
 - 课程内容通过 `content/courses/**/course.json` 和 `pnpm courses:validate`、`pnpm courses:sync` 发布。
-- 课程已经有 enrollment 后，必修集合、章节 ID/顺序和评分规则冻结；结构性升级使用新的 course slug；允许修正文案。
+- 课程已经有 enrollment 后，必修集合、章节 ID/顺序、评分规则以及 v3 的必需 Block/完成模式/validator 指纹/必需题库哈希冻结；结构性升级使用新的 course slug；允许修正文案、可选动画和不影响完成条件的可选 Block。
 - 发布前必须至少有 1 个必修 Lesson，并验证最终测验、validator 资源及结构完整性。
 
 ## 7. 认证、安全与隔离
@@ -118,7 +121,8 @@ docs/                   # 规格、架构、API、课程制作、决策
 - 组件与主应用同源，只允许通过受认证的 `/api/learning/**` 读写状态；不得直接持有 service role 或绕过服务端校验。
 - 互动组件不得使用 `eval` 或执行用户输入的任意脚本；纯客户端仿真只作为教学交互，最终通过/积分必须由服务端验证器判定。
 - 遥测是客户端声明；**不能把任意客户端事件当作可信过关凭证**。
-- 概念动画与知识检查不得替代服务端正式测验；检查点不计分，不改变课程完成状态。
+- 概念动画与 MiniCheck 不得替代服务端正式测验；MiniCheck 不计分，不改变章节完成状态。混合章节的 KnowledgeCheck 由服务端题库评分，答案/解析不得进入浏览器。
+- 客户端不得直接写 `block_results`；Block 提交必须经 `/api/learning/blocks/submit`，服务端重新计算后再调用事务函数。
 
 ## 8. 测试与阶段门禁
 

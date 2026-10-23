@@ -175,6 +175,33 @@ describe("课程部署扫描", () => {
     expect(scan.canDeploy).toBe(true);
   });
 
+  it("新增不影响完成条件的可选 Block 不改变结构摘要", () => {
+    const root = tempDir();
+    const target = path.join(root, "http-from-zero");
+    fs.cpSync(path.join(repoRoot, "content/courses/http-from-zero"), target, { recursive: true });
+    const baseline = buildCourseSnapshot(target, "http-from-zero");
+
+    const manifestPath = path.join(target, "course.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    const chapter = manifest.lessons.find(
+      (lesson: { slug: string }) => lesson.slug === "request-response",
+    );
+    chapter.blocks.push({
+      id: "optional-check",
+      kind: "question",
+      source: "assessments/status-check.server.json",
+    });
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    fs.appendFileSync(
+      path.join(target, "lessons/04-request-response.mdx"),
+      "\n\n<KnowledgeCheck blockId=\"optional-check\" />\n",
+    );
+
+    const changed = buildCourseSnapshot(target, "http-from-zero");
+    expect(changed.sourceDigest).not.toBe(baseline.sourceDigest);
+    expect(changed.structuralDigest).toBe(baseline.structuralDigest);
+  });
+
   it("移除已部署课程会阻止部署，避免线上记录指向缺失内容", () => {
     const dir = copyCourse();
     const baseline = buildCourseSnapshot(dir, "sql-injection-basics");

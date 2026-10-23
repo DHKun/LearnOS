@@ -1,0 +1,24 @@
+{
+  "passScore": 50,
+  "questions": [
+    {
+      "id": "q-content-type",
+      "prompt": "响应体是 JSON 时，哪个 Header 最直接地描述它的类型？",
+      "type": "single",
+      "options": [
+        { "id": "host", "label": "Host" },
+        { "id": "content-type", "label": "Content-Type" },
+        { "id": "cookie", "label": "Cookie" }
+      ],
+      "answer": "content-type",
+      "explanation": "Content-Type 声明响应体的媒体类型。"
+    },
+    {
+      "id": "q-cookie",
+      "prompt": "浏览器是否会自动把符合作用域的 Cookie 放进后续请求的 Cookie Header？",
+      "type": "boolean",
+      "answer": true,
+      "explanation": "Cookie 由浏览器按 Domain/Path 等属性自动管理并发送。"
+    }
+  ]
+}

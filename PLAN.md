@@ -209,16 +209,17 @@ tests/e2e/admin-detail.spec.ts          1 test
 ## 10. 当前工作记录（Agent 持续维护）
 
 ```text
-当前 Phase：Release（完成）+ 单机 Docker Compose 部署（完成）
-当前任务：P0-01 ～ P4-07；第 14 节一键部署全部完成
-最近验证日期：2026-10-22
-本次已完成：三门课程（含验收新增 HTTP 重试课程）、API、11+2 张表 + RLS + 事务函数、
-            同源 Learning SDK 与原生互动组件、学生 5 页 / 管理员 5 页；
+当前 Phase：Release（完成）+ 单机 Docker Compose 部署（完成）+ 章节级混合互动（完成）
+当前任务：P0-01 ～ P4-07；第 14 节一键部署；第 15 节 Manifest v3 混合章节全部完成
+最近验证日期：2026-10-23
+本次已完成：四门课程（含 http-from-zero v3 混合课程）、API、11+2 章节 Block+2 部署表 + RLS + 事务函数、
+            同源 Learning SDK、ChapterLearningProvider/BlockScope、block_results/attempts、
+            MDX AST 校验、章节内 all/any 完成规则、学生 5 页 / 管理员 5 页；
             单机 Docker Compose：web + updater、固定快照、courses:preflight/sync、
             构建日志、系统/课程版本、自动/手动回滚、部署任务持久化；
             性能专项、审计修复、单站点原生活动重构；见 docs/decisions.md / docs/architecture.md
-测试结果：lint 0 error（1 既有 warning）；typecheck 通过；Vitest 79 passed；
-          build 通过；Playwright 17 passed；security scan 71 资源通过；courses:validate 3/3；
+测试结果：lint 0 error（1 既有 warning）；typecheck 通过；Vitest 19 文件 / 126 passed；
+          build 通过；Playwright 18 passed；security scan 75 资源通过；courses:validate 4/4；
           真实 Compose 部署 2026.10.22-11 成功；构建失败/健康失败自动回滚已验证
 失败 / 阻塞：无（本地）；托管云端、SMTP、TLS、第二台主机未验证
 下一个门禁：无（本地 Release）
@@ -328,3 +329,54 @@ tests/e2e/admin-detail.spec.ts          1 test
 | 安全/课程 | `pnpm security:scan` 71 个资源无泄漏；`pnpm courses:validate` 3/3 |
 
 > 未验证：托管 Supabase/云端主机、真实 SMTP、TLS/反向代理、第二台干净主机重放、rootless Docker、长时间压测。上述项目未作为本次验收通过项。
+
+## 15. 章节级混合互动教学系统（Manifest v3，2026-10-23）
+
+**目标**：Course → Chapter → Block；同一章节可自由组合文字、图片、动画、JS 模拟实验、知识检查和总结；完成规则由服务端判定，旧 v2 课程与学习数据不回归。
+
+### 15.1 数据模型与渲染
+
+- [x] Manifest v3：`article` 章节可选 `blocks`（simulation/question）与 `completion`（manual/all/any）；v2 兼容。
+- [x] MDX AST 校验：Concept/Activity/Block 引用、声明 Block 恰好渲染一次、组件类型、未知组件。
+- [x] 客户端组件禁止导入 `validators.ts` / `*.server.json` / `assessments/`。
+- [x] `ChapterLearningProvider` + `BlockScope`：同一章多个 Concept/Simulation 使用 `blockId` 命名空间。
+- [x] `SimulationBlock` / `KnowledgeCheck` / `ChapterProgress`；普通 MDX、Callout、MiniCheck 继续工作。
+- [x] `useBlockState` 复用 600ms 防抖、自动保存、刷新恢复、版本冲突与只读复习；旧扁平概念状态兼容读取。
+
+### 15.2 Block 服务端验证与完成
+
+- [x] `block_attempts` / `block_results` 迁移、RLS（仅 service role）。
+- [x] `save_block_result` / `learnos_chapter_completion_satisfied`；幂等 attempt、all/any、首次 +10。
+- [x] `POST /api/learning/blocks/submit`；服务端 validator/题库评分，拒绝客户端 `passed` 字段。
+- [x] `complete_lesson` 拒绝 manual 绕过 v3 server_validated 章节。
+- [x] 章节知识检查支持单选、多选、判断题；答案/解析不出现在公开数据或客户端 bundle。
+
+### 15.3 示范课程与兼容
+
+- [x] `http-from-zero` 9 章：纯文字、动画、URL+自测、模拟实验、实验+知识检查 all、知识检查、多个动画+实验/知识检查 any、纯文字总结、最终测验。
+- [x] 旧 `sql-injection-basics`、`idempotent-retries`、`http-retry-basics` 继续 v2 加载与完成。
+- [x] `courses:scan` / `courses:snapshot` / 部署结构摘要包含 v3 `chapterHash`；旧课程摘要不变。
+- [x] `courses:sync` 冻结必需 Block、完成模式、validator 指纹、必需题库哈希；允许可选 Block/文案变化。
+
+### 15.4 测试与验收
+
+- [x] 单元：Manifest v3、完成规则、结构哈希/冻结、MDX AST、判断题/公开题目、多 Block 状态隔离。
+- [x] 集成：真实 PostgreSQL 下 Block 失败/通过、all/any、幂等重放、同键不同内容、归属不匹配、RLS、积分只发一次。
+- [x] E2E：`http-from-zero` 九章完整学习闭环；纯文字/动画/实验/知识检查/all/any/刷新恢复/最终测验；伪造 `passed` 与直接完成被拒绝。
+- [x] `pnpm courses:validate` 4/4；`pnpm lint` / `typecheck` / `test` / `build` / `test:e2e` / `security:scan` 全量执行（结果见 15.5）。
+
+### 15.5 实际验证记录
+
+| 项目 | 结果 |
+| --- | --- |
+| `pnpm courses:validate` | ✅ 4/4（含 `http-from-zero` v3 与 3 门旧 v2 课程） |
+| `pnpm lint` | ✅ 0 error（1 个既有 notes-panel warning） |
+| `pnpm typecheck` | ✅ 通过 |
+| `pnpm test` | ✅ 19 个文件、126 tests 通过（含真实 PostgreSQL Block/RLS 集成） |
+| `pnpm build` | ✅ 通过；`/api/learning/blocks/submit` 已生成 |
+| `pnpm test:e2e` | ✅ 18 passed（最终全部 E2E） |
+| `pnpm security:scan` | ✅ 75 个客户端资源通过，未发现服务端密钥/测验解析泄漏 |
+| 真实 HTTP 课程 | 纯文字、动画、模拟实验、知识检查、all/any、最终测验均实际完成；DB 记录 completed、积分 140 |
+| 状态恢复 | 章节刷新后 Cookie 实验参数恢复；两个 Concept 的 step 分别保存（2 / 0） |
+
+> 未验证：慢网/断网、真实 SMTP/TLS/云端 staging、第二台干净主机、并发压力测试。文档见 `docs/mixed-chapters.md`。

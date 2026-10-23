@@ -125,6 +125,31 @@ describe("课程插件生成器", () => {
     expect(validators).toContain("sql-injection-lab");
   });
 
+  it("纯文字课程可以没有 plugins 声明", () => {
+    const root = tempRoot();
+    const dir = path.join(root, "content/courses/plain-text");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "course.json"),
+      JSON.stringify(
+        {
+          schemaVersion: 3,
+          slug: "plain-text",
+          title: "纯文字课程",
+          description: "",
+          version: "1.0.0",
+          lessons: [],
+        },
+        null,
+        2,
+      ),
+    );
+    const result = runGenerator(root);
+    expect(result.ok, result.stderr).toBe(true);
+    const catalog = fs.readFileSync(path.join(root, "lib/generated/course-catalog.ts"), "utf8");
+    expect(catalog).not.toContain("plain-text/");
+  });
+
   it("拒绝重复的 Validator ID", () => {
     const root = tempRoot();
     writeMinimalCourse(root, "duplicate-validator", [
@@ -135,6 +160,50 @@ describe("课程插件生成器", () => {
     const result = runGenerator(root);
     expect(result.ok).toBe(false);
     expect(result.stderr).toContain("Validator ID 重复: shared-validator");
+  });
+
+  it("拒绝客户端组件导入服务端答案/验证器", () => {
+    const root = tempRoot();
+    const dir = path.join(root, "content/courses/leaky-client");
+    fs.mkdirSync(path.join(dir, "activities"), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "validators.ts"),
+      "export function validate() { return { passed: true, feedback: {} }; }\n",
+    );
+    fs.writeFileSync(
+      path.join(dir, "activities/leaky.tsx"),
+      'import { validate } from "../validators";\nexport function Leaky() { return null; }\n',
+    );
+    fs.writeFileSync(
+      path.join(dir, "course.json"),
+      JSON.stringify(
+        {
+          schemaVersion: 2,
+          slug: "leaky-client",
+          title: "泄漏客户端",
+          description: "",
+          version: "1.0.0",
+          lessons: [],
+          plugins: {
+            concepts: [],
+            activities: [
+              {
+                id: "leaky",
+                component: "activities/leaky.tsx",
+                export: "Leaky",
+                validator: { path: "validators.ts", export: "validate" },
+              },
+            ],
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    const result = runGenerator(root);
+    expect(result.ok).toBe(false);
+    expect(result.stderr).toContain("不能导入服务端验证器或答案文件");
   });
 
   it("拒绝指向课程目录外的符号链接", () => {

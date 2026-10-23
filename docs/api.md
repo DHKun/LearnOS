@@ -138,6 +138,46 @@ HTTP 状态：`400 BAD_REQUEST`、`401 UNAUTHENTICATED`、`403 FORBIDDEN`、`404
 - 同一 `id` 重放返回首次结果，不重复发分。
 - 通过时首次完成章节 +10。
 
+### 1.12.1 提交章节 Block（Manifest v3）
+
+`POST /api/learning/blocks/submit` body：
+
+```json
+{
+  "attemptId": "uuid",
+  "enrollmentId": "uuid",
+  "lessonId": "uuid",
+  "blockId": "methods-check",
+  "submission": { "answers": { "q1": "post" } }
+}
+```
+
+返回：
+
+```json
+{
+  "accepted": true,
+  "duplicate": false,
+  "passed": true,
+  "score": 100,
+  "feedback": {},
+  "blockStatus": "passed",
+  "chapterCompletionSatisfied": true,
+  "chapterCompleted": true,
+  "lessonStatus": "completed",
+  "courseProgress": { "total": 9, "completed": 5, "percent": 56 },
+  "enrollmentStatus": "active",
+  "pointsAwarded": 10
+}
+```
+
+- 仅 `article` 章节中声明过的 `simulation` / `question` Block。
+- `submission` 对 simulation 是实验参数；对 question 是 `{ "answers": {...} }`，支持 single/multiple/boolean。
+- 服务端重新运行 validator 或题库评分；`passed` 由服务端计算，客户端额外传 `passed` 字段会被 Zod 拒绝（422）。
+- `attemptId` 幂等；同一 ID 不同请求内容 → `409 IDEMPOTENCY_KEY_REUSED`。
+- `all` / `any` 条件满足时在同一事务完成章节并发放首次 +10；多个 Block 只发一次章节积分。
+- 不存在的 Block → `404 BLOCK_NOT_FOUND`；类型不匹配 → `400 BLOCK_KIND_MISMATCH`。
+
 ### 1.13 完成章节
 
 `POST /api/lessons/:id/complete` body `{ "enrollmentId": "uuid" }`
@@ -145,7 +185,8 @@ HTTP 状态：`400 BAD_REQUEST`、`401 UNAUTHENTICATED`、`403 FORBIDDEN`、`404
 返回 `{ lessonStatus, courseProgress, enrollmentStatus, pointsAwarded, alreadyCompleted }`。
 
 - 图文章节（manual）或 reported 交互章节；幂等。
-- 测验 → `400 QUIZ_REQUIRES_SUBMISSION`；server_validated → `400 SERVER_VALIDATION_REQUIRED`。
+- 测验 → `400 QUIZ_REQUIRES_SUBMISSION`；server_validated interactive → `400 SERVER_VALIDATION_REQUIRED`。
+- v3 混合章节的 `all/any` 完成规则 → `400 COMPLETION_NOT_ALLOWED`，必须通过 Block 提交接口。
 
 ### 1.14 获取测验
 

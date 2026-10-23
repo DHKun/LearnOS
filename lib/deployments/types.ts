@@ -15,6 +15,9 @@ export type SnapshotLesson = {
   passScore?: number;
   finalExam?: boolean;
   quizHash?: string;
+  /** V3 mixed chapter: structural signature of required blocks + completion. */
+  chapterHash?: string;
+  chapterCompletion?: { mode: "manual" | "all" | "any"; requiredBlocks: string[] };
 };
 
 export type SnapshotPlugin = {

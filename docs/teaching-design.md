@@ -74,8 +74,9 @@
 
 ## 4. 状态与事件
 
-- 概念状态通过 `LearningProvider` 的 SDK 保存：`{ conceptId, blockId, conceptStep, conceptCompleted }`。
-- 每个章节建议只放一个概念动画；若需要多个，应使用独立 `blockId` 并扩展状态结构，避免互相覆盖。
+- 概念状态通过 block-scoped Learning SDK 保存：`{ conceptId, blockId, conceptStep, conceptCompleted }`。
+- 同一章可以放多个概念动画；每个使用独立 `blockId`，状态写入 `{ schemaVersion: 2, blocks: { [blockId]: ... } }`，不会互相覆盖。
+- 旧版扁平状态会作为第一个 concept Block 的 legacy 状态读取，首次保存后自动迁移到命名空间结构。
 - 关键事件：
   - `concept_viewed`
   - `concept_step_viewed`

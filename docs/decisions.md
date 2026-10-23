@@ -227,3 +227,37 @@
 **决定**：Compose 的 web 扫描挂载使用 `${LEARNOS_HOST_PROJECT_DIR:-.}/content/courses`。updater 启动时通过 `docker inspect` 读取自身 `/workspace` 挂载的 `Source`，把真实宿主机路径写入 `LEARNOS_HOST_PROJECT_DIR`，再执行所有 Compose 命令；宿主机手动 `docker compose up` 时默认 `.` 仍然正确。
 
 **影响**：扫描与 updater 看到同一份宿主机源码；无需在 `.env.local` 手动维护绝对路径。课程文件需对容器用户（uid 1001）可读，README 给出 `chmod -R a+rX content/courses`。
+
+## D31 — Manifest v3：MDX 负责顺序，Manifest 只声明可验证 Block
+
+**背景**：固定 Article/Activity/Quiz 页面模板无法表达“文字 → 动画 → 文字 → 实验 → 文字 → 知识检查 → 总结”的混合章节；同时需要保持旧 v2 课程和历史数据。
+
+**决定**：新增 `schemaVersion: 3`，仅在 `article` 章节增加可选 `blocks`（simulation/question）与 `completion`（manual/all/any）。普通文字、图片、表格、公式、Callout、MiniCheck 继续直接写在 MDX，不进入 JSON Block。MDX 是章节内容与顺序的唯一来源；Manifest 只声明需要正式验证的内容及其完成条件。v2 继续完全兼容。
+
+**理由**：避免维护两套顺序；纯文字课程无需任何插件；章节可以完全没有 Block，也可以有多个动画/实验/题；不把展示性动画错误地当成可信完成条件。
+
+**影响**：`courses:validate` 需要同时解析 Manifest 与 MDX；`courses:sync` 把 `blocks/completion/chapterHash` 写入 `lessons.config`；页面使用统一的 `ChapterLearningProvider` 渲染混合章节。
+
+## D32 — Block 状态使用 blockId 命名空间
+
+**决定**：混合章节的 Lesson State 使用 `{ schemaVersion: 2, blocks: { [blockId]: ... } }`。`ChapterLearningProvider` 持有一个 LearningClient 和整章状态；每个 `BlockScope` 提供 scoped SDK，`saveState` 合并到自己的 blockId，`submit` 调用 Block 接口，`complete` 为 no-op。统一 `useBlockState`（复用 `useActivityState` 的 600ms 防抖与版本乐观锁）。
+
+**理由**：当前 Lesson 级状态在多个 Concept/Activity 同时保存时会互相覆盖；整章共享一个 client 与串行化队列可以避免丢失更新，同时保留重开恢复和多标签冲突提示。
+
+**影响**：旧 v2 article 的扁平 Concept 状态会作为第一个 concept Block 的 legacy 状态读取，并在首次保存时迁移到 v2 命名空间。旧独立 interactive 章节仍使用原有 Lesson 级状态。
+
+## D33 — Block 通过结果与章节完成在数据库事务中判定
+
+**决定**：新增 `block_attempts`（幂等尝试）与 `block_results`（每 enrollment/lesson/block 可信通过状态），以及 `save_block_result` / `learnos_chapter_completion_satisfied` RPC。服务端先运行 validator 或题库评分，再调用 RPC；RPC 校验 Block 类型、记录尝试、更新通过状态，并按 `completion.mode` 的 all/any 规则完成章节。章节完成、point ledger 与结课判定在同一事务；`complete_lesson` 拒绝绕过 v3 server_validated 章节。
+
+**理由**：客户端 `passed: true` 不可信；多 Block 章节必须按服务端记录计算完成；积分只能在首次完成时发一次。
+
+**影响**：新增 `/api/learning/blocks/submit`；`block_results` 没有浏览器策略，仅 service role 可写；一个章节有多个 Block 也只发一次 +10。
+
+## D34 — MDX 使用 AST 校验，客户端组件禁止导入服务端答案
+
+**决定**：`pnpm courses:validate` 使用 `remark-parse` + `remark-mdx` 解析 MDX，提取大写 JSX 组件与字符串 props，校验 Concept/Activity/Block 引用、声明 Block 的渲染次数和组件类型；未知组件失败。课程 prepare 与部署快照额外拒绝客户端组件导入 `validators.ts`、`*.server.json` 或 `assessments/`。
+
+**理由**：正则扫描无法可靠处理嵌套、换行、属性顺序和表达式；题库/validator 进入客户端 bundle 会泄露正式答案。
+
+**影响**：课程作者必须保证每个声明的 Block 在 MDX 中恰好渲染一次；允许集合为 `Callout`、`MiniCheck`、`ConceptPlayer`、`SimulationBlock`、`KnowledgeCheck`。

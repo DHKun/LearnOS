@@ -2,6 +2,7 @@
 
 import { CONCEPT_COMPONENTS } from "@/lib/generated/course-components";
 import { isConceptId } from "@/lib/education/concepts";
+import { BlockScope, useOptionalChapterLearning } from "@/lib/learning/chapter-context";
 
 export function ConceptPlayer({
   conceptId,
@@ -10,6 +11,7 @@ export function ConceptPlayer({
   conceptId: string;
   blockId?: string;
 }) {
+  const chapter = useOptionalChapterLearning();
   if (!isConceptId(conceptId)) {
     return (
       <div className="my-8 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
@@ -18,5 +20,13 @@ export function ConceptPlayer({
     );
   }
   const Concept = CONCEPT_COMPONENTS[conceptId];
-  return <Concept key={blockId ?? conceptId} />;
+  const effectiveBlockId = blockId ?? `concept-${conceptId}`;
+
+  if (!chapter) return <Concept key={effectiveBlockId} />;
+
+  return (
+    <BlockScope key={effectiveBlockId} blockId={effectiveBlockId} kind="concept">
+      <Concept />
+    </BlockScope>
+  );
 }

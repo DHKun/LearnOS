@@ -1,8 +1,15 @@
 import { createHash } from "node:crypto";
 
-import { loadAllCourses, readQuizFile, type LoadedCourse } from "@/lib/content/loader";
+import {
+  loadAllCourses,
+  readBlockQuizFile,
+  readQuizFile,
+  type LoadedCourse,
+} from "@/lib/content/loader";
 import { getActivityDefinition } from "@/lib/activities/catalog";
 import { buildCourseUpdate, initialCourseStatus } from "@/lib/content/sync-policy";
+import { buildChapterStructure, chapterConfig, resolveChapterCompletion } from "@/lib/content/chapters";
+import type { ArticleLessonManifest } from "@/lib/content/manifest";
 import { getValidator, getValidatorFingerprint } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -29,6 +36,23 @@ function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function chapterStructure(loaded: LoadedCourse, lesson: ArticleLessonManifest) {
+  return buildChapterStructure(lesson, {
+    quiz: (block) => {
+      const quiz = readBlockQuizFile(loaded, lesson, block);
+      return {
+        quizHash: sha256(canonicalJson(quiz)),
+        passScore: block.passScore ?? quiz.passScore,
+      };
+    },
+    validatorFingerprint: (activityId) => {
+      const activity = getActivityDefinition(activityId);
+      if (!activity) return null;
+      return getValidatorFingerprint(activity.validatorId) ?? null;
+    },
+  });
+}
+
 export function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
   if (loaded.manifest.lessons.length !== existing.length) return false;
   const sorted = [...existing].sort((a, b) => a.position - b.position);
@@ -46,6 +70,24 @@ export function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): bo
     }
 
     const config = row.config ?? {};
+    if (lesson.type === "article") {
+      const completion = resolveChapterCompletion(lesson);
+      const existingCompletion = config.completion as
+        | { mode?: string; requiredBlocks?: string[] }
+        | undefined;
+      const existingMode = existingCompletion?.mode ?? "manual";
+      const existingRequired = [...(existingCompletion?.requiredBlocks ?? [])].sort();
+      const nextRequired = [...completion.requiredBlocks].sort();
+      if (existingMode !== completion.mode) return false;
+      if (existingMode === "manual") {
+        // Optional practice blocks may be added or changed without affecting progress.
+        return true;
+      }
+      if (existingRequired.join("|") !== nextRequired.join("|")) return false;
+      const next = chapterStructure(loaded, lesson);
+      if (config.chapterHash !== next.hash) return false;
+      return true;
+    }
     if (lesson.type === "quiz") {
       const quiz = readQuizFile(loaded, lesson);
       // Grading rules and actual question content are frozen once learners exist.
@@ -81,7 +123,7 @@ export async function syncCourses(
   options: { publish?: boolean; publishNew?: boolean; refreshMetadata?: boolean } = {},
 ): Promise<SyncSummary[]> {
   const db = createAdminClient();
-  const courses = loadAllCourses();
+  const courses = await loadAllCourses();
   const summaries: SyncSummary[] = [];
 
   for (const loaded of courses) {
@@ -156,6 +198,19 @@ export async function syncCourses(
 
       if (lesson.type === "article") {
         contentRef = lesson.source;
+        const completion = resolveChapterCompletion(lesson);
+        const hasChapter =
+          (lesson.blocks?.length ?? 0) > 0 ||
+          lesson.completion !== undefined ||
+          completion.mode !== "manual" ||
+          lesson.completionPolicy === "server_validated";
+        if (hasChapter) {
+          const structure = chapterStructure(loaded, lesson);
+          config = {
+            ...(lesson.unit ? { unit: lesson.unit } : {}),
+            ...chapterConfig(lesson, structure),
+          };
+        }
       } else if (lesson.type === "interactive") {
         const activity = getActivityDefinition(lesson.activityId);
         if (!activity) throw new Error(`未注册的 activityId: ${lesson.activityId}`);

@@ -37,7 +37,7 @@
    - 统一返回 `{ data }` 或 `{ error: { code, message } }`。
 4. 需要原子性的写操作调用 PostgreSQL `SECURITY DEFINER` 函数；函数再次校验学生身份、归属与状态，并在同一事务内写进度、结课与积分。
 
-## 3. 数据模型（11 张业务表）
+## 3. 数据模型（核心 11 张 + 章节 Block 2 张）
 
 | 表 | 作用 | 关键约束 |
 | --- | --- | --- |
@@ -52,10 +52,14 @@
 | `quiz_attempts` | 测验尝试与得分 | PK = 提交 UUID；分数 0–100 |
 | `notes` | 私人章节笔记 | PK `(student_id, lesson_id)`；`octet_length(content) <= 65536` |
 | `point_events` | 积分台账 | `dedupe_key` 唯一；只能由事务函数写入 |
+| `block_attempts` | 章节 Block 的每次正式提交 | PK = 请求 UUID；同 ID 不同请求 hash 拒绝 |
+| `block_results` | 每 enrollment/lesson/block 的可信通过状态 | PK `(enrollment_id, lesson_id, block_id)`；`passed` 只由服务端事务写入 |
 
 `profiles.email` 为便于管理端展示而冗余保存（见 [`decisions.md`](decisions.md)）。
 
-另有 2 张运维表（不属于上述 11 张业务表）：`deployment_jobs` 保存部署/回滚任务、阶段、日志、课程快照和镜像引用；`deployment_state` 保存当前/上一个成功版本。二者启用 RLS 且没有浏览器策略，仅 service role 可访问。
+`block_attempts` / `block_results` 是章节级 Block 的持久化结构；`block_attempts` 保证提交幂等，`block_results` 是章节完成判定的可信来源。二者启用 RLS 且没有浏览器策略，仅 service role 可访问。
+
+另有 2 张运维表：`deployment_jobs` 保存部署/回滚任务、阶段、日志、课程快照和镜像引用；`deployment_state` 保存当前/上一个成功版本。二者同样仅 service role 可访问。
 
 ### 3.0 课程部署表
 
@@ -81,7 +85,9 @@
 | `join_course` | 新建/恢复/幂等返回 enrollment；唯一冲突转 `ACTIVE_COURSE_EXISTS` |
 | `abandon_course` | `active → abandoned`，保留数据 |
 | `heartbeat` | 更新 `last_seen_at`、当前章节，并将当前章节标记为 `in_progress`（不降级 completed）；仅在章节变化且可见/聚焦时更新 `last_interaction_at` |
-| `complete_lesson` | 图文章节/reported 实验完成、首次 +10、结课判定 |
+| `complete_lesson` | 图文章节/reported 实验完成、首次 +10、结课判定；拒绝 manual 绕过 v3 server_validated 章节 |
+| `save_block_result` | 记录 Block 尝试、幂等校验、更新 `block_results`、按 all/any 完成章节并 +10 |
+| `learnos_chapter_completion_satisfied` | 根据 `lessons.config.completion` 与 `block_results` 计算完成条件 |
 | `record_event` | 事件幂等写入、频率限制、交互时间更新 |
 | `save_state` | `expectedVersion` 乐观锁；冲突 `STATE_VERSION_CONFLICT` |
 | `save_submission` | 写入验证结果；通过才完成章节并 +10；重复 ID 返回缓存结果 |
@@ -116,7 +122,8 @@ none ──join──▶ active ──finish──▶ completed ──review─�
 not_started → in_progress → completed
 ```
 
-- `article`：学生明确点击「标记本章完成」，来源 `manual`。
+- `article`（v2/手动）：学生明确点击「标记本章完成」，来源 `manual`。
+- `article`（v3 混合章节）：`blocks` 由服务端验证器/题库记录到 `block_results`；`completion.mode=all/any` 满足后由 `save_block_result` 自动完成，禁止直接调用 `complete_lesson` 绕过。
 - `interactive`：
   - `reported`：允许 `complete()` 自报告；
   - `server_validated`：只有注册验证器返回 `passed=true` 才能完成；
@@ -138,16 +145,26 @@ not_started → in_progress → completed
 ```text
 content/courses/<slug>/course.json
   ├── *.mdx                    → 服务端 compileMDX（可信仓库内容）
-  ├── quiz.server.json         → 仅服务端读取；API 去除 answer/explanation
-  └── validators.ts            → 静态注册到 lib/content/validators.server.ts
+  ├── concepts/*.tsx           → 课程插件动画（按需加载）
+  ├── activities/*.tsx         → 课程插件原生实验（按需加载）
+  ├── assessments/*.server.json→ 章节知识检查；仅服务端读取
+  ├── quiz.server.json         → 最终测验；仅服务端读取
+  └── validators.ts            → 静态注册到 server-only validator registry
 
-pnpm courses:validate → 结构/资源/题库/activityId/validator 校验
-pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结构、题库与验证器
+pnpm courses:prepare  → 解析 plugins、生成组件/验证器 Registry
+pnpm courses:validate → manifest v2/v3、MDX AST、Block/题库/activity/validator、路径/符号链接校验
+pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结构、必需 Block、题库与验证器
 ```
 
-- 数据库保存 `content_ref`（文件相对路径）与 `config`（activityId/validatorId/validatorHash/passScore/finalExam/quizHash）。
-- 测验题目在请求时从服务端文件读取并评分；答案不进入数据库、API 响应或客户端 bundle。
-- 题库内容与 validator 源码哈希在首次同步时冻结；已有报名后变更会被拒绝，结构性升级使用新 course slug。
+- 数据库保存 `content_ref` 与 `config`：
+  - interactive: activityId/validatorId/validatorFingerprint；
+  - quiz: passScore/finalExam/quizHash；
+  - v3 article: `blocks`、`completion`、`chapterHash`（仅覆盖必需 Block 的结构）。
+- `chapterHash` 由必需 Block 的类型、activity validator 指纹、章节题库哈希、完成模式/requiredBlocks 计算；新增可选 Block 不改变该哈希。
+- MDX 通过 `remark-parse` + `remark-mdx` AST 校验：声明的 Block 必须恰好渲染一次，组件类型必须匹配，Concept/Activity 必须已注册。
+- 章节知识检查/最终测验答案只在服务端读取；`resolveChapterBlocks` 只输出公开题目，不包含 answer/explanation。
+- 客户端组件不能导入 `validators.ts`、`*.server.json` 或 `assessments/`；`courses:prepare` 与部署扫描都会拒绝。
+- 题库内容与 validator 源码哈希在首次同步时冻结；已有报名后必需结构变更会被拒绝，结构性升级使用新 course slug。
 
 ## 8. 原生活动与 Learning SDK
 
@@ -160,17 +177,21 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 | `start()` | `POST /api/learning/events`，`session_start` 按会话 ID 去重 |
 | `track()` | `POST /api/learning/events`，事件 UUID 幂等，payload 完整持久化 |
 | `saveState()` | 600ms 防抖 → `PUT /api/learning/states/:lessonId`，`expectedVersion` 乐观锁；冲突回传 409 |
-| `complete()` | `POST /api/lessons/:id/complete`；`server_validated` 返回 `recorded:false` |
-| `submit()` | `POST /api/learning/submissions`，服务端验证器判定 |
+| `complete()` | 旧 `interactive`：`POST /api/lessons/:id/complete`；BlockScope 中为 no-op，由 Block 提交决定完成 |
+| `submit()` | 旧 interactive：`POST /api/learning/submissions`；BlockScope：`POST /api/learning/blocks/submit` |
 | `refreshState()` | 重新读取服务端状态/版本，用于冲突恢复 |
 
-4. 组件从 `initialState` 恢复；状态变化经 SDK 串行保存；`pagehide` 以 `keepalive` 尽力保存最后一次状态。
-5. 互动组件与主应用同源，只通过 `/api/learning/**` 读写；禁止任意模块导入、`eval` 或执行用户输入脚本。客户端事件仅是学习遥测，不是不可伪造的过关证明。
+4. 混合章节使用两层 Context：
+   - `ChapterLearningProvider` 持有一个 `LearningClient` 与整章 `{ schemaVersion:2, blocks }` 状态；
+   - 每个 `BlockScope` 提供 scoped SDK，`saveState` 合并到所属 `blockId`，`submit` 调用 Block 接口，`complete` 为 no-op。
+5. 组件从 `initialState` 恢复；状态变化经 SDK 串行保存；`pagehide` 以 `keepalive` 尽力保存最后一次状态。
+6. 互动组件与主应用同源，只通过 `/api/learning/**` 读写；禁止任意模块导入、`eval` 或执行用户输入脚本。客户端事件仅是学习遥测，不是不可伪造的过关证明；`block_results` 只由服务端事务写入。
+7. `ChapterProgress` 显示必需 Block 的通过状态与 all/any 规则；满足条件后 `router.refresh()` 展示服务端完成状态。
 
 ## 9. 安全控制
 
 - **身份**：Supabase Cookie 会话；服务端 `auth.getUser()`；角色来自 `profiles`；禁用账号在每个请求重新检查。
-- **RLS**：11 张表全部启用；学生仅读自己（课程目录/章节按已发布或已报名），管理员读全部；`notes` 仅本人；浏览器角色无写权限（`REVOKE`），仅可写自己的 notes。
+- **RLS**：核心 11 张 + 章节 Block 2 张 + 部署 2 张表全部启用；学生仅读自己（课程目录/章节按已发布或已报名），管理员读全部；`notes` 仅本人；`block_attempts`/`block_results`/部署表没有浏览器策略。浏览器角色无进度/积分/Block 写权限。
 - **写入**：进度/积分/测验只能经 service-role 事务函数；浏览器无法直接写 `lesson_progress`、`point_events`、`quiz_attempts`。
 - **CSRF**：写请求校验 Origin；Server Action 由 Next 内建保护。
 - **输入**：Zod 限制 UUID、长度、枚举、JSON 大小；事件 8KB、状态/提交 64KB、笔记 64KB；事件限速 120 次/分钟/ enrollment。
@@ -210,8 +231,10 @@ updater (Node + Docker CLI) ── 无监听端口；轮询 Supabase 任务
 
 ## 12. 教学层与新版工作区
 
-- **概念层**：`lib/education/concepts.ts` 管理 `conceptId` 元数据；`components/concepts/registry.tsx` 按需加载四个概念动画；文章 MDX 通过 `<ConceptPlayer>` 组合动画与文字，通过 `<MiniCheck>` 插入不计分知识检查。
-- **动画控制**：`components/education/concept-frame.tsx` 统一播放/暂停/重播/单步/速度、类比边界、静态图解、键盘和 `prefers-reduced-motion`；状态写入同一课时的 `activity_states`，事件写入 `activity_events`。
+- **混合章节**：`ChapterLearningProvider` 持有一个 LearningClient 与整章 `{schemaVersion:2, blocks}` 状态；`BlockScope` 为每个 Concept/Simulation/KnowledgeCheck 提供 block-scoped SDK，状态按 `blockId` 合并保存。
+- **概念层**：`lib/education/concepts.ts` 管理 `conceptId` 元数据；`components/concepts/registry.tsx` 按需加载概念动画；MDX 通过 `<ConceptPlayer>` 组合动画与文字，通过 `<MiniCheck>` 插入不计分知识检查。
+- **章节 Block**：`SimulationBlock` 在章节内加载 Activity Registry；`KnowledgeCheck` 使用服务端题库评分；`ChapterProgress` 展示必需 Block 的通过状态和 all/any 规则。
+- **动画控制**：`components/education/concept-frame.tsx` 统一播放/暂停/重播/单步/速度、类比边界、静态图解、键盘和 `prefers-reduced-motion`；状态写入 block 命名空间内的 `activity_states`，事件写入 `activity_events`。
 - **学习工作区**：`components/learning/workspace.tsx` 在桌面提供可折叠目录、主内容、默认关闭的笔记抽屉与专注模式；移动端目录和笔记分别使用抽屉，内容优先。
 - **连续学习**：`LessonPager` 提供上一节/下一节/课程完成入口；页头显示当前完成条件。
 - **管理员**：`/admin/students/[id]` 为独立学生详情页，含概览、章节进度、学习时间线和成绩/积分四个标签页；课程详情学员表分页并在学生/课程之间互链。
@@ -230,10 +253,11 @@ updater (Node + Docker CLI) ── 无监听端口；轮询 Supabase 任务
 
 ## 13. 课程插件与自动注册
 
-- 每门课程是 `content/courses/<slug>/` 下的完整插件；`course.json` 的 `plugins` 声明 concept、activity 与 validator，路径/导出在生成期校验。
+- 每门课程是 `content/courses/<slug>/` 下的完整插件；Manifest v2 继续兼容，v3 在 `article` 章节增加 `blocks/completion`；`plugins` 声明 concept、activity 与 validator，路径/导出在生成期校验。
+- MDX 使用 `remark-parse` + `remark-mdx` AST 校验，拒绝未注册组件、未声明/重复/类型不匹配的 Block；客户端组件禁止导入服务端 validator/题库。
 - `scripts/courses/generate.ts` 扫描全部 Manifest，稳定排序生成 `lib/generated/course-catalog.ts`、`course-components.tsx`、`validator-registry.server.ts`；平台 Registry 只引用生成物。
 - 新课程无需修改核心 Registry；删除课程会清除生成项。
-- 旧两门课程用 `legacyGlobalId` 保留原 activity/concept ID 与历史数据；组件源码已迁入课程目录。
+- 旧课程用 `legacyGlobalId` 保留原 activity/concept ID 与历史数据；组件源码已迁入课程目录。
 - Validator 指纹来自 validator 文件 SHA-256，由生成器输出；旧 `validatorHash` 在首次同步时兼容升级到版本 2 指纹。
 - `pnpm courses:scan` / `pnpm courses:snapshot` 输出课程版本、源码摘要、结构摘要与插件清单；`/admin/deployments` 与 `updater` 使用同一套快照逻辑。
 - Validator ID 全局唯一；组件/validator 路径解析真实路径，拒绝符号链接越出课程目录。

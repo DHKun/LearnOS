@@ -3,6 +3,8 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { ConceptPlayer } from "@/components/concepts/registry";
 import { MiniCheck } from "@/components/education/mini-check";
+import { KnowledgeCheck } from "@/components/learning/knowledge-check";
+import { SimulationBlock } from "@/components/learning/simulation-block";
 
 type CalloutType = "note" | "tip" | "warning";
 
@@ -42,4 +44,6 @@ export const mdxComponents = {
   Callout,
   ConceptPlayer,
   MiniCheck,
+  SimulationBlock,
+  KnowledgeCheck,
 };

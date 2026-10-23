@@ -2,6 +2,8 @@
 
 LearnOS 采用**内容即代码**：课程结构、MDX、题库与服务端验证器都在仓库中，经脚本校验后同步到数据库。管理员 UI 只管理发布状态与标题/简介，不编辑章节内容。
 
+> **Manifest v3 混合章节**：一个章节可以用 MDX 自由组合文字、图片、动画、JS 模拟实验和知识检查。完整字段、模板和 Block 状态模型见 [`mixed-chapters.md`](mixed-chapters.md)。v2 课程继续完全兼容。
+
 ## 1. 目录结构
 
 ```text
@@ -9,8 +11,11 @@ content/courses/<course-slug>/
   course.json              # 课程 manifest
   01-intro.mdx             # 图文章节
   02-principle.mdx
-  quiz.server.json         # 测验题库（含答案，仅服务端读取）
-  validators.ts            # 互动组件服务端验证器
+  quiz.server.json         # 最终测验题库（含答案，仅服务端读取）
+  assessments/*.server.json# v3 章节知识检查题库（仅服务端读取）
+  validators.ts            # 互动组件/模拟 Block 服务端验证器
+  concepts/*.tsx           # 课程插件动画
+  activities/*.tsx         # 课程插件原生模拟实验
 
 components/activities/     # activityId registry 与原生 React 组件
 lib/activities/            # 纯模拟/校验逻辑与活动目录
@@ -65,7 +70,7 @@ lib/activities/            # 纯模拟/校验逻辑与活动目录
 | `required` | 否 | 默认 `true`；课程至少 1 个必修 |
 | `unit` | 否 | 可选逻辑分组，写入 `lessons.config.unit`，用于目录分组；不增加表，不参与结构冻结 |
 | `type` | 是 | `article` / `interactive` / `quiz` |
-| `completionPolicy` | 依类型 | article: `manual`；interactive: `reported` / `server_validated`；quiz: `server_validated` |
+| `completionPolicy` | 依类型 | article: `manual`，或带可验证 blocks 的 `server_validated`；interactive: `reported` / `server_validated`；quiz: `server_validated` |
 | `source` | article/quiz | 课程目录内相对路径；禁止 `..`、绝对路径 |
 | `activityId` | interactive | 必须已注册到 `lib/activities/catalog.ts` 与 `components/activities/registry.tsx` |
 | `finalExam` | quiz | **必须且只能有一个**，且必须是最后一个章节 |
@@ -75,8 +80,54 @@ lib/activities/            # 纯模拟/校验逻辑与活动目录
 - 章节 slug 唯一、资源文件存在、路径不得逃出课程目录。
 - 至少一个必修章节。
 - 恰好一个 `finalExam: true` 的测验，且位于最后。
-- 图文章节不能声明 `server_validated`；交互章节不能使用 `manual`。
-- 每个交互章节的 `activityId` 必须在活动目录中注册，且对应服务端 validator 可用。
+- 图文章节声明 `server_validated` 时必须带 `blocks` 与可满足的 `completion`；交互章节不能使用 `manual`。
+- 每个交互章节/模拟 Block 的 `activityId` 必须在活动目录中注册，且对应服务端 validator 可用。
+- v3 的 Block ID 在章节内唯一；`requiredBlocks` 必须引用存在的 Block；MDX 必须实际渲染声明的 Block。
+- MDX 使用 AST 解析校验，未知组件、未注册 Concept/Activity、重复 Block 都会失败。
+- 客户端组件不能导入 `validators.ts`、`*.server.json` 或 `assessments/`。
+
+### 2.1 Manifest v3 混合章节
+
+```json
+{
+  "schemaVersion": 3,
+  "slug": "http-from-zero",
+  "title": "HTTP 协议入门",
+  "version": "1.0.0",
+  "plugins": { "concepts": [], "activities": [] },
+  "lessons": [
+    {
+      "slug": "request-response",
+      "title": "请求与响应",
+      "type": "article",
+      "source": "lessons/04-request-response.mdx",
+      "completionPolicy": "server_validated",
+      "required": true,
+      "blocks": [
+        {
+          "id": "request-lab",
+          "kind": "simulation",
+          "activityId": "http-from-zero/request-builder"
+        },
+        {
+          "id": "request-check",
+          "kind": "question",
+          "source": "assessments/request-check.server.json"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": ["request-lab", "request-check"]
+      }
+    }
+  ]
+}
+```
+
+- `blocks` / `completion` 省略时就是普通文章章节。
+- `completion.mode`: `manual | all | any`；`all/any` 必须 `server_validated`。
+- 只有 simulation/question 可以进入 `requiredBlocks`；动画只做展示。
+- `plugins` 可省略；纯文字课程不需要任何概念或活动。
 
 ## 3. MDX 图文
 
@@ -91,6 +142,18 @@ lib/activities/            # 纯模拟/校验逻辑与活动目录
 ```
 
 `type`: `note | tip | warning`。
+
+混合章节还可以使用：
+
+```mdx
+<ConceptPlayer conceptId="http-from-zero/request-flow" blockId="flow-1" />
+<SimulationBlock blockId="request-lab" />
+<KnowledgeCheck blockId="request-check" />
+```
+
+- `blockId` 必须与 manifest `blocks[].id` 一致；同一章内唯一。
+- 动画可多次使用，只要 `blockId` 不同。
+- `MiniCheck` 仍然不计分；正式知识检查用 `KnowledgeCheck`。
 
 - 页面标题由播放器渲染，MDX 内不要再写一级标题。
 - 图片可使用相对/绝对 URL；MVP 不使用 Supabase Storage，建议内联为代码或外链可信资源。
@@ -245,11 +308,9 @@ export function MyActivity({ readOnly }: { readOnly: boolean }) {
 
 1. 在 `lib/activities/` 编写纯模拟/校验逻辑，并补单元测试。
 2. 在 `content/courses/<slug>/validators.ts` 调用该纯函数，返回 `passed` 与 `feedback`。
-3. 在 `lib/content/validators.server.ts` 注册 `validatorId`。
-4. 在 `lib/activities/catalog.ts` 增加 `activityId` 与 `validatorId` 映射。
-5. 在 `components/activities/<name>/index.tsx` 实现 React 组件，使用 `useLearning`/`useActivityState`。
-6. 在 `components/activities/registry.tsx` 显式注册组件。
-7. 在 `course.json` 的 interactive 章节填写 `activityId`。
+3. 在课程 `course.json` 的 `plugins.activities` 声明 component/export/validator；`pnpm courses:prepare` 自动生成 catalog 与 registry，不要手工维护注册表。
+4. 在 `content/courses/<slug>/activities/` 实现 React 组件，使用 `useLearning`/`useActivityState`；混合章节中组件会自动获得 block-scoped SDK。
+5. 在 interactive 章节或 v3 simulation Block 中填写全局 `activityId`。
 8. 执行 `pnpm courses:validate`、`pnpm typecheck`、`pnpm test`、`pnpm build` 和 E2E。
 
 ## 8. 校验、同步与发布
@@ -260,8 +321,9 @@ pnpm courses:sync            # 新课程默认 draft，保留已有发布状态
 pnpm courses:sync --publish  # 显式发布（演示/种子）
 ```
 
-- 已有 enrollment 的课程：**禁止**改变必修章节集合、顺序、类型；同步会失败并提示使用新 slug。
-- 允许原地修改标题、简介、文案、题库（不改变结构）并递增 `version`。
+- 已有 enrollment 的课程：**禁止**改变必修章节集合、顺序、类型，以及 v3 的必需 Block、完成模式、validator 指纹和必需题库哈希；同步会失败并提示使用新 slug。
+- 允许普通文案、可选动画、非必需 Block、不影响完成条件的 UI 修改原地更新。
+- v3 章节的 `config.blocks/completion/chapterHash` 由 `courses:sync` 写入；服务端 Block 完成判定只读该配置与 `block_results`。
 - 结构性调整：复制目录为新 slug，发布新课程；旧课程保留历史记录。
 - 管理端 `/admin/courses` 发布时会再次校验结构与 validator。
 
@@ -270,8 +332,8 @@ pnpm courses:sync --publish  # 显式发布（演示/种子）
 - [ ] `pnpm courses:validate` 通过。
 - [ ] `pnpm courses:sync` 成功，课程在 `/admin/courses` 为 `published`。
 - [ ] 图文无一级标题，代码块/表格渲染正常。
-- [ ] 交互实验能在独立域名打开，`LearningSDK` 已加载。
+- [ ] 交互实验/模拟组件在同一章节内按需加载，`BlockScope` 与 Learning SDK 正常。
 - [ ] 刷新/关闭重开能恢复状态。
 - [ ] 错误提交返回失败，正确提交由服务端判定通过。
 - [ ] 测验及格线合理，答案未出现在 API 响应/客户端资源。
-- [ ] 完成全部必修后课程结课、积分正确（每章 10 + 最终测验 50）。
+- [ ] 完成全部必修后课程结课、积分正确（每章 10 + 最终测验 50）；混合章节多个 Block 只发一次章节积分。

@@ -93,7 +93,9 @@ export function LessonNav({
                     <span className="mt-0.5 flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
                       <Icon className="size-3" />
                       {lesson.type === "article"
-                        ? "图文"
+                        ? lesson.blocks && lesson.blocks.length > 0
+                          ? "混合章节"
+                          : "图文"
                         : lesson.type === "interactive"
                           ? "互动实验"
                           : "测验"}

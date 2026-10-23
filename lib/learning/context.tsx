@@ -5,7 +5,7 @@ import * as React from "react";
 import { LearningClient } from "@/lib/learning/client";
 import type { LearningSDK, LearningState } from "@/lib/learning/types";
 
-type LearningContextValue = {
+export type LearningContextValue = {
   sdk: LearningSDK;
   activityId: string;
   lessonId: string;
@@ -15,7 +15,7 @@ type LearningContextValue = {
   readOnly: boolean;
 };
 
-const LearningContext = React.createContext<LearningContextValue | null>(null);
+export const LearningContext = React.createContext<LearningContextValue | null>(null);
 
 type LearningProviderProps = Omit<LearningContextValue, "sdk"> & {
   children: React.ReactNode;

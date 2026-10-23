@@ -5,7 +5,14 @@ import path from "node:path";
 import { z } from "zod";
 
 import { canonicalJson } from "@/lib/crypto/canonical-json";
-import { quizFileSchema } from "@/lib/content/manifest";
+import {
+  chapterBlockSchema,
+  chapterCompletionSchema,
+  quizFileSchema,
+} from "@/lib/content/manifest";
+import { validateChapterMdx } from "@/lib/content/mdx-validation";
+import { buildChapterStructure } from "@/lib/content/chapters";
+import type { ArticleLessonManifest } from "@/lib/content/manifest";
 import type {
   DeploymentCourseSnapshot,
   SnapshotLesson,
@@ -40,6 +47,8 @@ const scanLessonSchema = z.discriminatedUnion("type", [
     type: z.literal("article"),
     source: safeRelativePath,
     completionPolicy: z.enum(["manual", "reported", "server_validated"]).default("manual"),
+    blocks: z.array(chapterBlockSchema).max(50).optional(),
+    completion: chapterCompletionSchema.optional(),
   }),
   z.object({
     slug: z.string().regex(slugPattern),
@@ -108,12 +117,75 @@ const scanManifestSchema = z
       }
       slugs.add(lesson.slug);
       if (lesson.required) requiredCount += 1;
-      if (lesson.type === "article" && lesson.completionPolicy === "server_validated") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["lessons", index, "completionPolicy"],
-          message: "图文章节不能使用 server_validated",
-        });
+      if (lesson.type === "article") {
+        const blocks = lesson.blocks ?? [];
+        const ids = new Set<string>();
+        for (const [blockIndex, block] of blocks.entries()) {
+          if (ids.has(block.id)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["lessons", index, "blocks", blockIndex, "id"],
+              message: `Block ID 重复: ${block.id}`,
+            });
+          }
+          ids.add(block.id);
+        }
+        if ((blocks.length > 0 || lesson.completion) && course.schemaVersion !== 3) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["lessons", index],
+            message: "blocks/completion 需要 schemaVersion: 3",
+          });
+        }
+        const completion = lesson.completion;
+        if (completion) {
+          if (completion.mode === "manual") {
+            if (completion.requiredBlocks.length > 0) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["lessons", index, "completion", "requiredBlocks"],
+                message: "manual 完成模式不能声明 requiredBlocks",
+              });
+            }
+            if (lesson.completionPolicy !== "manual") {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["lessons", index, "completionPolicy"],
+                message: "manual 完成模式要求 completionPolicy=manual",
+              });
+            }
+          } else {
+            if (lesson.completionPolicy !== "server_validated") {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["lessons", index, "completionPolicy"],
+                message: "all/any 完成模式要求 completionPolicy=server_validated",
+              });
+            }
+            if (completion.requiredBlocks.length === 0) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["lessons", index, "completion", "requiredBlocks"],
+                message: "all/any 完成模式至少需要一个 requiredBlock",
+              });
+            }
+            for (const [requiredIndex, blockId] of completion.requiredBlocks.entries()) {
+              if (!ids.has(blockId)) {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  path: ["lessons", index, "completion", "requiredBlocks", requiredIndex],
+                  message: `requiredBlock 不存在: ${blockId}`,
+                });
+              }
+            }
+          }
+        } else if (lesson.completionPolicy === "server_validated" && blocks.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["lessons", index, "completionPolicy"],
+            message: "server_validated 图文章节必须声明可验证的 blocks",
+          });
+        }
       }
       if (lesson.type === "interactive" && lesson.completionPolicy === "manual") {
         ctx.addIssue({
@@ -251,6 +323,15 @@ function hasExport(file: string, name: string): boolean {
   return new RegExp(`export\\s+(?:async\\s+)?(?:function|const|class)\\s+${name}\\b`).test(source);
 }
 
+function rejectServerImports(file: string) {
+  const source = fs.readFileSync(file, "utf8");
+  const pattern =
+    /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'][^"']*(?:validators(?:\.ts)?|\.server\.json|assessments\/)[^"']*["']/;
+  if (pattern.test(source)) {
+    throw new Error(`${path.basename(file)} 不能导入服务端验证器或答案文件`);
+  }
+}
+
 function readManifest(courseDir: string): ScanManifest {
   const manifestPath = path.join(courseDir, "course.json");
   if (!fs.existsSync(manifestPath)) {
@@ -297,6 +378,7 @@ export function buildCourseSnapshot(
     if (!hasExport(component, concept.export)) {
       throw new Error(`概念 ${concept.id} 的组件未导出 ${concept.export}`);
     }
+    rejectServerImports(component);
     return {
       id: concept.id,
       globalId,
@@ -313,6 +395,7 @@ export function buildCourseSnapshot(
     if (!hasExport(component, activity.export)) {
       throw new Error(`活动 ${activity.id} 的组件未导出 ${activity.export}`);
     }
+    rejectServerImports(component);
     const validatorFile = resolveCourseFile(courseDir, activity.validator.path);
     if (!hasExport(validatorFile, activity.validator.export)) {
       throw new Error(`活动 ${activity.id} 的验证器未导出 ${activity.validator.export}`);
@@ -360,8 +443,66 @@ export function buildCourseSnapshot(
     };
 
     if (lesson.type === "article") {
-      resolveCourseFile(courseDir, lesson.source);
-      return base;
+      const articlePath = resolveCourseFile(courseDir, lesson.source);
+      const blocks = lesson.blocks ?? [];
+      const quizHashes = new Map<string, { quizHash: string; passScore: number }>();
+      for (const block of blocks) {
+        if (block.kind !== "question") continue;
+        const quizPath = resolveCourseFile(courseDir, block.source);
+        let quiz: z.infer<typeof quizFileSchema>;
+        try {
+          const parsed = quizFileSchema.safeParse(JSON.parse(fs.readFileSync(quizPath, "utf8")));
+          if (!parsed.success) throw new Error(formatIssues(parsed.error));
+          quiz = parsed.data;
+        } catch (error) {
+          throw new Error(
+            `章节 ${lesson.slug} 的 Block ${block.id} 题库校验失败: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        }
+        quizHashes.set(block.id, {
+          quizHash: sha256(canonicalJson(quiz)),
+          passScore: block.passScore ?? quiz.passScore,
+        });
+      }
+
+      if (blocks.length === 0 && !lesson.completion && lesson.completionPolicy !== "server_validated") {
+        // Legacy v2 article: keep the old structural digest stable.
+        validateChapterMdx({
+          source: fs.readFileSync(articlePath, "utf8"),
+          label: `课程 ${manifest.slug} 的章节 ${lesson.slug}`,
+          blocks,
+          isConcept: (conceptId) => conceptIds.has(conceptId),
+          activityExists: (activityId) => activityById.has(activityId),
+        });
+        return base;
+      }
+
+      const article = lesson as unknown as ArticleLessonManifest;
+      const structure = buildChapterStructure(article, {
+        quiz: (block) => {
+          const meta = quizHashes.get(block.id);
+          if (!meta) throw new Error(`章节 ${lesson.slug} 的 Block ${block.id} 缺少题库`);
+          return meta;
+        },
+        validatorFingerprint: (activityId) => activityById.get(activityId)?.validatorFingerprint ?? null,
+      });
+
+      validateChapterMdx({
+        source: fs.readFileSync(articlePath, "utf8"),
+        label: `课程 ${manifest.slug} 的章节 ${lesson.slug}`,
+        blocks,
+        isConcept: (conceptId) => conceptIds.has(conceptId),
+        activityExists: (activityId) => activityById.has(activityId),
+      });
+
+      return {
+        ...base,
+        ...(structure.completion.mode === "manual"
+          ? {}
+          : { chapterHash: structure.hash, chapterCompletion: structure.completion }),
+      };
     }
 
     if (lesson.type === "quiz") {

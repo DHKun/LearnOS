@@ -1,0 +1,23 @@
+## 状态码先看第一位
+
+- `2xx`：成功。
+- `3xx`：重定向或缓存相关。
+- `4xx`：客户端请求有问题或资源不可用。
+- `5xx`：服务器端错误。
+
+常见组合：
+
+```text
+GET /users/1       → 200 OK
+POST /users        → 201 Created
+DELETE /users/1    → 204 No Content
+GET /users/999     → 404 Not Found
+```
+
+## 用状态码表达结果
+
+<KnowledgeCheck blockId="status-check" />
+
+## 本章只需要通过知识检查
+
+没有模拟实验。通过上面的章节知识检查后，服务端会自动完成本章并记录首次完成积分。

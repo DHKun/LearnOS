@@ -75,6 +75,25 @@ export const submissionSchema = z
     }
   });
 
+export const blockSubmitSchema = z
+  .object({
+    attemptId: uuidSchema,
+    enrollmentId: uuidSchema,
+    lessonId: uuidSchema,
+    blockId: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Block ID 不合法"),
+    submission: z.record(z.unknown()),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (jsonBytes(value.submission) > MAX_JSON_BYTES) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["submission"],
+        message: "Block 提交超过 64KB",
+      });
+    }
+  });
+
 export const completeLessonSchema = z.object({ enrollmentId: uuidSchema }).strict();
 
 const answerValueSchema = z.union([

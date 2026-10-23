@@ -73,6 +73,20 @@ function hasExport(file: string, exportName: string) {
   if (!pattern.test(source)) fail(`${path.relative(root, file)} 未导出 ${exportName}`);
 }
 
+/**
+ * Client-facing course components must never import server-only validators or
+ * answer files. The generated registry keeps validators in a separate server
+ * module; this check protects the client bundle boundary.
+ */
+function rejectServerImports(file: string) {
+  const source = fs.readFileSync(file, "utf8");
+  const pattern =
+    /(?:from\s*|import\s*\(\s*|require\s*\(\s*)["'][^"']*(?:validators(?:\.ts)?|\.server\.json|assessments\/)[^"']*["']/;
+  if (pattern.test(source)) {
+    fail(`${path.relative(root, file)} 不能导入服务端验证器或答案文件`);
+  }
+}
+
 function main() {
   const manifests = fs
     .readdirSync(coursesDir, { withFileTypes: true })
@@ -93,20 +107,19 @@ function main() {
   for (const file of manifests) {
     const manifest = JSON.parse(fs.readFileSync(file, "utf8")) as LegacyManifest;
     if (!manifest.slug) fail(`${file} 缺少 slug`);
-    if (!manifest.plugins) {
-      fail(`${manifest.slug} 缺少 plugins 声明；旧格式课程必须迁移到 Manifest v2`);
-    }
     const courseDir = path.dirname(file);
-    for (const concept of manifest.plugins.concepts ?? []) {
+    const plugins = manifest.plugins ?? { concepts: [], activities: [] };
+    for (const concept of plugins.concepts ?? []) {
       const globalId = concept.legacyGlobalId ?? `${manifest.slug}/${concept.id}`;
       if (concepts.some((item) => item.globalId === globalId)) {
         fail(`概念 ID 重复: ${globalId}`);
       }
       const componentFile = inside(courseDir, concept.component);
       hasExport(componentFile, concept.export);
+      rejectServerImports(componentFile);
       concepts.push({ ...concept, globalId, file: componentFile });
     }
-    for (const activity of manifest.plugins.activities ?? []) {
+    for (const activity of plugins.activities ?? []) {
       const globalId = activity.legacyGlobalId ?? `${manifest.slug}/${activity.id}`;
       if (activities.some((item) => item.globalId === globalId)) {
         fail(`活动 ID 重复: ${globalId}`);
@@ -117,6 +130,7 @@ function main() {
       }
       const componentFile = inside(courseDir, activity.component);
       hasExport(componentFile, activity.export);
+      rejectServerImports(componentFile);
       const validatorFile = inside(courseDir, activity.validator.path);
       hasExport(validatorFile, activity.validator.export);
       activities.push({

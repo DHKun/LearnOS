@@ -1,0 +1,23 @@
+## Header 是元信息
+
+请求和响应都携带 Header。它们描述内容类型、缓存、认证、跨域、Cookie 等元信息，而不是资源本身。
+
+<ConceptPlayer conceptId="http-from-zero/headers-cookies" blockId="hc-set-cookie" />
+
+## Cookie 是跨请求的状态
+
+服务器通过 `Set-Cookie` 下发状态，浏览器保存后，在后续符合条件的请求中自动加上 `Cookie` Header。
+
+<ConceptPlayer conceptId="http-from-zero/headers-cookies" blockId="hc-request-cookie" />
+
+## 配置一个会话 Cookie
+
+下面的实验让你选择 Cookie 属性，观察浏览器是否会在下一次请求中携带它。
+
+<SimulationBlock blockId="cookie-lab" />
+
+## 也可以先完成知识检查
+
+本章的正式完成条件是 **任意一项**：通过 Cookie 实验，或通过知识检查。
+
+<KnowledgeCheck blockId="headers-check" />

@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 3,
+  "slug": "http-from-zero",
+  "title": "HTTP 协议入门：从一次请求开始",
+  "description": "从浏览器地址栏出发，理解 URL、请求/响应、方法、状态码、Header 与 Cookie。章节内容按教学需要自由混合文字、动画、JS 模拟实验和章节知识检查。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "request-flow",
+        "component": "concepts/http-concepts.tsx",
+        "export": "RequestFlow",
+        "title": "一次 HTTP 请求的旅程",
+        "analogy": "寄信与回信：地址、信封格式和回执"
+      },
+      {
+        "id": "url-anatomy",
+        "component": "concepts/http-concepts.tsx",
+        "export": "UrlAnatomy",
+        "title": "URL 的五个部分",
+        "analogy": "快递面单：运输方式、地址、房间号与备注"
+      },
+      {
+        "id": "headers-cookies",
+        "component": "concepts/http-concepts.tsx",
+        "export": "HeadersCookies",
+        "title": "Header 与 Cookie：服务器如何记住你",
+        "analogy": "会员卡：第一次办卡，之后每次出示"
+      }
+    ],
+    "activities": [
+      {
+        "id": "request-builder",
+        "component": "activities/http-activities.tsx",
+        "export": "RequestBuilderActivity",
+        "title": "HTTP 请求构造器",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateRequestBuilder"
+        }
+      },
+      {
+        "id": "method-match",
+        "component": "activities/http-activities.tsx",
+        "export": "MethodMatchActivity",
+        "title": "HTTP 方法匹配",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateMethodMatch"
+        }
+      },
+      {
+        "id": "cookie-lab",
+        "component": "activities/http-activities.tsx",
+        "export": "CookieLabActivity",
+        "title": "会话 Cookie 实验",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateCookieLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "internet-http",
+      "title": "互联网与 HTTP",
+      "type": "article",
+      "source": "lessons/01-internet-http.mdx",
+      "required": true,
+      "completionPolicy": "manual",
+      "unit": "基础"
+    },
+    {
+      "slug": "browser-server",
+      "title": "浏览器与服务器",
+      "type": "article",
+      "source": "lessons/02-browser-server.mdx",
+      "required": true,
+      "completionPolicy": "manual",
+      "unit": "基础"
+    },
+    {
+      "slug": "url-anatomy",
+      "title": "URL 的组成",
+      "type": "article",
+      "source": "lessons/03-url-anatomy.mdx",
+      "required": true,
+      "completionPolicy": "manual",
+      "unit": "基础"
+    },
+    {
+      "slug": "request-response",
+      "title": "请求与响应",
+      "type": "article",
+      "source": "lessons/04-request-response.mdx",
+      "required": true,
+      "completionPolicy": "server_validated",
+      "unit": "消息",
+      "blocks": [
+        {
+          "id": "request-lab",
+          "kind": "simulation",
+          "activityId": "http-from-zero/request-builder",
+          "title": "构造 GET /users/1"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": ["request-lab"]
+      }
+    },
+    {
+      "slug": "http-methods",
+      "title": "HTTP 方法",
+      "type": "article",
+      "source": "lessons/05-http-methods.mdx",
+      "required": true,
+      "completionPolicy": "server_validated",
+      "unit": "消息",
+      "blocks": [
+        {
+          "id": "methods-lab",
+          "kind": "simulation",
+          "activityId": "http-from-zero/method-match",
+          "title": "为场景选择方法"
+        },
+        {
+          "id": "methods-check",
+          "kind": "question",
+          "source": "assessments/methods-check.server.json",
+          "title": "方法知识检查",
+          "passScore": 60
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": ["methods-lab", "methods-check"]
+      }
+    },
+    {
+      "slug": "status-codes",
+      "title": "状态码",
+      "type": "article",
+      "source": "lessons/06-status-codes.mdx",
+      "required": true,
+      "completionPolicy": "server_validated",
+      "unit": "消息",
+      "blocks": [
+        {
+          "id": "status-check",
+          "kind": "question",
+          "source": "assessments/status-check.server.json",
+          "title": "状态码知识检查",
+          "passScore": 60
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": ["status-check"]
+      }
+    },
+    {
+      "slug": "headers-cookies",
+      "title": "Header 与 Cookie",
+      "type": "article",
+      "source": "lessons/07-headers-cookies.mdx",
+      "required": true,
+      "completionPolicy": "server_validated",
+      "unit": "状态",
+      "blocks": [
+        {
+          "id": "cookie-lab",
+          "kind": "simulation",
+          "activityId": "http-from-zero/cookie-lab",
+          "title": "配置会话 Cookie"
+        },
+        {
+          "id": "headers-check",
+          "kind": "question",
+          "source": "assessments/headers-check.server.json",
+          "title": "Header 与 Cookie 知识检查",
+          "passScore": 50
+        }
+      ],
+      "completion": {
+        "mode": "any",
+        "requiredBlocks": ["cookie-lab", "headers-check"]
+      }
+    },
+    {
+      "slug": "summary",
+      "title": "总结",
+      "type": "article",
+      "source": "lessons/08-summary.mdx",
+      "required": true,
+      "completionPolicy": "manual",
+      "unit": "总结"
+    },
+    {
+      "slug": "final-quiz",
+      "title": "最终测验",
+      "type": "quiz",
+      "source": "assessments/final.server.json",
+      "completionPolicy": "server_validated",
+      "required": true,
+      "finalExam": true,
+      "unit": "总结"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+## URL 不是一整块字符串
+
+把它拆开看：
+
+```text
+https://example.test:8443/users/1?page=2&sort=name
+└─┬─┘   └────┬─────┘└┬┘└──┬──┘└──────┬──────┘
+协议        主机      端口 路径        查询参数
+```
+
+<ConceptPlayer conceptId="http-from-zero/url-anatomy" blockId="url-diagram" />
+
+## 路径与查询参数
+
+- **路径** `/users/1` 描述资源层级。
+- **查询参数** `?page=2&sort=name` 调整资源的表示或筛选方式。
+
+`/users/1` 和 `/users?page=1` 都可能返回用户列表/用户，但语义不同：前者是单个资源，后者是集合的筛选视图。
+
+<MiniCheck
+  id="url-check"
+  question="在 https://example.test/users/1?tab=notes 中，哪个部分是路径？"
+  options={["example.test", "/users/1", "?tab=notes"]}
+  answer={1}
+  explanation="/users/1 是路径；example.test 是主机，?tab=notes 是查询参数。"
+/>
+
+## 本章是手动完成
+
+自测题只用于即时反馈，不计入正式成绩。阅读并完成自测后，点击“标记本章完成”。

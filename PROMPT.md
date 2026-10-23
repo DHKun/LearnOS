@@ -29,7 +29,7 @@
 - Tailwind CSS + shadcn/ui（简洁界面、浅色/深色两种主题）。
 - Supabase Auth + PostgreSQL + Storage；通过 `@supabase/ssr` 接入认证。
 - Zod 入参校验、RLS、事务、唯一约束、幂等键。
-- 每门课程是独立插件目录；Manifest v2 + `pnpm courses:prepare` 自动生成 Registry，新增课程不改平台源码；概念/互动使用同源 Learning SDK。
+- 每门课程是独立插件目录；Manifest v2/v3 + `pnpm courses:prepare` 自动生成 Registry，新增课程不改平台源码；概念/互动使用同源 Learning SDK。混合章节用 v3 blocks/completion 声明正式验证内容。
 - 教学优先「生活类比 → 动画 → 操作 → 反馈 → 知识检查 → 原理总结」；动画播放不产生积分。
 - 管理页面轮询刷新；课程页面心跳。尽量减少额外运行时服务与依赖。
 - 使用docker 或 docker compose 或者 mise来开发和部署
@@ -118,3 +118,22 @@ docs/MVP-SPEC.md
 ```
 
 在编码 Agent 中粘贴本文件「任务正文」作为首次任务。随后让 Agent 以 `PLAN.md` 作为持续进度记录；后续会话可要求它读取这四份文件继续执行。若某阶段已完成，先验证对应门禁，再继续下一个未完成阶段。
+
+---
+
+## 当前增量任务：章节级混合互动教学系统（Manifest v3）
+
+在保留既有 MVP、课程插件、Learning SDK、最终测验和 Docker Compose 部署的前提下，将课程内容模型升级为 **Course → Chapter → Block**：
+
+1. Manifest v3 为 `article` 章节增加可选 `blocks` 与 `completion`；v2 继续兼容。
+2. MDX 负责文字、图片、SVG、公式、代码、动画、模拟实验和知识检查的编排顺序；Manifest 只声明需要正式验证的 simulation/question Block。
+3. 章节可以没有 Block，也可以有多个动画、多个实验、多个知识检查；禁止强制每个章节使用固定模板。
+4. 新增 `SimulationBlock` 与 `KnowledgeCheck`；`MiniCheck` 继续只做即时反馈。
+5. 章节内所有 Block 共享 enrollment/lesson 上下文，但使用 `blockId` 命名空间保存状态；统一 `useBlockState`，解决多个 Concept/Activity 互相覆盖。
+6. 完成规则支持 `manual` / `all` / `any`；服务端根据 `block_results` 判定，不能信任客户端 `passed`。
+7. 新增 `block_attempts` / `block_results`、`save_block_result`、`POST /api/learning/blocks/submit`；章节完成与 +10 积分在同一事务中，重复提交不重复发分。
+8. `courses:prepare` / `courses:validate` / `courses:sync` / 部署扫描必须支持 v3、MDX AST 校验、Block 引用校验、客户端答案隔离和结构冻结。
+9. 创建 `http-from-zero` 示范课程，覆盖纯文字、动画、模拟实验、知识检查、all/any、最终测验和刷新恢复。
+10. 必须实际运行 `pnpm courses:validate`、`lint`、`typecheck`、`test`、`build`、`test:e2e`、`security:scan`，并报告未验证项。
+
+详细制作指南见 `docs/mixed-chapters.md`，实施记录见 `PLAN.md` 的章节级混合互动阶段。

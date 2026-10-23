@@ -12,7 +12,7 @@ import { structureMatches, type DbLesson } from "./sync";
  */
 async function main() {
   const db = createAdminClient();
-  const courses = loadAllCourses();
+  const courses = await loadAllCourses();
   const failures: string[] = [];
 
   for (const loaded of courses) {

@@ -22,6 +22,20 @@ export type EnrollmentSummary = {
   progress: CourseProgress;
 };
 
+export type ChapterBlockKind = "simulation" | "question";
+export type ChapterBlockSummary = {
+  id: string;
+  kind: ChapterBlockKind;
+  activityId?: string;
+  title?: string;
+  passScore?: number;
+  questionCount?: number;
+};
+export type ChapterCompletionSummary = {
+  mode: "manual" | "all" | "any";
+  requiredBlocks: string[];
+};
+
 export type LessonSummary = {
   id: string;
   slug: string;
@@ -34,6 +48,9 @@ export type LessonSummary = {
   unit?: string;
   /** Only populated for interactive lessons. */
   activityId?: string;
+  /** Manifest v3 mixed chapter blocks, safe for UI. */
+  blocks?: ChapterBlockSummary[];
+  completion?: ChapterCompletionSummary;
 };
 
 export type MyLessonProgress = Record<
@@ -121,6 +138,31 @@ export type QuizPayload = {
   title: string;
   passScore: number;
   questions: PublicQuizQuestion[];
+};
+
+export type BlockResultSummary = {
+  blockId: string;
+  kind: ChapterBlockKind;
+  passed: boolean;
+  attempts: number;
+  score: number | null;
+  feedback: Record<string, unknown>;
+  firstPassedAt: string | null;
+};
+
+export type BlockSubmitResult = {
+  accepted: boolean;
+  duplicate: boolean;
+  passed: boolean;
+  score: number | null;
+  feedback: Record<string, unknown>;
+  blockStatus: "passed" | "failed";
+  chapterCompletionSatisfied: boolean;
+  chapterCompleted: boolean;
+  lessonStatus: string | null;
+  courseProgress: CourseProgress;
+  enrollmentStatus: EnrollmentStatus;
+  pointsAwarded: number;
 };
 
 export type QuizSubmitResult = {

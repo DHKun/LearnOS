@@ -8,6 +8,7 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 - 架构与安全设计：[`docs/architecture.md`](docs/architecture.md)
 - 28 个 MVP 业务 API + 部署/健康检查接口：[`docs/api.md`](docs/api.md)
 - 课程制作与实验接入：[`docs/course-authoring.md`](docs/course-authoring.md)
+- 混合章节制作指南（Manifest v3）：[`docs/mixed-chapters.md`](docs/mixed-chapters.md)
 - 实现取舍日志：[`docs/decisions.md`](docs/decisions.md)
 - 课程插件规范：[`docs/course-plugin-spec.md`](docs/course-plugin-spec.md)
 - 30+ 次性能优化与测量：[`docs/performance.md`](docs/performance.md)
@@ -42,7 +43,9 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 ## 学习体验
 
 - **概念动画**：每个核心知识点按「生活类比 → 动画 → 自由探索 → 知识检查 → 原理解释」组织，支持播放、暂停、重播、单步、速度、静态图解与 reduced-motion。
-- **混合内容**：MDX 文章可组合文字、动画、Callout 和不计分知识检查；旧文章无需改写。
+- **混合章节**：同一篇 MDX 可按教学需要组合文字、图片、SVG、动画、JS 模拟实验、立即反馈和不计分知识检查；章节可以完全没有互动，也可以有多个动画/实验/知识检查。
+- **章节完成规则**：`manual` / `all` / `any`；正式实验与知识检查由服务端验证并记录，满足条件后自动完成章节，多个 Block 只发一次章节完成积分。
+- **Block 独立状态**：多个动画与实验用 `blockId` 命名空间保存，自动保存、刷新恢复、多标签冲突和只读复习继续沿用原 Learning SDK。
 - **学习工作区**：可折叠目录、专注模式、默认关闭的笔记抽屉、移动端目录/笔记抽屉、上一节/下一节与完成条件提示。
 - **管理员监控**：独立学生详情（概览/章节/时间线/积分）、待关注学生视图、课程学员分页与双向跳转。
 - **数据可靠性**：管理端可见性感知轮询、笔记本地草稿与冲突提示、元数据同步保护、状态乐观锁。
@@ -101,7 +104,7 @@ npx supabase status -o env
 ```bash
 pnpm db:reset            # 应用 supabase/migrations 全部迁移
 pnpm seed:admin          # 创建管理员 admin@learnos.local
-pnpm seed:demo           # 创建 2 名学生，并同步/发布两门示例课程
+pnpm seed:demo           # 创建 2 名学生，并同步/发布全部本地课程（含 HTTP 混合章节示范）
 ```
 
 管理员与演示账号（**仅本地开发**）：
@@ -231,7 +234,7 @@ docker compose --env-file .env.local build web     # 手动构建（日常请用
 pnpm courses:prepare     # 扫描课程插件并生成 Registry（build/dev/typecheck 自动执行）
 pnpm courses:scan        # 输出课程版本/源码摘要，供部署候选比较（不访问 Git）
 pnpm courses:snapshot    # 输出完整固定快照（文件摘要、章节、Concept/Activity/Validator）
-pnpm courses:validate    # 校验 manifest、MDX/题库资源、最终测验、activity/validator 注册
+pnpm courses:validate    # 校验 manifest、MDX AST、Block/题库资源、最终测验、插件注册
 pnpm courses:preflight   # 只读检查新结构是否与已有学习记录兼容
 pnpm courses:sync        # 将元数据写入 courses/lessons，保留管理员发布状态
 pnpm courses:sync --publish  # 显式发布（种子/演示用途）
@@ -239,12 +242,13 @@ pnpm courses:sync --publish  # 显式发布（种子/演示用途）
 
 - 手动运行 `pnpm courses:sync` 时新课程默认是 `draft`，在 `/admin/courses` 发布。
 - 管理员「编译并部署」使用 `pnpm courses:sync --publish-new`：新课程自动发布，已有课程的发布状态保持不变，从而做到「复制 → 扫描 → 部署 → 学生可见」。
-- 已有 enrollment 的课程**不能**修改必修章节集合、顺序或类型；结构性升级使用新 slug。
-- 修改标题/简介/文案/题库（不改变结构）可原地同步。
+- 已有 enrollment 的课程**不能**修改必修章节集合、顺序或类型，以及 v3 必需 Block、完成模式、validator 指纹和必需题库哈希；结构性升级使用新 slug。
+- 修改标题/简介/文案、可选动画和不影响完成条件的可选 Block 可原地同步。
+- 新课程可使用 `schemaVersion: 3`，在 `article` 章节声明 `blocks` / `completion`；纯文字课程不需要任何插件。
 - 复制一个新的 `content/courses/<slug>` 目录后，`pnpm courses:prepare` 会自动注册插件；不需要修改核心 Registry。
 - Validator ID 在全局唯一；组件/验证器路径不允许通过符号链接逃出课程目录。
 
-详见 [`docs/course-authoring.md`](docs/course-authoring.md)。
+详见 [`docs/course-authoring.md`](docs/course-authoring.md) 与 [`docs/mixed-chapters.md`](docs/mixed-chapters.md)。
 
 ## 测试与验证
 
@@ -270,7 +274,7 @@ pnpm exec playwright install chromium
 # 无 root 的 Linux 沙箱可参考“故障排查”
 ```
 
-E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、两门课程完整闭环、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
+E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、两门旧课程完整闭环、`http-from-zero` 九章混合课程（纯文字/动画/模拟/知识检查/all/any/最终测验/刷新恢复）、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
 
 ## 目录结构
 
@@ -284,27 +288,28 @@ components/             # 工作区、概念动画、原生互动组件、笔记
 lib/
   api/                  # 统一响应、错误码、Origin/CSRF、鉴权守卫
   auth/                 # 服务端会话、角色守卫、登录 Server Action
-  content/              # manifest schema、内容加载、验证器注册表
+  content/              # manifest v2/v3、MDX AST 校验、章节结构、内容加载、验证器注册表
   deployments/          # 课程快照、扫描比较、部署类型
-  learning/             # 同源 Learning SDK、React Context、状态保存 Hook
+  learning/             # 同源 Learning SDK、Chapter/Block State、状态保存 Hook
   activities/           # 互动模拟纯函数与 activityId 目录
   services/             # 报名/进度/互动/测验/笔记/积分/报表/部署
   supabase/             # browser/server/admin 客户端与中间件
-content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器
-supabase/migrations/    # schema、RLS、事务函数、部署任务表
+content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器；含 http-from-zero 示范课程
+supabase/migrations/    # schema、RLS、事务函数、Block 结果/尝试表、部署任务表
 tests/                  # unit、integration（RLS/事务）、e2e（Playwright）
 scripts/                # 课程同步/校验/快照、种子、性能脚本、安全扫描
 deploy/updater/         # 最小更新执行器（Docker CLI + Node）
 docker-compose.yml      # web + updater
 Dockerfile              # web 的 deps/tools/builder/runner 多阶段镜像
-docs/                   # 规格、架构、API、课程制作、决策、截图
+docs/                   # 规格、架构、API、课程制作、混合章节、决策、截图
 ```
 
 ## 关键实现点
 
 - **单课程占用**：`one_active_enrollment_per_student` 部分唯一索引 + `join_course` 事务函数；并发时只有一个请求成功，其余 `409 ACTIVE_COURSE_EXISTS`。
 - **完成与积分原子化**：章节完成、课程结课、`point_events` 写入在同一数据库事务；`dedupe_key` 唯一，重复/并发/重放不重复发分。
-- **服务端权威**：测验答案只在服务端文件；互动 `server_validated` 由注册的验证器判定；浏览器角色无权写进度、积分或成绩。
+- **服务端权威**：测验/知识检查答案只在服务端文件；模拟实验与章节知识检查由服务端重新判定；浏览器角色无权写 `block_results`、进度、积分或成绩。
+- **Block 状态隔离**：`{ schemaVersion: 2, blocks: { [blockId]: ... } }` 统一合并保存；`block_attempts` / `block_results` 记录幂等尝试与可信通过。
 - **在线与交互分离**：`last_seen_at` 由约 60 秒心跳更新；`last_interaction_at` 由章节切换、事件、提交、笔记等实际操作更新；120 秒无心跳仅显示离线，不改变 enrollment。
 - **原生互动组件**：`activityId` 通过显式 Registry 映射到可信 React 组件；组件与主应用同源，但只通过受认证的同源 API 读写状态；服务端验证器独立判定结果。
 - **笔记私有**：`notes` RLS 仅允许本人；管理员无策略与 API，无法读取。

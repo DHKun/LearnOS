@@ -8,6 +8,9 @@ import { ACTIVITY_IDS, CONCEPT_IDS } from "@/lib/generated/course-catalog";
 describe("课程插件自动注册", () => {
   it("生成目录包含所有已安装课程的概念与活动", () => {
     expect([...CONCEPT_IDS].sort()).toEqual([
+      "http-from-zero/headers-cookies",
+      "http-from-zero/request-flow",
+      "http-from-zero/url-anatomy",
       "http-retry-basics/deduplication",
       "http-retry-basics/lost-response",
       "idempotency.deduplication",
@@ -16,6 +19,9 @@ describe("课程插件自动注册", () => {
       "sql.parameter-binding",
     ]);
     expect([...ACTIVITY_IDS].sort()).toEqual([
+      "http-from-zero/cookie-lab",
+      "http-from-zero/method-match",
+      "http-from-zero/request-builder",
       "http-retry-basics/retry-lab",
       "idempotency-lab",
       "sql-injection-lab",
@@ -30,6 +36,7 @@ describe("课程插件自动注册", () => {
     expect(generated).toContain("content/courses/sql-injection-basics/");
     expect(generated).toContain("content/courses/idempotent-retries/");
     expect(generated).toContain("content/courses/http-retry-basics/");
+    expect(generated).toContain("content/courses/http-from-zero/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

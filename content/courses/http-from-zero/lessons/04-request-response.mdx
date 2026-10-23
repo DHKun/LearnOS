@@ -1,0 +1,34 @@
+## 一条请求的解剖
+
+```http
+GET /users/1 HTTP/1.1
+Host: example.test
+Accept: application/json
+```
+
+- 请求行：方法 `GET`、目标 `/users/1`、协议版本。
+- Header：`Host` 告诉服务器要访问哪个站点，`Accept` 表达期望的响应类型。
+- Body：GET 通常没有 Body。
+
+再看响应：
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id":1,"name":"小明"}
+```
+
+<ConceptPlayer conceptId="http-from-zero/request-flow" blockId="flow-request-response" />
+
+## 在浏览器里模拟请求
+
+下面的模拟器完全在浏览器内运行，不会发出真实网络请求。修改方法或路径，观察请求行、响应状态、Header 和 Body 如何变化。
+
+<SimulationBlock blockId="request-lab" />
+
+## 任务与正式验证
+
+目标：构造 `GET /users/1`，得到 200 响应。
+
+本地模拟会立即显示结果，但正式通过必须点击“提交实验结论”，由服务端验证器重新计算结果。通过后，本章会自动完成。

@@ -3,13 +3,14 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { FlaskConical, ListChecks, Lock, FileText } from "lucide-react";
 
-import { CompleteLessonButton, JoinCourseButton } from "@/components/learning/actions";
+import { JoinCourseButton } from "@/components/learning/actions";
 import { ArticleView } from "@/components/learning/article-view";
+import { ChapterProgress } from "@/components/learning/chapter-progress";
 import { LearningHeartbeat } from "@/components/learning/heartbeat";
 import { ActivityHost } from "@/components/activities/activity-host";
 import { LearningWorkspace } from "@/components/learning/workspace";
 import { LessonPager } from "@/components/learning/lesson-pager";
-import { LearningProvider } from "@/lib/learning/context";
+import { ChapterLearningProvider } from "@/lib/learning/chapter-context";
 import { LessonNav } from "@/components/learning/lesson-nav";
 import { NotesPanel } from "@/components/learning/notes-panel";
 import { QuizPlayer } from "@/components/learning/quiz-player";
@@ -19,6 +20,8 @@ import { requireStudent } from "@/lib/auth/session";
 import { loadCourse, readArticleSource } from "@/lib/content/loader";
 import { extractHeadings, type LessonHeading } from "@/lib/content/headings";
 import { getCourseDetailById } from "@/lib/services/courses";
+import { getBlockResults } from "@/lib/services/blocks";
+import { resolveChapterBlocks } from "@/lib/content/blocks";
 import { getStateForEnrollment } from "@/lib/services/learning";
 import { getQuizData } from "@/lib/services/quizzes";
 import { getNote } from "@/lib/services/notes";
@@ -75,6 +78,12 @@ export default async function LearnPage({
 
   let articleSource: string | null = null;
   let outline: LessonHeading[] = [];
+  let chapterBlocks: Awaited<ReturnType<typeof resolveChapterBlocks>>["blocks"] = [];
+  let chapterCompletion: Awaited<ReturnType<typeof resolveChapterBlocks>>["completion"] = {
+    mode: "manual",
+    requiredBlocks: [],
+  };
+  let blockResults: Awaited<ReturnType<typeof getBlockResults>> = {};
   let initialLabState: Awaited<ReturnType<typeof getStateForEnrollment>> | null = null;
   let initialQuiz: Awaited<ReturnType<typeof getQuizData>> | null = null;
   if (!abandoned && (current.type === "interactive" || current.type === "article")) {
@@ -90,15 +99,26 @@ export default async function LearnPage({
     if (manifestLesson && manifestLesson.type === "article") {
       articleSource = readArticleSource(loaded, manifestLesson);
       outline = extractHeadings(articleSource);
+      const resolved = resolveChapterBlocks(loaded, manifestLesson);
+      chapterBlocks = resolved.blocks;
+      chapterCompletion = resolved.completion;
+      if (!abandoned) {
+        blockResults = await getBlockResults(enrollment.id, current.id);
+      }
     }
   }
 
+  const hasRequiredBlocks = chapterCompletion.mode !== "manual";
   const completionHint = readOnly
     ? "课程已完成，当前章节仅供复习。"
     : current.type === "article"
       ? completedCurrent
         ? "本章已完成。可继续下一节，或重新阅读。"
-        : "阅读本节内容，必要时完成概念动画与知识检查，然后标记本章完成。"
+        : hasRequiredBlocks
+          ? "阅读、动画和模拟可以任意穿插；完成本章要求的实验或知识检查后，服务端会自动完成本章。"
+          : chapterBlocks.length > 0
+            ? "阅读本章内容并按需体验互动；本章为手动完成。"
+            : "阅读本节内容，然后标记本章完成。"
       : current.type === "interactive"
         ? completedCurrent
           ? "实验已通过服务端验证。可继续探索不同参数。"
@@ -168,7 +188,9 @@ export default async function LearnPage({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary" className="gap-1">
                   <TypeIcon className="size-3" />
-                  {TYPE_LABEL[current.type]}
+                  {current.type === "article" && chapterBlocks.length > 0
+                    ? "混合章节"
+                    : TYPE_LABEL[current.type]}
                 </Badge>
                 {current.required ? (
                   <Badge variant="outline">必修</Badge>
@@ -189,39 +211,35 @@ export default async function LearnPage({
             </header>
 
             {current.type === "article" && articleSource && (
-              <LearningProvider
-                activityId="article"
+              <ChapterLearningProvider
+                key={current.id}
                 lessonId={current.id}
                 enrollmentId={enrollment.id}
                 initialState={initialLabState?.state ?? null}
                 initialVersion={initialLabState?.version ?? 0}
                 readOnly={readOnly}
+                blocks={chapterBlocks}
+                completion={chapterCompletion}
+                blockResults={blockResults}
               >
                 <div className="rounded-xl border border-border bg-card p-5 sm:p-8">
                   <ArticleView source={articleSource} />
                 </div>
-              </LearningProvider>
-            )}
-
-            {current.type === "article" && (
-              <div className="flex flex-col gap-2 border-t border-border pt-5">
-                {readOnly ? (
-                  <p className="text-sm text-muted-foreground">复习模式不记录新的完成状态。</p>
-                ) : completedCurrent ? (
-                  <p className="text-sm text-success">本章已完成，可继续下一节。</p>
-                ) : (
-                  <CompleteLessonButton
-                    key={current.id}
-                    lessonId={current.id}
-                    enrollmentId={enrollment.id}
-                    completed={completedCurrent}
-                  />
-                )}
-              </div>
+                <ChapterProgress
+                  lessonId={current.id}
+                  enrollmentId={enrollment.id}
+                  completion={chapterCompletion}
+                  blocks={chapterBlocks}
+                  blockResults={blockResults}
+                  completed={completedCurrent}
+                  readOnly={readOnly}
+                />
+              </ChapterLearningProvider>
             )}
 
             {current.type === "interactive" && current.activityId && (
               <ActivityHost
+                key={current.id}
                 activityId={current.activityId}
                 lessonId={current.id}
                 enrollmentId={enrollment.id}

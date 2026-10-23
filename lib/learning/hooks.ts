@@ -69,3 +69,10 @@ export function useActivityState<T extends LearningState>(
     reload,
   };
 }
+
+/**
+ * Block-scoped alias of the existing serialized-state hook. It is identical
+ * because `BlockScope` supplies a scoped SDK, but naming it explicitly keeps
+ * course components from depending on the legacy lesson-wide hook.
+ */
+export const useBlockState = useActivityState;

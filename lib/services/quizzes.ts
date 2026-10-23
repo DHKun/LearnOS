@@ -7,6 +7,7 @@ import { findEnrollmentForLesson } from "@/lib/services/enrollments";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { QuizPayload, QuizSubmitResult } from "@/lib/types";
 import type { QuizQuestion } from "@/lib/content/manifest";
+import { gradeQuiz, publicQuizQuestion } from "@/lib/content/quiz";
 
 type QuizInternals = {
   lessonId: string;
@@ -64,12 +65,7 @@ export async function getQuizData(lessonId: string): Promise<QuizPayload> {
     lessonId: quiz.lessonId,
     title: quiz.title,
     passScore: quiz.passScore,
-    questions: quiz.questions.map((question) => ({
-      id: question.id,
-      prompt: question.prompt,
-      type: question.type,
-      options: question.options.map((option) => ({ id: option.id, label: option.label })),
-    })),
+    questions: quiz.questions.map(publicQuizQuestion),
   };
 }
 
@@ -79,31 +75,6 @@ export async function getQuizForStudent(
 ): Promise<QuizPayload> {
   await requireEnrollment(studentId, lessonId);
   return getQuizData(lessonId);
-}
-
-function grade(
-  questions: QuizQuestion[],
-  answers: Record<string, string | string[]>,
-): { correct: number; score: number } {
-  let correct = 0;
-  for (const question of questions) {
-    const given = answers[question.id];
-    const expected = question.answer;
-    if (Array.isArray(expected)) {
-      const givenList = Array.isArray(given) ? given : [];
-      const expectedSet = new Set(expected);
-      if (
-        givenList.length === expectedSet.size &&
-        givenList.every((item) => expectedSet.has(item))
-      ) {
-        correct += 1;
-      }
-    } else if (given === expected) {
-      correct += 1;
-    }
-  }
-  const score = questions.length === 0 ? 0 : Math.round((correct / questions.length) * 10000) / 100;
-  return { correct, score };
 }
 
 export async function submitQuiz(
@@ -119,7 +90,7 @@ export async function submitQuiz(
     throw new ApiError("ENROLLMENT_NOT_ACTIVE");
   }
 
-  const { correct, score } = grade(quiz.questions, answers);
+  const { correct, score } = gradeQuiz(quiz.questions, answers);
   const passed = score >= quiz.passScore;
   const requestHash = createHash("sha256")
     .update(canonicalJson({ lessonId, answers }))

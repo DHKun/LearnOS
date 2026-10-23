@@ -138,8 +138,14 @@ export default async function CourseDetailPage({
                   </div>
                   <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Icon className="size-3.5" />
-                    {TYPE_LABEL[lesson.type]}
+                    {lesson.type === "article" && lesson.blocks && lesson.blocks.length > 0
+                      ? "混合章节"
+                      : TYPE_LABEL[lesson.type]}
                     {lesson.type === "interactive" && " · 服务端验证"}
+                    {lesson.type === "article" &&
+                      lesson.completion?.mode !== undefined &&
+                      lesson.completion.mode !== "manual" &&
+                      " · 服务端验证"}
                     {lesson.type === "quiz" && " · 服务端判分"}
                   </p>
                 </div>

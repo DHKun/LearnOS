@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   AdminCourseDetail,
+  ChapterBlockSummary,
   AdminCourseRow,
   CourseDetail,
   CourseListItem,
@@ -23,8 +24,33 @@ const LESSON_COLUMNS =
 const ENROLLMENT_COLUMNS =
   "id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at";
 
+function chapterBlocks(config: Record<string, unknown>): ChapterBlockSummary[] | undefined {
+  if (!Array.isArray(config.blocks)) return undefined;
+  const blocks: ChapterBlockSummary[] = [];
+  for (const raw of config.blocks) {
+    if (!raw || typeof raw !== "object") continue;
+    const block = raw as Record<string, unknown>;
+    if (typeof block.id !== "string") continue;
+    if (block.kind !== "simulation" && block.kind !== "question") continue;
+    blocks.push({
+      id: block.id,
+      kind: block.kind,
+      ...(typeof block.activityId === "string" ? { activityId: block.activityId } : {}),
+      ...(typeof block.title === "string" ? { title: block.title } : {}),
+      ...(typeof block.passScore === "number" ? { passScore: block.passScore } : {}),
+      ...(typeof block.questionCount === "number" ? { questionCount: block.questionCount } : {}),
+    });
+  }
+  return blocks.length > 0 ? blocks : undefined;
+}
+
 function toLessonSummary(row: LessonRow): LessonSummary {
   const config = row.config ?? {};
+  const completion =
+    config.completion && typeof config.completion === "object"
+      ? (config.completion as { mode?: string; requiredBlocks?: unknown })
+      : null;
+  const blocks = chapterBlocks(config);
   return {
     id: row.id,
     slug: row.slug,
@@ -36,6 +62,19 @@ function toLessonSummary(row: LessonRow): LessonSummary {
     ...(typeof config.unit === "string" ? { unit: config.unit } : {}),
     ...(row.type === "interactive" && typeof config.activityId === "string"
       ? { activityId: config.activityId }
+      : {}),
+    ...(blocks ? { blocks } : {}),
+    ...(completion &&
+    (completion.mode === "manual" || completion.mode === "all" || completion.mode === "any") &&
+    Array.isArray(completion.requiredBlocks)
+      ? {
+          completion: {
+            mode: completion.mode,
+            requiredBlocks: completion.requiredBlocks.filter(
+              (id): id is string => typeof id === "string",
+            ),
+          },
+        }
       : {}),
   };
 }
