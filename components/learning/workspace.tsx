@@ -5,7 +5,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { BookOpen, Focus, PanelLeftClose, PanelLeftOpen, StickyNote, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { LessonOutline } from "@/components/learning/lesson-outline";
 import { cn } from "@/lib/utils";
+import type { LessonHeading } from "@/lib/content/headings";
 
 /**
  * Learning workspace shell.
@@ -21,12 +23,14 @@ export function LearningWorkspace({
   content,
   pager,
   lessonLabel,
+  outline = [],
 }: {
   nav: React.ReactNode;
   notes: React.ReactNode;
   content: React.ReactNode;
   pager: React.ReactNode;
   lessonLabel: string;
+  outline?: LessonHeading[];
 }) {
   const [navOpen, setNavOpen] = React.useState(true);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
@@ -74,6 +78,10 @@ export function LearningWorkspace({
   }, [isDesktop, mobileNavOpen, notesOpen]);
 
   const closeNotes = () => setNotesOpen(false);
+  const showNav = !focusMode && navOpen;
+  // Notes take over the right rail on desktop; the outline temporarily yields.
+  const showOutlineRail = !focusMode && outline.length > 0 && !notesOpen;
+  const showOutlineInline = !focusMode && outline.length > 0;
 
   return (
     <div
@@ -129,18 +137,30 @@ export function LearningWorkspace({
       <div
         className={cn(
           "grid gap-6",
-          !focusMode && navOpen && "lg:grid-cols-[15rem_minmax(0,1fr)]",
+          showNav && !showOutlineRail && "lg:grid-cols-[15rem_minmax(0,1fr)]",
+          showNav &&
+            showOutlineRail &&
+            "lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_14rem]",
+          !showNav && showOutlineRail && "xl:grid-cols-[minmax(0,1fr)_14rem]",
         )}
       >
-        {!focusMode && navOpen && (
+        {showNav && (
           <aside className="hidden lg:block" aria-label="课程目录">
             <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto pr-1">{nav}</div>
           </aside>
         )}
         <main className="min-w-0 space-y-6">
+          {showOutlineInline && <LessonOutline headings={outline} variant="inline" />}
           {content}
           {pager}
         </main>
+        {showOutlineRail && (
+          <aside className="hidden xl:block" aria-label="本章大纲">
+            <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto pl-1">
+              <LessonOutline headings={outline} variant="rail" />
+            </div>
+          </aside>
+        )}
       </div>
 
       {mobileNavOpen && (

@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { CheckCircle2, Circle, CirclePlay } from "lucide-react";
 
-import { LessonOutline } from "@/components/learning/lesson-outline";
 import { PrefetchOnHover } from "@/components/learning/prefetch-on-hover";
 import { LinkPending } from "@/components/link-pending";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { CourseProgress, LessonProgressStatus, LessonSummary, MyLessonProgress } from "@/lib/types";
-import type { LessonHeading } from "@/lib/content/headings";
 
 const STATUS_META: Record<
   LessonProgressStatus,
@@ -25,7 +23,6 @@ export function LessonNav({
   currentLessonId,
   progress,
   lessonProgress,
-  outline = [],
 }: {
   courseId: string;
   courseTitle: string;
@@ -33,7 +30,6 @@ export function LessonNav({
   currentLessonId: string;
   progress: CourseProgress;
   lessonProgress: MyLessonProgress;
-  outline?: LessonHeading[];
 }) {
   const currentIndex = lessons.findIndex((lesson) => lesson.id === currentLessonId);
   return (
@@ -138,7 +134,6 @@ export function LessonNav({
         </PrefetchOnHover>
       </nav>
 
-      <LessonOutline headings={outline} />
     </div>
   );
 }
