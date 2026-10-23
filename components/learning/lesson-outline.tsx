@@ -76,7 +76,10 @@ export function LessonOutline({
 
   if (variant === "inline") {
     return (
-      <details className="overflow-hidden rounded-xl border border-dashed border-border/80 bg-muted/20 xl:hidden">
+      <details
+        data-testid="outline-inline"
+        className="overflow-hidden rounded-xl border border-dashed border-border/80 bg-muted/20 2xl:hidden"
+      >
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-2.5 text-xs font-medium text-foreground">
           <span>本章小节目录</span>
           <span className="font-mono text-[10px] text-muted-foreground">
@@ -92,6 +95,7 @@ export function LessonOutline({
 
   return (
     <nav
+      data-testid="outline-rail"
       aria-label="本章小节目录"
       className="overflow-hidden rounded-xl border border-dashed border-border/80 bg-muted/20"
     >

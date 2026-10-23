@@ -152,9 +152,16 @@
   }
 
   .prose-learn {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: break-word;
     color: var(--foreground);
     font-size: 1.0625rem;
     line-height: 1.8;
+  }
+  .prose-learn svg,
+  .prose-learn img {
+    max-width: 100%;
   }
   .prose-learn > * + * {
     margin-top: 1.1em;
@@ -220,6 +227,7 @@
     padding: 0.1rem 0.35rem;
   }
   .prose-learn pre {
+    max-width: 100%;
     font-family: var(--font-mono);
     font-size: 0.875rem;
     background: oklch(0.22 0.02 250);

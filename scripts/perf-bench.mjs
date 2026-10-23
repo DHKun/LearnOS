@@ -140,7 +140,7 @@ async function measureStudent(browser, student) {
     await page.getByRole("heading", { level: 1 }).waitFor();
     result.me = Date.now() - meStart;
 
-    result.learnBundleKb = routeBundleKb("/(student)/learn/[courseId]/page");
+    result.learnBundleKb = routeBundleKb("/(learning)/learn/[courseId]/page");
     result.coursesBundleKb = routeBundleKb("/(student)/courses/page");
     result.domInteractive = await page.evaluate(
       () => Math.round(performance.getEntriesByType("navigation")[0]?.domInteractive ?? 0),

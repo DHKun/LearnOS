@@ -37,7 +37,7 @@ export function SimulationBlock({
 
   return (
     <section
-      className="my-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+      className="my-8 min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm"
       data-block-id={blockId}
       data-block-kind="simulation"
       aria-label={`模拟实验：${block.title ?? blockId}`}

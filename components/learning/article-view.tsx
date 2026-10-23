@@ -34,5 +34,5 @@ function compileArticle(source: string): Promise<ReactElement> {
 /** Render trusted repository MDX. Never pass user-authored MDX here. */
 export async function ArticleView({ source }: { source: string }) {
   const content = await compileArticle(source);
-  return <article className="prose-learn max-w-none">{content}</article>;
+  return <article className="prose-learn min-w-0 max-w-none">{content}</article>;
 }

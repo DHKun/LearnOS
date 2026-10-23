@@ -37,15 +37,24 @@ export function LearningWorkspace({
   const [notesOpen, setNotesOpen] = React.useState(false);
   const [focusMode, setFocusMode] = React.useState(false);
   const [isDesktop, setIsDesktop] = React.useState(false);
+  const [isWide, setIsWide] = React.useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   React.useEffect(() => {
-    const query = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsDesktop(query.matches);
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const wide = window.matchMedia("(min-width: 1280px)");
+    const update = () => {
+      setIsDesktop(desktop.matches);
+      setIsWide(wide.matches);
+    };
     update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
+    desktop.addEventListener("change", update);
+    wide.addEventListener("change", update);
+    return () => {
+      desktop.removeEventListener("change", update);
+      wide.removeEventListener("change", update);
+    };
   }, []);
 
   // Navigating to another chapter must not leave the mobile directory open.
@@ -78,10 +87,14 @@ export function LearningWorkspace({
   }, [isDesktop, mobileNavOpen, notesOpen]);
 
   const closeNotes = () => setNotesOpen(false);
-  const showNav = !focusMode && navOpen;
-  // Notes take over the right rail on desktop; the outline temporarily yields.
+  // At 1024–1279px, giving the notes column its width while keeping a 240px
+  // chapter rail would leave too little article width. The rail yields and
+  // comes back automatically when notes close.
+  const autoHideNav = notesOpen && isDesktop && !isWide;
+  const showNav = !focusMode && navOpen && !autoHideNav;
+  // Notes take priority over the outline; the rail is only used at ≥1536px.
   const showOutlineRail = !focusMode && outline.length > 0 && !notesOpen;
-  const showOutlineInline = !focusMode && outline.length > 0;
+  const showOutlineInline = !focusMode && outline.length > 0 && !notesOpen;
 
   return (
     <div
@@ -106,7 +119,7 @@ export function LearningWorkspace({
             type="button"
             variant="ghost"
             size="sm"
-            className="hidden lg:inline-flex"
+            className={cn("hidden lg:inline-flex", autoHideNav && "lg:hidden")}
             onClick={() => setNavOpen((open) => !open)}
             aria-label={navOpen ? "收起章节目录" : "展开章节目录"}
             aria-pressed={navOpen}
@@ -140,8 +153,8 @@ export function LearningWorkspace({
           showNav && !showOutlineRail && "lg:grid-cols-[15rem_minmax(0,1fr)]",
           showNav &&
             showOutlineRail &&
-            "lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_14rem]",
-          !showNav && showOutlineRail && "xl:grid-cols-[minmax(0,1fr)_14rem]",
+            "lg:grid-cols-[15rem_minmax(0,1fr)] 2xl:grid-cols-[15rem_minmax(0,1fr)_12.5rem]",
+          !showNav && showOutlineRail && "2xl:grid-cols-[minmax(0,1fr)_12.5rem]",
         )}
       >
         {showNav && (
@@ -155,7 +168,7 @@ export function LearningWorkspace({
           {pager}
         </main>
         {showOutlineRail && (
-          <aside className="hidden xl:block" aria-label="本章大纲">
+          <aside data-testid="outline-rail-aside" className="hidden 2xl:block" aria-label="本章大纲">
             <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto pl-1">
               <LessonOutline headings={outline} variant="rail" />
             </div>
@@ -202,10 +215,12 @@ export function LearningWorkspace({
         aria-expanded={notesOpen}
         aria-label={notesOpen ? "收起笔记" : "打开笔记"}
         onClick={() => setNotesOpen((open) => !open)}
-        className={cn(
-          "fixed bottom-4 right-4 z-40 inline-flex h-12 items-center gap-2 rounded-full border border-primary/20 bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:bottom-6 sm:right-6",
-          notesOpen && "lg:right-[23.5rem]",
-        )}
+        className="fixed bottom-4 right-4 z-40 inline-flex h-12 items-center gap-2 rounded-full border border-primary/20 bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg ring-1 ring-black/5 transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:bottom-6 sm:right-6"
+        style={
+          notesOpen && isDesktop
+            ? { right: "calc(max(0px, (100vw - 1600px) / 2) + 23rem)" }
+            : undefined
+        }
       >
         <StickyNote className="size-4" aria-hidden />
         <span className="hidden sm:inline">{notesOpen ? "收起笔记" : "笔记"}</span>
@@ -226,6 +241,7 @@ export function LearningWorkspace({
           data-testid="notes-panel"
           aria-label="章节笔记"
           className="fixed inset-y-0 right-0 z-50 flex w-[min(94vw,26rem)] flex-col border-l border-border bg-card shadow-xl lg:top-14 lg:w-[23rem]"
+          style={{ right: "max(0px, calc((100vw - 1600px) / 2))" }}
         >
           <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
             <div>

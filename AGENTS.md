@@ -54,7 +54,7 @@
 ```text
 app/
   (auth)/login/
-  (student)/courses/  (student)/learn/  (student)/me/
+  (student)/courses/  (learning)/learn/  (student)/me/
   (admin)/admin/
   api/
 components/

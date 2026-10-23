@@ -89,7 +89,7 @@ export function ConceptFrame({
   return (
     <section
       className={cn(
-        "my-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm",
+        "my-8 min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm",
         className,
       )}
       aria-label={`概念动画：${title}`}

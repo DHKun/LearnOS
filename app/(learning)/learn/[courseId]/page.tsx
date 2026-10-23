@@ -216,7 +216,7 @@ export default async function LearnPage({
                   blockResults={blockResults}
                   completed={completedCurrent}
                 >
-                  <div className="rounded-xl border border-border bg-card p-5 sm:p-8">
+                  <div className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-8">
                     <ArticleView source={articleSource} />
                   </div>
                   <ChapterProgress

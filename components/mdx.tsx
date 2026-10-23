@@ -40,7 +40,16 @@ export function Callout({
   );
 }
 
+function MdxTable(props: React.TableHTMLAttributes<HTMLTableElement>) {
+  return (
+    <div className="max-w-full overflow-x-auto">
+      <table {...props} />
+    </div>
+  );
+}
+
 export const mdxComponents = {
+  table: MdxTable,
   Callout,
   ConceptPlayer,
   MiniCheck,

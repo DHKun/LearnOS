@@ -280,7 +280,8 @@ E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同�
 
 ```text
 app/
-  (student)/            # /courses、/courses/[slug]、/learn/[courseId]、/me
+  (student)/            # /courses、/courses/[slug]、/me
+  (learning)/           # /learn/[courseId]（1600px 学习画布）
   (admin)/admin/        # /admin、/admin/students、/admin/students/[id]、/admin/courses、/admin/courses/[id]、/admin/deployments
   api/                  # 业务 REST 方法 + /api/health + /api/admin/deployments/**
   login/

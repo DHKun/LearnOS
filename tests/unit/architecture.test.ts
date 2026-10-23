@@ -15,7 +15,7 @@ describe("单站点原生互动架构", () => {
   });
 
   it("所有章节使用统一的正文渲染结构，不再渲染 iframe", () => {
-    const page = read("app/(student)/learn/[courseId]/page.tsx");
+    const page = read("app/(learning)/learn/[courseId]/page.tsx");
     expect(page).toContain("ChapterLearningProvider");
     expect(page).toContain("ArticleView");
     expect(page).not.toContain("ActivityHost");
