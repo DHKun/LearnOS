@@ -43,9 +43,7 @@ function lesson(overrides: Partial<ArticleLessonManifest> = {}): ArticleLessonMa
     slug: "chapter",
     title: "章节",
     required: true,
-    type: "article",
     source: "lessons/chapter.mdx",
-    completionPolicy: "server_validated",
     blocks: [
       { id: "sim", kind: "simulation", activityId: "course/sim" },
       { id: "quiz", kind: "question", source: "assessments/q.json" },
@@ -59,12 +57,12 @@ const quiz: QuizBlockResolver = () => ({ quizHash: "quiz-hash", passScore: 70 })
 const fingerprints: Record<string, string> = { "course/sim": "validator-hash" };
 
 describe("章节完成规则与结构冻结", () => {
-  it("省略 completion 的 server_validated 章节默认 all", () => {
+  it("省略 completion 时章节为手动完成，可选 Block 不参与判定", () => {
     const completion = resolveChapterCompletion({
       ...lesson(),
       completion: undefined,
     } as ArticleLessonManifest);
-    expect(completion).toEqual({ mode: "all", requiredBlocks: ["sim", "quiz"] });
+    expect(completion).toEqual({ mode: "manual", requiredBlocks: [] });
   });
 
   it("新增不影响完成条件的可选 Block 不改变章节结构哈希", () => {

@@ -1,13 +1,6 @@
-import { createHash } from "node:crypto";
-
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
-import { canonicalJson } from "@/lib/crypto/canonical-json";
-import { loadCourse } from "@/lib/content/loader";
-import { getActivityDefinition } from "@/lib/activities/catalog";
-import { getValidator } from "@/lib/content/validators.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { findEnrollmentForLesson, getOwnedEnrollment } from "@/lib/services/enrollments";
-import type { CourseProgress } from "@/lib/types";
 
 async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
   const db = createAdminClient();
@@ -126,89 +119,6 @@ export async function getState(
   if (!data) return { state: null, version: 0, updatedAt: null };
 
   return { state: data.state as Record<string, unknown>, version: data.version, updatedAt: data.updated_at };
-}
-
-async function loadInteractiveLesson(lessonId: string) {
-  const db = createAdminClient();
-  const { data: lesson, error } = await db
-    .from("lessons")
-    .select("id,slug,type,course_id,completion_policy,config")
-    .eq("id", lessonId)
-    .maybeSingle();
-  if (error) throw error;
-  if (!lesson) throw new ApiError("LESSON_NOT_FOUND");
-
-  const { data: course, error: courseError } = await db
-    .from("courses")
-    .select("slug")
-    .eq("id", lesson.course_id)
-    .maybeSingle();
-  if (courseError) throw courseError;
-  if (!course) throw new ApiError("COURSE_NOT_FOUND");
-
-  const loaded = loadCourse(course.slug);
-  const manifestLesson = loaded.manifest.lessons.find((item) => item.slug === lesson.slug);
-  return { lesson, course, loaded, manifestLesson };
-}
-
-export async function submitInteraction(
-  studentId: string,
-  input: {
-    id: string;
-    enrollmentId: string;
-    lessonId: string;
-    submission: Record<string, unknown>;
-  },
-): Promise<{
-  accepted: boolean;
-  duplicate: boolean;
-  passed: boolean;
-  feedback: Record<string, unknown>;
-  lessonStatus: string | null;
-  courseProgress: CourseProgress;
-  enrollmentStatus?: string;
-  pointsAwarded?: number;
-}> {
-  const { lesson, manifestLesson } = await loadInteractiveLesson(input.lessonId);
-
-  if (
-    lesson.type !== "interactive" ||
-    lesson.completion_policy !== "server_validated" ||
-    !manifestLesson ||
-    manifestLesson.type !== "interactive"
-  ) {
-    throw new ApiError("SUBMISSION_NOT_ALLOWED");
-  }
-
-  const activity = getActivityDefinition(manifestLesson.activityId);
-  const validator = activity ? getValidator(activity.validatorId) : null;
-  if (!validator) throw new ApiError("SUBMISSION_NOT_ALLOWED");
-
-  const result = await validator(input.submission);
-  const hash = createHash("sha256")
-    .update(canonicalJson({ lessonId: input.lessonId, submission: input.submission }))
-    .digest("hex");
-
-  const saved = await rpc<{
-    accepted: boolean;
-    duplicate: boolean;
-    passed: boolean;
-    feedback: Record<string, unknown>;
-    lessonStatus: string | null;
-    courseProgress: CourseProgress;
-    enrollmentStatus?: string;
-    pointsAwarded?: number;
-  }>("save_submission", {
-    p_student: studentId,
-    p_enrollment: input.enrollmentId,
-    p_lesson: input.lessonId,
-    p_submission_id: input.id,
-    p_submission_hash: hash,
-    p_passed: result.passed,
-    p_feedback: result.feedback,
-  });
-
-  return saved;
 }
 
 /** Verify the caller owns the enrollment before accepting any lesson write. */

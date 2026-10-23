@@ -57,24 +57,6 @@ export const stateSaveSchema = z
     }
   });
 
-export const submissionSchema = z
-  .object({
-    id: uuidSchema,
-    enrollmentId: uuidSchema,
-    lessonId: uuidSchema,
-    submission: z.record(z.unknown()),
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (jsonBytes(value.submission) > MAX_JSON_BYTES) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["submission"],
-        message: "提交内容超过 64KB",
-      });
-    }
-  });
-
 export const blockSubmitSchema = z
   .object({
     attemptId: uuidSchema,
@@ -95,28 +77,6 @@ export const blockSubmitSchema = z
   });
 
 export const completeLessonSchema = z.object({ enrollmentId: uuidSchema }).strict();
-
-const answerValueSchema = z.union([
-  z.string().max(200),
-  z.array(z.string().max(200)).max(8),
-]);
-
-export const quizSubmitSchema = z
-  .object({
-    attemptId: uuidSchema,
-    enrollmentId: uuidSchema,
-    answers: z.record(z.string().max(100), answerValueSchema),
-  })
-  .strict()
-  .superRefine((value, ctx) => {
-    if (Object.keys(value.answers).length > 100) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["answers"],
-        message: "答案数量超限",
-      });
-    }
-  });
 
 export const noteSchema = z
   .object({ content: z.string() })

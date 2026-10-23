@@ -7,42 +7,62 @@
     {
       "slug": "why-retries-duplicate",
       "title": "超时的请求到底发生了什么",
-      "type": "article",
       "source": "01-why-retries-duplicate.mdx",
-      "completionPolicy": "manual",
       "required": true,
       "unit": "原理"
     },
     {
       "slug": "idempotency-keys",
       "title": "幂等键与去重存储",
-      "type": "article",
       "source": "02-idempotency-keys.mdx",
-      "completionPolicy": "manual",
       "required": true,
       "unit": "原理"
     },
     {
       "slug": "retry-lab",
       "title": "实验：让支付恰好发生一次",
-      "type": "interactive",
-      "completionPolicy": "server_validated",
       "required": true,
-      "activityId": "http-retry-basics/retry-lab",
-      "unit": "实验与测验"
+      "unit": "实验与测验",
+      "source": "lessons/03-retry-lab.mdx",
+      "blocks": [
+        {
+          "id": "retry-lab",
+          "kind": "simulation",
+          "activityId": "http-retry-basics/retry-lab",
+          "title": "恰好一次支付"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "retry-lab"
+        ]
+      }
     },
     {
       "slug": "final-quiz",
       "title": "最终测验",
-      "type": "quiz",
-      "source": "quiz.server.json",
-      "completionPolicy": "server_validated",
       "required": true,
+      "unit": "实验与测验",
+      "source": "lessons/04-final-assessment.mdx",
       "finalExam": true,
-      "unit": "实验与测验"
+      "blocks": [
+        {
+          "id": "final-assessment",
+          "kind": "question",
+          "source": "quiz.server.json",
+          "title": "最终测验"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-assessment"
+        ]
+      }
     }
   ],
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "plugins": {
     "concepts": [
       {

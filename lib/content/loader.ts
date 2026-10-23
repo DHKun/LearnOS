@@ -97,70 +97,42 @@ export function loadCourse(slug: string): LoadedCourse {
   const blockFiles: Record<string, string> = {};
 
   for (const lesson of parsed.data.lessons) {
-    if (lesson.type === "article") {
-      const absolute = safeFile(dir, lesson.source, `课程 ${slug} 的章节 ${lesson.slug}`);
-      if (!lesson.source.endsWith(".mdx")) {
-        throw new Error(`课程 ${slug} 的图文章节 ${lesson.slug} 必须使用 .mdx 资源`);
-      }
-      files[lesson.slug] = absolute;
-      validateChapterBlocks(lesson);
+    const absolute = safeFile(dir, lesson.source, `课程 ${slug} 的章节 ${lesson.slug}`);
+    if (!lesson.source.endsWith(".mdx")) {
+      throw new Error(`课程 ${slug} 的章节 ${lesson.slug} 必须使用 .mdx 资源`);
+    }
+    files[lesson.slug] = absolute;
+    validateChapterBlocks(lesson);
 
-      for (const block of chapterBlocks(lesson)) {
-        if (block.kind === "simulation") {
-          const activity = getActivityDefinition(block.activityId);
-          if (!activity) {
-            throw new Error(
-              `课程 ${slug} 的章节 ${lesson.slug} Block ${block.id} 引用了未注册的 activityId: ${block.activityId}`,
-            );
-          }
-          if (!getValidator(activity.validatorId)) {
-            throw new Error(
-              `课程 ${slug} 的章节 ${lesson.slug} Block ${block.id} 缺少服务端验证器: ${activity.validatorId}`,
-            );
-          }
-        } else {
-          const quizPath = safeFile(
-            dir,
-            block.source,
-            `课程 ${slug} 的章节 ${lesson.slug} 知识检查 ${block.id}`,
+    for (const block of chapterBlocks(lesson)) {
+      if (block.kind === "simulation") {
+        const activity = getActivityDefinition(block.activityId);
+        if (!activity) {
+          throw new Error(
+            `课程 ${slug} 的章节 ${lesson.slug} Block ${block.id} 引用了未注册的 activityId: ${block.activityId}`,
           );
-          const quiz = quizFileSchema.safeParse(readJson(quizPath));
-          if (!quiz.success) {
-            throw new Error(
-              `课程 ${slug} 的章节 ${lesson.slug} 知识检查 ${block.id} 校验失败: ${quiz.error.issues
-                .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-                .join("; ")}`,
-            );
-          }
-          blockFiles[`${lesson.slug}::${block.id}`] = quizPath;
         }
-      }
-    } else if (lesson.type === "quiz") {
-      const absolute = safeFile(dir, lesson.source, `课程 ${slug} 的测验 ${lesson.slug}`);
-      const quiz = quizFileSchema.safeParse(readJson(absolute));
-      if (!quiz.success) {
-        throw new Error(
-          `课程 ${slug} 的测验 ${lesson.slug} 校验失败: ${quiz.error.issues
-            .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-            .join("; ")}`,
+        if (!getValidator(activity.validatorId)) {
+          throw new Error(
+            `课程 ${slug} 的章节 ${lesson.slug} Block ${block.id} 缺少服务端验证器: ${activity.validatorId}`,
+          );
+        }
+      } else {
+        const quizPath = safeFile(
+          dir,
+          block.source,
+          `课程 ${slug} 的章节 ${lesson.slug} 知识检查 ${block.id}`,
         );
+        const quiz = quizFileSchema.safeParse(readJson(quizPath));
+        if (!quiz.success) {
+          throw new Error(
+            `课程 ${slug} 的章节 ${lesson.slug} 知识检查 ${block.id} 校验失败: ${quiz.error.issues
+              .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+              .join("; ")}`,
+          );
+        }
+        blockFiles[`${lesson.slug}::${block.id}`] = quizPath;
       }
-      files[lesson.slug] = absolute;
-    }
-  }
-
-  for (const lesson of parsed.data.lessons) {
-    if (lesson.type !== "interactive") continue;
-    const activity = getActivityDefinition(lesson.activityId);
-    if (!activity) {
-      throw new Error(
-        `课程 ${slug} 的互动章节 ${lesson.slug} 引用了未注册的 activityId: ${lesson.activityId}`,
-      );
-    }
-    if (!getValidator(activity.validatorId)) {
-      throw new Error(
-        `课程 ${slug} 的互动章节 ${lesson.slug} 缺少服务端验证器: ${activity.validatorId}`,
-      );
     }
   }
 
@@ -182,9 +154,7 @@ export async function loadAllCourses(): Promise<LoadedCourse[]> {
   const results = await Promise.all(
     slugs.map(async (slug) => {
       const course = loadCourse(slug);
-      for (const lesson of course.manifest.lessons) {
-        if (lesson.type === "article") validateArticleMdx(course, lesson);
-      }
+      for (const lesson of course.manifest.lessons) validateArticleMdx(course, lesson);
       return course;
     }),
   );
@@ -195,17 +165,6 @@ export function readArticleSource(course: LoadedCourse, lesson: LessonManifest):
   const file = course.files[lesson.slug];
   if (!file) throw new Error(`课程 ${course.slug} 缺少章节 ${lesson.slug} 的资源`);
   return fs.readFileSync(file, "utf8");
-}
-
-/** Server-only: read the quiz including answers. Never send this object to a client. */
-export function readQuizFile(course: LoadedCourse, lesson: LessonManifest): QuizFile {
-  const file = course.files[lesson.slug];
-  if (!file) throw new Error(`课程 ${course.slug} 缺少测验 ${lesson.slug} 的资源`);
-  const parsed = quizFileSchema.safeParse(readJson(file));
-  if (!parsed.success) {
-    throw new Error(`课程 ${course.slug} 的测验 ${lesson.slug} 无效`);
-  }
-  return parsed.data;
 }
 
 export function readBlockQuizFile(
@@ -235,9 +194,7 @@ export async function validateAllCourses(): Promise<CourseValidationResult[]> {
     listCourseSlugs().map(async (slug) => {
       try {
         const course = loadCourse(slug);
-        for (const lesson of course.manifest.lessons) {
-          if (lesson.type === "article") validateArticleMdx(course, lesson);
-        }
+        for (const lesson of course.manifest.lessons) validateArticleMdx(course, lesson);
         return { slug, ok: true };
       } catch (error) {
         return {

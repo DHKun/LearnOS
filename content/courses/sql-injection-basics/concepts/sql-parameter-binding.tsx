@@ -140,7 +140,7 @@ export function SqlParameterBinding() {
     setMode(nextMode);
     setInputKind(nextInput);
     sdk.track("concept_variant_changed", {
-      conceptId: "sql.parameter-binding",
+      conceptId: "sql-injection-basics/parameter-binding",
       mode: nextMode,
       input: nextInput,
     });
@@ -148,7 +148,7 @@ export function SqlParameterBinding() {
 
   return (
     <ConceptFrame
-      conceptId="sql.parameter-binding"
+      conceptId="sql-injection-basics/parameter-binding"
       blockId="sql-parameter-binding"
       title="参数化查询：固定表格与填空"
       analogy={

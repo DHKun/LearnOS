@@ -6,7 +6,13 @@ async function main() {
   const publish = process.argv.includes("--publish");
   const publishNew = process.argv.includes("--publish-new");
   const refreshMetadata = process.argv.includes("--refresh-metadata");
-  const summaries = await syncCourses({ publish, publishNew, refreshMetadata });
+  const adoptStructure = process.argv.includes("--adopt-structure");
+  if (adoptStructure) {
+    console.warn(
+      "[courses:sync] --adopt-structure：正在对已有学习记录的课程执行平台模型迁移；仅在确认旧课程不是正式资产时使用。",
+    );
+  }
+  const summaries = await syncCourses({ publish, publishNew, refreshMetadata, adoptStructure });
   for (const summary of summaries) {
     console.log(
       `${summary.created ? "＋" : "↻"} ${summary.slug} → ${summary.courseId} (${summary.lessonCount} 章节, ${summary.enrollments} 条学习记录)`,

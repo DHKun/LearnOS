@@ -65,10 +65,8 @@ describe("章节知识检查判分", () => {
 
   it("章节公开 Block 数据不包含答案或解析", () => {
     const course = loadCourse("http-from-zero");
-    const lesson = course.manifest.lessons.find(
-      (item) => item.type === "article" && item.slug === "http-methods",
-    );
-    if (!lesson || lesson.type !== "article") throw new Error("missing lesson");
+    const lesson = course.manifest.lessons.find((item) => item.slug === "http-methods");
+    if (!lesson) throw new Error("missing lesson");
     const resolved = resolveChapterBlocks(course, lesson);
     const json = JSON.stringify(resolved);
     expect(json).not.toContain("\"answer\"");

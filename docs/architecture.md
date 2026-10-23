@@ -122,13 +122,10 @@ none ──join──▶ active ──finish──▶ completed ──review─�
 not_started → in_progress → completed
 ```
 
-- `article`（v2/手动）：学生明确点击「标记本章完成」，来源 `manual`。
-- `article`（v3 混合章节）：`blocks` 由服务端验证器/题库记录到 `block_results`；`completion.mode=all/any` 满足后由 `save_block_result` 自动完成，禁止直接调用 `complete_lesson` 绕过。
-- `interactive`：
-  - `reported`：允许 `complete()` 自报告；
-  - `server_validated`：只有注册验证器返回 `passed=true` 才能完成；
-  - 遥测事件独立保存，不影响通过。
-- `quiz`：服务端评分达到 `passScore` 才完成；失败可重试；同一 `attemptId` 幂等。
+- 手动章节：学生阅读后点击「标记本章完成」，来源 `manual`；声明 `all/any` 的章节由 Block 事务自动完成。
+- Block 章节：`blocks` 由服务端验证器/题库记录到 `block_results`；`completion.mode=all/any` 满足后由 `save_block_result` 自动完成，禁止直接调用 `complete_lesson` 绕过。
+- 没有独立的 interactive / quiz 章节类型；模拟实验与正式题目都通过 chapter Block 提交，`attemptId` 幂等。
+- 动画播放、文字阅读、MiniCheck 只产生遥测或本地反馈，不参与正式通过判定。
 
 ## 6. 在线状态
 
@@ -147,19 +144,17 @@ content/courses/<slug>/course.json
   ├── *.mdx                    → 服务端 compileMDX（可信仓库内容）
   ├── concepts/*.tsx           → 课程插件动画（按需加载）
   ├── activities/*.tsx         → 课程插件原生实验（按需加载）
-  ├── assessments/*.server.json→ 章节知识检查；仅服务端读取
-  ├── quiz.server.json         → 最终测验；仅服务端读取
+  ├── assessments/*.server.json→ 章节知识检查/最终测验；仅服务端读取
   └── validators.ts            → 静态注册到 server-only validator registry
 
 pnpm courses:prepare  → 解析 plugins、生成组件/验证器 Registry
-pnpm courses:validate → manifest v2/v3、MDX AST、Block/题库/activity/validator、路径/符号链接校验
+pnpm courses:validate → Manifest v3、MDX AST、Block/题库/activity/validator、路径/符号链接校验
 pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结构、必需 Block、题库与验证器
 ```
 
 - 数据库保存 `content_ref` 与 `config`：
-  - interactive: activityId/validatorId/validatorFingerprint；
-  - quiz: passScore/finalExam/quizHash；
-  - v3 article: `blocks`、`completion`、`chapterHash`（仅覆盖必需 Block 的结构）。
+  - 章节：blocks/completion/chapterHash/finalExam；
+  - `chapterHash` 仅覆盖必需 Block 的结构，可选练习 Block 不影响。
 - `chapterHash` 由必需 Block 的类型、activity validator 指纹、章节题库哈希、完成模式/requiredBlocks 计算；新增可选 Block 不改变该哈希。
 - MDX 通过 `remark-parse` + `remark-mdx` AST 校验：声明的 Block 必须恰好渲染一次，组件类型必须匹配，Concept/Activity 必须已注册。
 - 章节知识检查/最终测验答案只在服务端读取；`resolveChapterBlocks` 只输出公开题目，不包含 answer/explanation。
@@ -168,7 +163,7 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 
 ## 8. 原生活动与 Learning SDK
 
-1. 服务端学习页按 `lesson.config.activityId` 渲染 `ActivityHost`，并传入当前 enrollment、lesson 与服务端读取的初始状态/版本。
+1. 服务端学习页统一渲染 MDX；`SimulationBlock` / `KnowledgeCheck` 用 `BlockScope` 绑定当前 enrollment、lesson、blockId 与服务端读取的初始状态/版本。
 2. `LearningProvider` 创建 `LearningClient`，自动绑定 lesson/enrollment；组件不能选择学生身份，API 仍逐请求校验归属。
 3. SDK 直接使用同源认证 API：
 
@@ -177,8 +172,8 @@ pnpm courses:sync     → upsert courses/lessons；有 enrollment 时冻结结�
 | `start()` | `POST /api/learning/events`，`session_start` 按会话 ID 去重 |
 | `track()` | `POST /api/learning/events`，事件 UUID 幂等，payload 完整持久化 |
 | `saveState()` | 600ms 防抖 → `PUT /api/learning/states/:lessonId`，`expectedVersion` 乐观锁；冲突回传 409 |
-| `complete()` | 旧 `interactive`：`POST /api/lessons/:id/complete`；BlockScope 中为 no-op，由 Block 提交决定完成 |
-| `submit()` | 旧 interactive：`POST /api/learning/submissions`；BlockScope：`POST /api/learning/blocks/submit` |
+| `complete()` | BlockScope 中为 no-op；完成状态只由 Block/complete API 的服务端事务决定 |
+| `submit()` | 只允许 BlockScope：`POST /api/learning/blocks/submit`；基础 client 不提供独立实验提交 |
 | `refreshState()` | 重新读取服务端状态/版本，用于冲突恢复 |
 
 4. 混合章节使用两层 Context：
@@ -253,7 +248,7 @@ updater (Node + Docker CLI) ── 无监听端口；轮询 Supabase 任务
 
 ## 13. 课程插件与自动注册
 
-- 每门课程是 `content/courses/<slug>/` 下的完整插件；Manifest v2 继续兼容，v3 在 `article` 章节增加 `blocks/completion`；`plugins` 声明 concept、activity 与 validator，路径/导出在生成期校验。
+- 每门课程是 `content/courses/<slug>/` 下的完整插件；唯一模型为 Course → Chapter（MDX）→ 可选 blocks/completion；`plugins` 声明 concept、activity 与 validator，路径/导出在生成期校验。
 - MDX 使用 `remark-parse` + `remark-mdx` AST 校验，拒绝未注册组件、未声明/重复/类型不匹配的 Block；客户端组件禁止导入服务端 validator/题库。
 - `scripts/courses/generate.ts` 扫描全部 Manifest，稳定排序生成 `lib/generated/course-catalog.ts`、`course-components.tsx`、`validator-registry.server.ts`；平台 Registry 只引用生成物。
 - 新课程无需修改核心 Registry；删除课程会清除生成项。

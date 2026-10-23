@@ -7,47 +7,66 @@
     {
       "slug": "where-injection-comes-from",
       "title": "注入从哪里来",
-      "type": "article",
       "source": "01-where-injection-comes-from.mdx",
-      "completionPolicy": "manual",
       "required": true,
       "unit": "原理"
     },
     {
       "slug": "why-parameterized-queries-work",
       "title": "参数化查询为什么有效",
-      "type": "article",
       "source": "02-parameterized-queries.mdx",
-      "completionPolicy": "manual",
       "required": true,
       "unit": "原理"
     },
     {
       "slug": "query-audit-lab",
       "title": "实验：审计一条登录查询",
-      "type": "interactive",
-      "completionPolicy": "server_validated",
       "required": true,
-      "activityId": "sql-injection-lab",
-      "unit": "实验与测验"
+      "unit": "实验与测验",
+      "source": "lessons/03-query-audit-lab.mdx",
+      "blocks": [
+        {
+          "id": "query-audit-lab",
+          "kind": "simulation",
+          "activityId": "sql-injection-basics/sql-injection-lab",
+          "title": "SQL 注入审计台"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "query-audit-lab"
+        ]
+      }
     },
     {
       "slug": "final-quiz",
       "title": "最终测验",
-      "type": "quiz",
-      "source": "quiz.server.json",
-      "completionPolicy": "server_validated",
       "required": true,
+      "unit": "实验与测验",
+      "source": "lessons/04-final-assessment.mdx",
       "finalExam": true,
-      "unit": "实验与测验"
+      "blocks": [
+        {
+          "id": "final-assessment",
+          "kind": "question",
+          "source": "quiz.server.json",
+          "title": "最终测验"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-assessment"
+        ]
+      }
     }
   ],
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "plugins": {
     "concepts": [
       {
         "id": "data-vs-instruction",
-        "legacyGlobalId": "sql.data-vs-instruction",
         "component": "concepts/sql-data-vs-instruction.tsx",
         "export": "SqlDataVsInstruction",
         "title": "数据与指令：一句话为什么能改变程序",
@@ -55,7 +74,6 @@
       },
       {
         "id": "parameter-binding",
-        "legacyGlobalId": "sql.parameter-binding",
         "component": "concepts/sql-parameter-binding.tsx",
         "export": "SqlParameterBinding",
         "title": "参数化查询：固定表格与填空",
@@ -65,12 +83,10 @@
     "activities": [
       {
         "id": "sql-injection-lab",
-        "legacyGlobalId": "sql-injection-lab",
         "component": "activities/sql-injection.tsx",
         "export": "SqlInjectionActivity",
         "title": "SQL 注入审计台",
         "validator": {
-          "id": "sql-injection-lab",
           "path": "validators.ts",
           "export": "validateSqlInjectionLab"
         }

@@ -6,7 +6,6 @@ import { config as loadEnv } from "dotenv";
 import { createAdminClient } from "@/lib/supabase/admin";
 import * as admin from "@/lib/services/admin";
 import * as courses from "@/lib/services/courses";
-import * as quizzes from "@/lib/services/quizzes";
 import * as loader from "@/lib/content/loader";
 import * as headings from "@/lib/content/headings";
 
@@ -67,7 +66,6 @@ async function main() {
   if (joinError) throw joinError;
 
   const articleLesson = lessons.find((lesson) => lesson.type === "article")!;
-  const quizLesson = lessons.find((lesson) => lesson.type === "quiz")!;
   const loaded = loader.loadCourse(course.slug);
   const articleManifest = loaded.manifest.lessons.find(
     (lesson) => lesson.slug === articleLesson.slug,
@@ -114,7 +112,6 @@ async function main() {
         admin.listCourseStudents(course.id, { page: 1, pageSize: 50 }),
       ),
     );
-    results.push(await time("getQuizData", () => quizzes.getQuizData(quizLesson.id)));
     results.push(await time("loadCourse", () => loader.loadCourse(course.slug)));
     results.push(
       await time("readArticleSource", () =>

@@ -2,23 +2,19 @@
 
 LearnOS 采用**内容即代码**：课程结构、MDX、题库与服务端验证器都在仓库中，经脚本校验后同步到数据库。管理员 UI 只管理发布状态与标题/简介，不编辑章节内容。
 
-> **Manifest v3 混合章节**：一个章节可以用 MDX 自由组合文字、图片、动画、JS 模拟实验和知识检查。完整字段、模板和 Block 状态模型见 [`mixed-chapters.md`](mixed-chapters.md)。v2 课程继续完全兼容。
+> **唯一正式模型（Manifest v3）**：`Course → Chapter → 可选 Block → 完成规则`。每个章节都有 MDX 正文；模拟实验与正式知识检查是可选的 Block。没有独立的「实验页」或「测验页」类型，也没有 v2 兼容分支。
 
 ## 1. 目录结构
 
 ```text
 content/courses/<course-slug>/
-  course.json              # 课程 manifest
-  01-intro.mdx             # 图文章节
-  02-principle.mdx
-  quiz.server.json         # 最终测验题库（含答案，仅服务端读取）
-  assessments/*.server.json# v3 章节知识检查题库（仅服务端读取）
-  validators.ts            # 互动组件/模拟 Block 服务端验证器
+  course.json              # 课程 manifest（schemaVersion: 3）
+  lessons/01-intro.mdx     # 章节正文（每章一个 .mdx）
+  lessons/02-lab.mdx
+  assessments/*.server.json# 正式知识检查题库（仅服务端读取）
+  validators.ts            # 模拟实验服务端验证器
   concepts/*.tsx           # 课程插件动画
   activities/*.tsx         # 课程插件原生模拟实验
-
-components/activities/     # activityId registry 与原生 React 组件
-lib/activities/            # 纯模拟/校验逻辑与活动目录
 ```
 
 `<course-slug>` 必须与 `course.json` 的 `slug` 一致，且匹配 `^[a-z0-9]+(-[a-z0-9]+)*$`。
@@ -27,35 +23,52 @@ lib/activities/            # 纯模拟/校验逻辑与活动目录
 
 ```json
 {
-  "slug": "sql-injection-basics",
-  "title": "SQL 注入：从字符串拼接到参数化查询",
-  "description": "从登录框出发理解注入与参数化。",
+  "schemaVersion": 3,
+  "slug": "http-from-zero",
+  "title": "HTTP 协议入门",
+  "description": "从一次请求开始理解 HTTP。",
   "version": "1.0.0",
+  "plugins": { "concepts": [], "activities": [] },
   "lessons": [
     {
-      "slug": "where-injection-comes-from",
-      "title": "注入从哪里来",
-      "type": "article",
-      "source": "01-where-injection-comes-from.mdx",
-      "completionPolicy": "manual",
-      "required": true
-    },
-    {
-      "slug": "query-audit-lab",
-      "title": "实验：审计一条登录查询",
-      "type": "interactive",
-      "activityId": "sql-injection-lab",
-      "completionPolicy": "server_validated",
-      "required": true
+      "slug": "request-response",
+      "title": "请求与响应",
+      "source": "lessons/04-request-response.mdx",
+      "required": true,
+      "unit": "消息",
+      "blocks": [
+        {
+          "id": "request-lab",
+          "kind": "simulation",
+          "activityId": "http-from-zero/request-builder",
+          "title": "构造一个请求"
+        },
+        {
+          "id": "request-check",
+          "kind": "question",
+          "source": "assessments/request-check.server.json",
+          "title": "请求知识检查"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": ["request-lab"]
+      }
     },
     {
       "slug": "final-quiz",
       "title": "最终测验",
-      "type": "quiz",
-      "source": "quiz.server.json",
-      "completionPolicy": "server_validated",
+      "source": "lessons/09-final-quiz.mdx",
       "required": true,
-      "finalExam": true
+      "finalExam": true,
+      "blocks": [
+        {
+          "id": "final-quiz",
+          "kind": "question",
+          "source": "assessments/final.server.json"
+        }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["final-quiz"] }
     }
   ]
 }
@@ -63,71 +76,41 @@ lib/activities/            # 纯模拟/校验逻辑与活动目录
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| `slug` | 是 | 全课程唯一，小写连字符 |
-| `title` / `description` | 是 / 否 | 标题 ≤160；简介 ≤2000 |
+| `schemaVersion` | 是 | 必须是 `3`；v2 不再接受 |
+| `slug` / `title` / `description` | 是 / 是 / 否 | 课程标识与元数据 |
 | `version` | 是 | semver，同步后写入 `courses.content_version` |
-| `lessons` | 是 | 至少 1 个；数组顺序即章节顺序（position 从 0 开始） |
-| `required` | 否 | 默认 `true`；课程至少 1 个必修 |
-| `unit` | 否 | 可选逻辑分组，写入 `lessons.config.unit`，用于目录分组；不增加表，不参与结构冻结 |
-| `type` | 是 | `article` / `interactive` / `quiz` |
-| `completionPolicy` | 依类型 | article: `manual`，或带可验证 blocks 的 `server_validated`；interactive: `reported` / `server_validated`；quiz: `server_validated` |
-| `source` | article/quiz | 课程目录内相对路径；禁止 `..`、绝对路径 |
-| `activityId` | interactive | 必须已注册到 `lib/activities/catalog.ts` 与 `components/activities/registry.tsx` |
-| `finalExam` | quiz | **必须且只能有一个**，且必须是最后一个章节 |
+| `lessons` | 是 | 至少 1 个；数组顺序即章节顺序 |
+| `lesson.slug` / `title` | 是 | 章节目录中的名称；`title` 允许换行展示 |
+| `lesson.source` | 是 | 课程目录内相对路径，必须以 `.mdx` 结尾 |
+| `lesson.required` | 否 | 默认 `true`；课程至少 1 个必修 |
+| `lesson.unit` | 否 | 可选逻辑分组，只写入 `config.unit`，不增加表 |
+| `lesson.blocks` | 否 | `simulation` 或 `question`；未声明的 Block 不能提交 |
+| `lesson.completion` | 否 | `manual | all | any`；省略即手动完成 |
+| `lesson.finalExam` | 否 | 最多一个；必须是必修、必须包含必需的知识检查 Block |
 
 ### 结构规则（`pnpm courses:validate` 强制）
 
-- 章节 slug 唯一、资源文件存在、路径不得逃出课程目录。
+- 每章必须有 `.mdx` 正文，路径不得逃出课程目录。
 - 至少一个必修章节。
-- 恰好一个 `finalExam: true` 的测验，且位于最后。
-- 图文章节声明 `server_validated` 时必须带 `blocks` 与可满足的 `completion`；交互章节不能使用 `manual`。
-- 每个交互章节/模拟 Block 的 `activityId` 必须在活动目录中注册，且对应服务端 validator 可用。
-- v3 的 Block ID 在章节内唯一；`requiredBlocks` 必须引用存在的 Block；MDX 必须实际渲染声明的 Block。
+- **最终测验可选**：0 或 1 个 `finalExam`，不再强制每门课程都有。
+- `all/any` 完成规则至少引用一个 Block，且 `requiredBlocks` 必须存在；`manual` 不能声明 required 项。
+- 只有 `simulation` / `question` 可以进入 `requiredBlocks`；动画与 MiniCheck 不参与正式判定。
+- 模拟 Block 的 `activityId` 必须在生成的 activity registry 中注册，且服务端 validator 可用。
+- Block ID 在章节内唯一；MDX 必须实际渲染声明的 Block。
 - MDX 使用 AST 解析校验，未知组件、未注册 Concept/Activity、重复 Block 都会失败。
 - 客户端组件不能导入 `validators.ts`、`*.server.json` 或 `assessments/`。
 
-### 2.1 Manifest v3 混合章节
+### 2.1 完成规则
 
-```json
-{
-  "schemaVersion": 3,
-  "slug": "http-from-zero",
-  "title": "HTTP 协议入门",
-  "version": "1.0.0",
-  "plugins": { "concepts": [], "activities": [] },
-  "lessons": [
-    {
-      "slug": "request-response",
-      "title": "请求与响应",
-      "type": "article",
-      "source": "lessons/04-request-response.mdx",
-      "completionPolicy": "server_validated",
-      "required": true,
-      "blocks": [
-        {
-          "id": "request-lab",
-          "kind": "simulation",
-          "activityId": "http-from-zero/request-builder"
-        },
-        {
-          "id": "request-check",
-          "kind": "question",
-          "source": "assessments/request-check.server.json"
-        }
-      ],
-      "completion": {
-        "mode": "all",
-        "requiredBlocks": ["request-lab", "request-check"]
-      }
-    }
-  ]
-}
-```
+| `completion.mode` | 行为 |
+| --- | --- |
+| 省略 / `manual` | 学生阅读后手动标记完成；可选 Block 不影响完成 |
+| `all` | 全部 `requiredBlocks` 通过后，服务端自动结章 |
+| `any` | 任一 `requiredBlocks` 通过后，服务端自动结章 |
 
-- `blocks` / `completion` 省略时就是普通文章章节。
-- `completion.mode`: `manual | all | any`；`all/any` 必须 `server_validated`。
-- 只有 simulation/question 可以进入 `requiredBlocks`；动画只做展示。
-- `plugins` 可省略；纯文字课程不需要任何概念或活动。
+- 通过状态只由服务端验证器/题库评分产生；客户端不能提交 `passed`。
+- 首次结章 +10；`finalExam` 章节首次通过额外 +50。
+- 动画播放、文字阅读、MiniCheck 不默认参与完成判定。
 
 ## 3. MDX 图文
 
@@ -217,20 +200,18 @@ export function validateMyLab(submission: unknown): {
 }
 ```
 
-然后在 `lib/content/validators.server.ts` 的静态注册表中登记：
+在 `course.json` 的 `plugins.activities` 中声明 validator 路径与导出名；`pnpm courses:prepare` 会生成静态 registry 与服务端 validator registry：
 
-```ts
-import { validateMyLab } from "@/content/courses/my-course/validators";
-
-const VALIDATORS = {
-  "my-lab-validator": (submission) => {
-    const result = validateMyLab(submission);
-    return { passed: result.passed, feedback: result.feedback };
-  },
-};
+```json
+{
+  "id": "my-lab",
+  "component": "activities/my-lab.tsx",
+  "export": "MyLab",
+  "validator": { "path": "validators.ts", "export": "validateMyLab" }
+}
 ```
 
-- 禁止根据 `validatorId` 动态 import 用户输入。
+- validatorId 由课程 slug 与活动 id 组成（例如 `my-course/my-lab`），禁止根据用户输入动态 import。
 - 验证器只返回 `passed` 与可展示的 `feedback`；不要返回答案或密钥。
 - `server_validated` 章节只有验证器通过才会完成并发 10 分；失败可再次提交。
 
@@ -250,14 +231,15 @@ lib/activities/
   sql-injection.ts           # 纯 TypeScript 模拟与校验
   idempotency.ts
 components/activities/
-  registry.tsx               # activityId → 动态 React 组件（唯一注册点）
-  activity-host.tsx          # 绑定 lesson/enrollment/initial state
+  registry.tsx               # 生成的活动/概念动态组件注册点
+  status.tsx                 # 实验保存/冲突状态
   sql-injection/index.tsx
   idempotency/index.tsx
 ```
 
-- `catalog.ts` 是 manifest 校验、同步和服务端验证器的唯一活动清单。
-- `registry.tsx` 必须显式列出每个 `activityId` 对应的组件；禁止根据路径或用户输入动态 import。
+- `lib/generated/course-catalog.ts` 与 `validator-registry.server.ts` 由 `pnpm courses:prepare` 生成，禁止手工维护。
+- `registry.tsx` 由生成器显式列出每个 `activityId` 对应的组件；禁止根据路径或用户输入动态 import。
+- 独立实验不再作为章节类型存在；在 MDX 中用 `<SimulationBlock blockId="..." />` 嵌入普通章节。
 - 模拟计算放在纯函数模块，便于单元测试，并与服务端 validator 共用，避免客户端/服务端判定漂移。
 
 ### 6.2 组件契约

@@ -133,13 +133,6 @@ export type PublicQuizQuestion = {
   options: { id: string; label: string }[];
 };
 
-export type QuizPayload = {
-  lessonId: string;
-  title: string;
-  passScore: number;
-  questions: PublicQuizQuestion[];
-};
-
 export type BlockResultSummary = {
   blockId: string;
   kind: ChapterBlockKind;
@@ -161,20 +154,6 @@ export type BlockSubmitResult = {
   chapterCompleted: boolean;
   lessonStatus: string | null;
   courseProgress: CourseProgress;
-  enrollmentStatus: EnrollmentStatus;
-  pointsAwarded: number;
-};
-
-export type QuizSubmitResult = {
-  attemptId: string;
-  score: number;
-  passed: boolean;
-  correctCount: number;
-  questionCount: number;
-  passScore: number;
-  duplicate: boolean;
-  courseProgress: CourseProgress;
-  lessonStatus: LessonProgressStatus | null;
   enrollmentStatus: EnrollmentStatus;
   pointsAwarded: number;
 };

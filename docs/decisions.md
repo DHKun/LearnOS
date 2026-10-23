@@ -289,3 +289,31 @@
 **理由**：学生需要先识别“课程章节”，再定位“本章小节”；技术类型不构成学习决策信息。
 
 **影响**：仅改导航表达，不改变课程路径、Lesson ID 或学习记录。移动端目录抽屉复用同一组件。
+
+## D38 — 收敛为唯一章节模型，移除 Manifest v2 与 Legacy Global ID
+
+**背景**：v2 的 `article` / `interactive` / `quiz` 三种 Lesson 类型与 v3 的章节内 Block 并存，导致 Manifest、加载器、同步、页面渲染和测试长期维护两套完成语义；`legacyGlobalId` 与 `validator.id` 只服务于旧实验课程。
+
+**决定**：Manifest 只接受 `schemaVersion: 3`，Lesson 统一为「MDX 正文 + 可选 blocks/completion/finalExam」。删除 `type`、`completionPolicy`、`activityId`、`config` 与 v2 分支；插件全局 ID 固定为 `${courseSlug}/${localId}`，validatorId 使用同一 ID，删除 `legacyGlobalId` 与 `validator.id`。`finalExam` 变为可选，最多一个；存在的最终测验就是一个带必需 question Block 的普通 `all` 章节。三门口径旧的演示课程已迁移为同一结构，原有 course/chapter/enrollment/progress/point 记录保留。
+
+**理由**：一个章节可以自由混合文字、动画、实验与题目；完成规则只由 `completion` 声明。两套模型会让“哪些内容参与正式判定”长期含糊。
+
+**影响**：`resolveChapterCompletion` 省略 completion 即手动完成，不再隐式 all；同步时 `completion_policy` 由完成规则派生。已有学习记录的旧课程通过一次性 `pnpm courses:sync --adopt-structure` 迁移；普通同步仍保持结构冻结。数据库类型列与历史 `quiz_attempts` / `record_quiz_attempt` 保留，不在本次重新设计数据库。
+
+## D39 — 最终测验积分迁移到 Block 事务
+
+**背景**：最终测验从独立 quiz Lesson 改为普通章节后，`record_quiz_attempt` 不再被新模型调用；若直接删除会丢失既有“最终测验首次通过 +50”的产品规则。
+
+**决定**：新增迁移 `20250101001100_final_exam_block_points.sql`，在 `save_block_result` 判定章节完成时检查 `lessons.config.finalExam = true`，在同一事务内插入 `final_quiz_passed` 50 分，`dedupe_key = final_quiz:<enrollment>`；重复提交仍返回 `pointsAwarded=0`。最终测验章节首次完成因此获得 10 + 50。
+
+**理由**：保持积分账本与章节完成同事务，不引入新的积分服务；旧 quiz RPC 保留但新模型不再使用。
+
+**影响**：HTTP 课程总积分仍为 140，SQL 课程仍为 90；集成测试与 E2E 覆盖重复提交不发分。
+
+## D40 — 学习页统一渲染，删除独立实验/测验页面路径
+
+**决定**：`learn/[courseId]` 对所有章节渲染 `ArticleView + ChapterLearningProvider + ChapterProgress`；模拟实验与题目通过 MDX 的 `SimulationBlock` / `KnowledgeCheck` 进入 `BlockScope`。删除 `ActivityHost`、`QuizPlayer`、`/api/learning/submissions`、`/api/quizzes/*` 与对应 service；基础 `LearningClient.submit` 显式拒绝，正式提交只允许 BlockScope 的 `/api/learning/blocks/submit`。
+
+**理由**：独立实验/测验页面会与统一章节内容重复；BlockScope 已提供服务端判分、整章状态命名空间和完成事务。
+
+**影响**：课程路径与 Lesson ID 不变；历史 quiz 表/函数保留用于数据审计，但没有新的写入路径。

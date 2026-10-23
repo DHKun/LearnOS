@@ -183,8 +183,8 @@ test.describe("HTTP 混合章节完整学习闭环", () => {
       await page.locator('[data-question-id="f-post"] input[value="post"]').check();
       await page.locator('[data-question-id="f-404"] input[value="404"]').check();
       await page.locator('[data-question-id="f-cookie"] input[value="no-js"]').check();
-      await page.getByRole("button", { name: "提交测验" }).click();
-      await expect(page.getByText(/测验通过/)).toBeVisible({ timeout: 20_000 });
+      await page.getByRole("button", { name: "提交知识检查" }).click();
+      await expect(page.getByText("本章知识检查已通过")).toBeVisible({ timeout: 20_000 });
 
       // 数据库中的真实记录与积分。
       const enrollments = await getEnrollments(student.id);
@@ -205,7 +205,7 @@ test.describe("HTTP 混合章节完整学习闭环", () => {
       expect(points.data.total).toBe(140);
 
       // 最终地址仍是课程完成后的复习入口。
-      await expect(page.getByText(/测验通过/)).toBeVisible();
+      await expect(page.getByText("本章知识检查已通过")).toBeVisible();
     } finally {
       await deleteTestStudent(student.id);
     }

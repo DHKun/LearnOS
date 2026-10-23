@@ -27,9 +27,9 @@ test.describe("服务端权威与越权防护", () => {
     const studentB = await createTestStudent("secure-b");
     const course = await getCourseBySlug("sql-injection-basics");
     const lessons = await getLessons(course.id);
-    const article = lessons.find((lesson) => lesson.type === "article")!;
-    const lab = lessons.find((lesson) => lesson.type === "interactive")!;
-    const quizLesson = lessons.find((lesson) => lesson.type === "quiz")!;
+    const article = lessons.find((lesson) => lesson.slug === "where-injection-comes-from")!;
+    const lab = lessons.find((lesson) => lesson.slug === "query-audit-lab")!;
+    const quizLesson = lessons.find((lesson) => lesson.slug === "final-quiz")!;
 
     try {
       await login(page, studentA.email, studentA.password);
@@ -45,18 +45,19 @@ test.describe("服务端权威与越权防护", () => {
         enrollmentId,
       });
       expect(forged.status).toBe(400);
-      expect(forged.body?.error?.code).toBe("SERVER_VALIDATION_REQUIRED");
+      expect(forged.body?.error?.code).toBe("COMPLETION_NOT_ALLOWED");
       expect(await getPointsTotal(studentA.id)).toBe(0);
 
       // 2. 不安全的实验结论不能通过
       const wrong = await api<{ passed: boolean; pointsAwarded: number }>(
         page,
-        "/api/learning/submissions",
+        "/api/learning/blocks/submit",
         "POST",
         {
-          id: crypto.randomUUID(),
+          attemptId: crypto.randomUUID(),
           enrollmentId,
           lessonId: lab.id,
+          blockId: "query-audit-lab",
           submission: { defences: ["escape-quotes"] },
         },
       );
@@ -64,17 +65,19 @@ test.describe("服务端权威与越权防护", () => {
       expect(wrong.body?.data?.passed).toBe(false);
       expect(await getPointsTotal(studentA.id)).toBe(0);
 
-      // 3. 正确的实验结论通过并只发一次积分；重放同一提交 ID 幂等
-      const submissionId = crypto.randomUUID();
+      // 3. 正确的实验结论通过并只发一次积分；重放同一 attemptId 幂等
+      const attemptId = crypto.randomUUID();
+      const submission = { defences: ["parameterize"] };
       const correct = await api<{ passed: boolean; pointsAwarded: number }>(
         page,
-        "/api/learning/submissions",
+        "/api/learning/blocks/submit",
         "POST",
         {
-          id: submissionId,
+          attemptId,
           enrollmentId,
           lessonId: lab.id,
-          submission: { defences: ["parameterize"] },
+          blockId: "query-audit-lab",
+          submission,
         },
       );
       expect(correct.status).toBe(200);
@@ -83,13 +86,14 @@ test.describe("服务端权威与越权防护", () => {
 
       const replay = await api<{ duplicate: boolean; passed: boolean }>(
         page,
-        "/api/learning/submissions",
+        "/api/learning/blocks/submit",
         "POST",
         {
-          id: submissionId,
+          attemptId,
           enrollmentId,
           lessonId: lab.id,
-          submission: { defences: ["parameterize"] },
+          blockId: "query-audit-lab",
+          submission,
         },
       );
       expect(replay.status).toBe(200);
@@ -99,12 +103,13 @@ test.describe("服务端权威与越权防护", () => {
 
       const reusedSubmission = await api(
         page,
-        "/api/learning/submissions",
+        "/api/learning/blocks/submit",
         "POST",
         {
-          id: submissionId,
+          attemptId,
           enrollmentId,
           lessonId: lab.id,
+          blockId: "query-audit-lab",
           submission: { defences: ["type-cast"] },
         },
       );
@@ -214,21 +219,27 @@ test.describe("服务端权威与越权防护", () => {
       });
       expect([403, 404]).toContain(bEvent.status);
 
-      // 7. 测验答案不下发；失败可重试，通过后幂等
-      const quiz = await api<{
-        passScore: number;
-        questions: { id: string; options: { id: string }[] }[];
-      }>(page, `/api/quizzes/${quizLesson.id}`);
-      expect(quiz.status).toBe(200);
-      const serialized = JSON.stringify(quiz.body?.data);
-      expect(serialized).not.toContain('"answer"');
-      expect(serialized).not.toContain('"explanation"');
+      // 7. 题目答案不下发；失败可重试，通过后幂等
+      await page.goto(`/learn/${course.id}?lesson=${quizLesson.id}`);
+      await expect(page.getByText("最终测验", { exact: false }).first()).toBeVisible({
+        timeout: 20_000,
+      });
+      const pageHtml = await page.content();
+      expect(pageHtml).not.toContain('"answer"');
+      expect(pageHtml).not.toContain('"explanation"');
 
+      const failedAttemptId = crypto.randomUUID();
       const failedAttempt = await api<{ passed: boolean }>(
         page,
-        `/api/quizzes/${quizLesson.id}/submit`,
+        "/api/learning/blocks/submit",
         "POST",
-        { attemptId: crypto.randomUUID(), enrollmentId, answers: {} },
+        {
+          attemptId: failedAttemptId,
+          enrollmentId,
+          lessonId: quizLesson.id,
+          blockId: "final-assessment",
+          submission: { answers: {} },
+        },
       );
       expect(failedAttempt.status).toBe(200);
       expect(failedAttempt.body?.data?.passed).toBe(false);
@@ -238,12 +249,18 @@ test.describe("服务端权威与越权防护", () => {
       const answers: Record<string, string | string[]> = {};
       for (const question of quizFile.questions) answers[question.id] = question.answer;
 
-      const attemptId = crypto.randomUUID();
+      const passedAttemptId = crypto.randomUUID();
       const passedAttempt = await api<{ passed: boolean; pointsAwarded: number }>(
         page,
-        `/api/quizzes/${quizLesson.id}/submit`,
+        "/api/learning/blocks/submit",
         "POST",
-        { attemptId, enrollmentId, answers },
+        {
+          attemptId: passedAttemptId,
+          enrollmentId,
+          lessonId: quizLesson.id,
+          blockId: "final-assessment",
+          submission: { answers },
+        },
       );
       expect(passedAttempt.status).toBe(200);
       expect(passedAttempt.body?.data?.passed).toBe(true);
@@ -252,9 +269,15 @@ test.describe("服务端权威与越权防护", () => {
 
       const replayAttempt = await api<{ duplicate: boolean; pointsAwarded?: number }>(
         page,
-        `/api/quizzes/${quizLesson.id}/submit`,
+        "/api/learning/blocks/submit",
         "POST",
-        { attemptId, enrollmentId, answers },
+        {
+          attemptId: passedAttemptId,
+          enrollmentId,
+          lessonId: quizLesson.id,
+          blockId: "final-assessment",
+          submission: { answers },
+        },
       );
       expect(replayAttempt.status).toBe(200);
       expect(replayAttempt.body?.data?.duplicate).toBe(true);
@@ -263,9 +286,15 @@ test.describe("服务端权威与越权防护", () => {
 
       const reusedAttempt = await api(
         page,
-        `/api/quizzes/${quizLesson.id}/submit`,
+        "/api/learning/blocks/submit",
         "POST",
-        { attemptId, enrollmentId, answers: {} },
+        {
+          attemptId: passedAttemptId,
+          enrollmentId,
+          lessonId: quizLesson.id,
+          blockId: "final-assessment",
+          submission: { answers: {} },
+        },
       );
       expect(reusedAttempt.status).toBe(409);
       expect(reusedAttempt.body?.error?.code).toBe("IDEMPOTENCY_KEY_REUSED");

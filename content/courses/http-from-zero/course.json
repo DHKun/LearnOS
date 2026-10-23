@@ -65,37 +65,29 @@
     {
       "slug": "internet-http",
       "title": "互联网与 HTTP",
-      "type": "article",
       "source": "lessons/01-internet-http.mdx",
       "required": true,
-      "completionPolicy": "manual",
       "unit": "基础"
     },
     {
       "slug": "browser-server",
       "title": "浏览器与服务器",
-      "type": "article",
       "source": "lessons/02-browser-server.mdx",
       "required": true,
-      "completionPolicy": "manual",
       "unit": "基础"
     },
     {
       "slug": "url-anatomy",
       "title": "URL 的组成",
-      "type": "article",
       "source": "lessons/03-url-anatomy.mdx",
       "required": true,
-      "completionPolicy": "manual",
       "unit": "基础"
     },
     {
       "slug": "request-response",
       "title": "请求与响应",
-      "type": "article",
       "source": "lessons/04-request-response.mdx",
       "required": true,
-      "completionPolicy": "server_validated",
       "unit": "消息",
       "blocks": [
         {
@@ -107,16 +99,16 @@
       ],
       "completion": {
         "mode": "all",
-        "requiredBlocks": ["request-lab"]
+        "requiredBlocks": [
+          "request-lab"
+        ]
       }
     },
     {
       "slug": "http-methods",
       "title": "HTTP 方法",
-      "type": "article",
       "source": "lessons/05-http-methods.mdx",
       "required": true,
-      "completionPolicy": "server_validated",
       "unit": "消息",
       "blocks": [
         {
@@ -135,16 +127,17 @@
       ],
       "completion": {
         "mode": "all",
-        "requiredBlocks": ["methods-lab", "methods-check"]
+        "requiredBlocks": [
+          "methods-lab",
+          "methods-check"
+        ]
       }
     },
     {
       "slug": "status-codes",
       "title": "状态码",
-      "type": "article",
       "source": "lessons/06-status-codes.mdx",
       "required": true,
-      "completionPolicy": "server_validated",
       "unit": "消息",
       "blocks": [
         {
@@ -157,16 +150,16 @@
       ],
       "completion": {
         "mode": "all",
-        "requiredBlocks": ["status-check"]
+        "requiredBlocks": [
+          "status-check"
+        ]
       }
     },
     {
       "slug": "headers-cookies",
       "title": "Header 与 Cookie",
-      "type": "article",
       "source": "lessons/07-headers-cookies.mdx",
       "required": true,
-      "completionPolicy": "server_validated",
       "unit": "状态",
       "blocks": [
         {
@@ -185,27 +178,40 @@
       ],
       "completion": {
         "mode": "any",
-        "requiredBlocks": ["cookie-lab", "headers-check"]
+        "requiredBlocks": [
+          "cookie-lab",
+          "headers-check"
+        ]
       }
     },
     {
       "slug": "summary",
       "title": "总结",
-      "type": "article",
       "source": "lessons/08-summary.mdx",
       "required": true,
-      "completionPolicy": "manual",
       "unit": "总结"
     },
     {
       "slug": "final-quiz",
       "title": "最终测验",
-      "type": "quiz",
-      "source": "assessments/final.server.json",
-      "completionPolicy": "server_validated",
       "required": true,
+      "unit": "总结",
+      "source": "lessons/09-final-quiz.mdx",
       "finalExam": true,
-      "unit": "总结"
+      "blocks": [
+        {
+          "id": "final-quiz",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "最终测验"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-quiz"
+        ]
+      }
     }
   ]
 }

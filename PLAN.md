@@ -428,3 +428,36 @@ tests/e2e/admin-detail.spec.ts          1 test
 | `pnpm security:scan` | ✅ 75 个客户端资源通过 |
 | `pnpm courses:validate` | ✅ 4/4 |
 | 新增 E2E | 底部笔记按钮可见、桌面非模态、专注模式、移动端不遮挡下一章、双必需活动自动结章、目录/进度同步、重复提交不发分 |
+
+## 17. 课程模型收敛（P1，2026-10-23）
+
+**目标**：唯一正式模型 `Course → Chapter（MDX）→ 可选 Block → 完成规则`；不再维护 v2 类型分支与 Legacy Global ID。
+
+### 17.1 Manifest 与内容
+
+- [x] `schemaVersion` 固定为 3；删除 `type`、`completionPolicy`、`activityId`、`config` 与 v2 union。
+- [x] 章节统一为 `source` + 可选 `blocks` / `completion` / `finalExam`；`finalExam` 改为可选，最多一个。
+- [x] 删除 `legacyGlobalId` 与 `validator.id`；插件全局 ID 固定为 `${courseSlug}/${localId}`。
+- [x] 三门口径旧课程（SQL 注入、幂等、HTTP 重试）迁移为统一章节：新增实验/结业 MDX，独立实验与测验变成 Block。
+- [x] 保留既有 course/chapter/enrollment/progress/point 记录；使用一次性 `courses:sync --adopt-structure` 迁移，普通同步继续冻结。
+
+### 17.2 渲染与判分
+
+- [x] 学习页统一渲染 MDX + `ChapterLearningProvider`；删除 `ActivityHost`、`QuizPlayer`、`/api/learning/submissions`、`/api/quizzes/*`。
+- [x] 最终测验通过必需 question Block 判分；新增迁移在 `save_block_result` 内发放首次 +50，重复提交不发分。
+- [x] `resolveChapterCompletion` 省略 completion 即手动完成；未列入 requiredBlocks 的 Block 仅作可选练习。
+- [x] 同步结构比较覆盖 type/completion/finalExam/chapterHash；发布校验只要求必修章节、MDX 内容与最多一个 finalExam。
+
+### 17.3 验证记录
+
+| 项目 | 结果 |
+| --- | --- |
+| `pnpm courses:validate` | ✅ 4/4（全部 v3） |
+| `pnpm courses:sync` | ✅ 4/4 正常同步；已有学习记录课程冻结通过 |
+| `pnpm lint` | ✅ 0 error（1 个既有 notes-panel warning） |
+| `pnpm typecheck` | ✅ 通过 |
+| `pnpm test` | ✅ 19 个文件、126 tests 通过（含真实 PostgreSQL 最终测验 +60 与重复提交） |
+| `pnpm build` | ✅ 通过 |
+| `pnpm test:e2e` | ✅ 22 passed（本地 `http://127.0.0.1:3005`，含迁移后的 SQL/幂等/HTTP 全部闭环） |
+| `pnpm security:scan` | ✅ 72 个客户端资源通过 |
+| 数据迁移 | ✅ 3 门旧课程原地迁移，3 条演示 enrollment 保留；未清空业务表 |

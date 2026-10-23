@@ -210,7 +210,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   });
 
   it("完成图文章节幂等，积分只发一次", async () => {
-    const articles = lessons.filter((lesson) => lesson.type === "article");
+    const articles = lessons.filter((lesson) => lesson.completion_policy === "manual");
     const awards: number[] = [];
     for (const article of articles) {
       const result = await rpc<{ pointsAwarded: number }>("complete_lesson", {
@@ -234,11 +234,14 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
     );
     expect(second.pointsAwarded).toBe(0);
     expect(second.alreadyCompleted).toBe(true);
-    expect(await pointsTotal(student.id)).toBe(20);
+    expect(await pointsTotal(student.id)).toBe(articles.length * 10);
   });
 
-  it("server_validated 章节拒绝直接 complete，并只接受验证器为 true 的提交", async () => {
+  it("server_validated 章节拒绝直接 complete，Block 结果由事务判定", async () => {
     const lab = lessons.find((lesson) => lesson.slug === "query-audit-lab")!;
+    const manualAwards = lessons.filter(
+      (lesson) => lesson.completion_policy === "manual",
+    ).length * 10;
     await expect(
       rpc("complete_lesson", {
         p_student: student.id,
@@ -246,122 +249,151 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         p_lesson: lab.id,
         p_source: "manual",
       }),
-    ).rejects.toThrow("SERVER_VALIDATION_REQUIRED");
+    ).rejects.toThrow("COMPLETION_NOT_ALLOWED");
 
     const failedId = randomUUID();
-    const failed = await rpc<{ passed: boolean; pointsAwarded?: number }>("save_submission", {
+    const failed = await rpc<{ passed: boolean; pointsAwarded?: number }>("save_block_result", {
       p_student: student.id,
       p_enrollment: enrollmentId,
       p_lesson: lab.id,
-      p_submission_id: failedId,
-      p_submission_hash: "hash-false",
+      p_block_id: "query-audit-lab",
+      p_block_kind: "simulation",
+      p_attempt_id: failedId,
+      p_request_hash: "hash-false",
       p_passed: false,
+      p_score: 0,
       p_feedback: { message: "not safe" },
     });
     expect(failed.passed).toBe(false);
-    expect(await pointsTotal(student.id)).toBe(20);
+    expect(await pointsTotal(student.id)).toBe(manualAwards);
 
     const passedId = randomUUID();
-    const passed = await rpc<{ passed: boolean; pointsAwarded: number }>("save_submission", {
-      p_student: student.id,
-      p_enrollment: enrollmentId,
-      p_lesson: lab.id,
-      p_submission_id: passedId,
-      p_submission_hash: "hash-true",
-      p_passed: true,
-      p_feedback: { message: "safe" },
-    });
-    expect(passed.passed).toBe(true);
-    expect(passed.pointsAwarded).toBe(10);
-
-    const duplicate = await rpc<{ duplicate: boolean; pointsAwarded?: number }>("save_submission", {
-      p_student: student.id,
-      p_enrollment: enrollmentId,
-      p_lesson: lab.id,
-      p_submission_id: passedId,
-      p_submission_hash: "hash-true",
-      p_passed: true,
-      p_feedback: { message: "safe" },
-    });
-    expect(duplicate.duplicate).toBe(true);
-    expect(duplicate.pointsAwarded ?? 0).toBe(0);
-    expect(await pointsTotal(student.id)).toBe(30);
-
-    await expect(
-      rpc("save_submission", {
+    const passed = await rpc<{ passed: boolean; pointsAwarded: number }>(
+      "save_block_result",
+      {
         p_student: student.id,
         p_enrollment: enrollmentId,
         p_lesson: lab.id,
-        p_submission_id: passedId,
-        p_submission_hash: "different-payload",
+        p_block_id: "query-audit-lab",
+        p_block_kind: "simulation",
+        p_attempt_id: passedId,
+        p_request_hash: "hash-true",
         p_passed: true,
-        p_feedback: { message: "different" },
+        p_score: 100,
+        p_feedback: { message: "safe" },
+      },
+    );
+    expect(passed.passed).toBe(true);
+    expect(passed.pointsAwarded).toBe(10);
+
+    const duplicate = await rpc<{ duplicate: boolean; pointsAwarded?: number }>(
+      "save_block_result",
+      {
+        p_student: student.id,
+        p_enrollment: enrollmentId,
+        p_lesson: lab.id,
+        p_block_id: "query-audit-lab",
+        p_block_kind: "simulation",
+        p_attempt_id: passedId,
+        p_request_hash: "hash-true",
+        p_passed: true,
+        p_score: 100,
+        p_feedback: {},
+      },
+    );
+    expect(duplicate.duplicate).toBe(true);
+    expect(duplicate.pointsAwarded ?? 0).toBe(0);
+    expect(await pointsTotal(student.id)).toBe(manualAwards + 10);
+
+    await expect(
+      rpc("save_block_result", {
+        p_student: student.id,
+        p_enrollment: enrollmentId,
+        p_lesson: lab.id,
+        p_block_id: "query-audit-lab",
+        p_block_kind: "simulation",
+        p_attempt_id: passedId,
+        p_request_hash: "different-payload",
+        p_passed: true,
+        p_score: 100,
+        p_feedback: {},
       }),
     ).rejects.toThrow("IDEMPOTENCY_KEY_REUSED");
   });
 
-  it("测验尝试按 attemptId 幂等，失败可重试，最终通过才完成课程", async () => {
-    const quiz = lessons.find((lesson) => lesson.slug === "final-quiz")!;
+  it("最终测验使用必需 Block，重复提交不重复发分并结课", async () => {
+    const finalLesson = lessons.find((lesson) => lesson.slug === "final-quiz")!;
+    const before = await pointsTotal(student.id);
 
     const failedAttempt = randomUUID();
-    const failed = await rpc<{ passed: boolean; pointsAwarded?: number }>("record_quiz_attempt", {
+    const failed = await rpc<{ passed: boolean; pointsAwarded?: number }>("save_block_result", {
       p_student: student.id,
       p_enrollment: enrollmentId,
-      p_lesson: quiz.id,
+      p_lesson: finalLesson.id,
+      p_block_id: "final-assessment",
+      p_block_kind: "question",
       p_attempt_id: failedAttempt,
-      p_score: 20,
+      p_request_hash: "answers-failed",
       p_passed: false,
-      p_answer_summary: { correct: 1, total: 5 },
+      p_score: 20,
+      p_feedback: { correct: 1, total: 5 },
     });
     expect(failed.passed).toBe(false);
-    expect(await pointsTotal(student.id)).toBe(30);
+    expect(await pointsTotal(student.id)).toBe(before);
 
     const passAttempt = randomUUID();
     const passed = await rpc<{
       passed: boolean;
       pointsAwarded: number;
       enrollmentStatus: string;
-    }>("record_quiz_attempt", {
+    }>("save_block_result", {
       p_student: student.id,
       p_enrollment: enrollmentId,
-      p_lesson: quiz.id,
+      p_lesson: finalLesson.id,
+      p_block_id: "final-assessment",
+      p_block_kind: "question",
       p_attempt_id: passAttempt,
-      p_score: 100,
-      p_passed: true,
-      p_answer_summary: { correct: 5, total: 5 },
       p_request_hash: "answers-v1",
+      p_passed: true,
+      p_score: 100,
+      p_feedback: { correct: 5, total: 5 },
     });
     expect(passed.passed).toBe(true);
     expect(passed.pointsAwarded).toBe(60);
     expect(passed.enrollmentStatus).toBe("completed");
-    expect(await pointsTotal(student.id)).toBe(90);
+    expect(await pointsTotal(student.id)).toBe(before + 60);
 
     const duplicate = await rpc<{ duplicate: boolean; pointsAwarded?: number }>(
-      "record_quiz_attempt",
+      "save_block_result",
       {
         p_student: student.id,
         p_enrollment: enrollmentId,
-        p_lesson: quiz.id,
+        p_lesson: finalLesson.id,
+        p_block_id: "final-assessment",
+        p_block_kind: "question",
         p_attempt_id: passAttempt,
-        p_score: 100,
+        p_request_hash: "answers-v1",
         p_passed: true,
-        p_answer_summary: {},
+        p_score: 100,
+        p_feedback: {},
       },
     );
     expect(duplicate.duplicate).toBe(true);
     expect(duplicate.pointsAwarded ?? 0).toBe(0);
-    expect(await pointsTotal(student.id)).toBe(90);
+    expect(await pointsTotal(student.id)).toBe(before + 60);
 
     await expect(
-      rpc("record_quiz_attempt", {
+      rpc("save_block_result", {
         p_student: student.id,
         p_enrollment: enrollmentId,
-        p_lesson: quiz.id,
+        p_lesson: finalLesson.id,
+        p_block_id: "final-assessment",
+        p_block_kind: "question",
         p_attempt_id: passAttempt,
-        p_score: 10,
-        p_passed: false,
-        p_answer_summary: { correct: 0, total: 5 },
         p_request_hash: "different-answers",
+        p_passed: true,
+        p_score: 100,
+        p_feedback: {},
       }),
     ).rejects.toThrow("IDEMPOTENCY_KEY_REUSED");
   });

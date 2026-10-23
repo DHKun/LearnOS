@@ -12,25 +12,16 @@ export type ResolvedChapterCompletion = {
 };
 
 /**
- * Normalize how a v3 chapter completes. The manifest may omit `completion`:
- * a manual article stays manual; a server-validated article with blocks means
- * "complete all declared blocks".
+ * Normalize how a chapter completes. `completion` is the only source of truth;
+ * blocks that are not listed as required are practice content and never block
+ * automatic completion.
  */
 export function resolveChapterCompletion(lesson: ArticleLessonManifest): ResolvedChapterCompletion {
-  if (lesson.completion) {
-    return {
-      mode: lesson.completion.mode,
-      requiredBlocks: [...lesson.completion.requiredBlocks],
-    };
-  }
-  if (lesson.completionPolicy === "server_validated") {
-    const blocks = lesson.blocks ?? [];
-    if (blocks.length === 0) {
-      throw new Error(`章节 ${lesson.slug} 使用 server_validated 但没有可验证的 blocks`);
-    }
-    return { mode: "all", requiredBlocks: blocks.map((block) => block.id) };
-  }
-  return { mode: "manual", requiredBlocks: [] };
+  if (!lesson.completion) return { mode: "manual", requiredBlocks: [] };
+  return {
+    mode: lesson.completion.mode,
+    requiredBlocks: [...lesson.completion.requiredBlocks],
+  };
 }
 
 export function chapterBlocks(lesson: ArticleLessonManifest): ChapterBlock[] {
@@ -110,6 +101,7 @@ export function buildChapterStructure(
         mode: completion.mode,
         requiredBlocks: completion.requiredBlocks.slice().sort(),
         required,
+        finalExam: Boolean(lesson.finalExam),
       }),
     )
     .digest("hex");
@@ -137,6 +129,7 @@ export function chapterConfig(
     blocks,
     completion: structure.completion,
     chapterHash: structure.hash,
+    ...(lesson.finalExam ? { finalExam: true } : {}),
   };
 }
 
@@ -162,6 +155,15 @@ export function validateChapterBlocks(lesson: ArticleLessonManifest): void {
       if (block.kind !== "simulation" && block.kind !== "question") {
         throw new Error(`章节 ${lesson.slug} 的 requiredBlock 不可正式验证: ${blockId}`);
       }
+    }
+  }
+  if (lesson.finalExam) {
+    const hasRequiredQuestion = blocks.some(
+      (block) =>
+        block.kind === "question" && completion.requiredBlocks.includes(block.id),
+    );
+    if (!hasRequiredQuestion) {
+      throw new Error(`章节 ${lesson.slug} 的 finalExam 必须包含必需的知识检查 Block`);
     }
   }
 }

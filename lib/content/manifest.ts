@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-import { ACTIVITY_IDS } from "@/lib/activities/catalog";
-
-export const lessonTypeSchema = z.enum(["article", "interactive", "quiz"]);
-export const completionPolicySchema = z.enum(["manual", "reported", "server_validated"]);
-
 const safeRelativePath = z
   .string()
   .min(1)
@@ -13,13 +8,12 @@ const safeRelativePath = z
     message: "资源路径必须是课程目录内的相对路径",
   });
 
-
 export const chapterBlockIdSchema = z
   .string()
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Block ID 只能使用小写字母、数字和连字符");
 export const chapterCompletionModeSchema = z.enum(["manual", "all", "any"]);
 
-/** A block declared in a v3 mixed chapter. MDX renders it; the manifest validates it. */
+/** A block declared in a chapter. MDX renders it; the manifest validates it. */
 export const chapterBlockSchema = z.discriminatedUnion("kind", [
   z.object({
     id: chapterBlockIdSchema,
@@ -41,7 +35,11 @@ export const chapterCompletionSchema = z.object({
   requiredBlocks: z.array(chapterBlockIdSchema).default([]),
 });
 
-const baseLesson = {
+/**
+ * The only formal course unit: a chapter always has MDX prose. Simulations and
+ * graded questions are optional blocks declared here and rendered by MDX.
+ */
+export const lessonManifestSchema = z.object({
   slug: z
     .string()
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "slug 只能使用小写字母、数字和连字符"),
@@ -49,39 +47,19 @@ const baseLesson = {
   required: z.boolean().default(true),
   /** Optional logical grouping; no extra database table is required. */
   unit: z.string().min(1).max(80).optional(),
-};
-
-export const lessonManifestSchema = z.discriminatedUnion("type", [
-  z.object({
-    ...baseLesson,
-    type: z.literal("article"),
-    source: safeRelativePath,
-    completionPolicy: completionPolicySchema.default("manual"),
-    /** Manifest v3: optional in-chapter blocks. Plain MDX remains valid without them. */
-    blocks: z.array(chapterBlockSchema).max(50).optional(),
-    /** Manifest v3: how the chapter is completed. Absent means manual. */
-    completion: chapterCompletionSchema.optional(),
+  source: safeRelativePath.refine((value) => value.endsWith(".mdx"), {
+    message: "章节正文必须使用 .mdx 资源",
   }),
-  z.object({
-    ...baseLesson,
-    type: z.literal("interactive"),
-    activityId: z.enum(ACTIVITY_IDS),
-    completionPolicy: completionPolicySchema.default("server_validated"),
-    config: z.record(z.unknown()).optional(),
-  }),
-  z.object({
-    ...baseLesson,
-    type: z.literal("quiz"),
-    source: safeRelativePath,
-    completionPolicy: z.literal("server_validated").default("server_validated"),
-    finalExam: z.boolean().optional(),
-  }),
-]);
-
+  /** Optional in-chapter blocks. Plain MDX remains valid without them. */
+  blocks: z.array(chapterBlockSchema).max(50).optional(),
+  /** How the chapter completes. Absent means manual. */
+  completion: chapterCompletionSchema.optional(),
+  /** Optional final assessment flag; at most one per course. */
+  finalExam: z.boolean().optional(),
+});
 
 const pluginComponent = z.object({
   id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
-  legacyGlobalId: z.string().min(1).max(160).optional(),
   component: safeRelativePath,
   export: z.string().regex(/^[A-Za-z_$][A-Za-z0-9_$]*$/),
   title: z.string().min(1).max(160).optional(),
@@ -90,7 +68,6 @@ const pluginComponent = z.object({
 
 const pluginActivity = pluginComponent.extend({
   validator: z.object({
-    id: z.string().min(1).max(160).optional(),
     path: safeRelativePath,
     export: z.string().regex(/^[A-Za-z_$][A-Za-z0-9_$]*$/),
   }),
@@ -103,7 +80,9 @@ const pluginsSchema = z.object({
 
 export const courseManifestSchema = z
   .object({
-    schemaVersion: z.union([z.literal(2), z.literal(3)]).optional(),
+    schemaVersion: z.literal(3, {
+      errorMap: () => ({ message: "课程清单必须使用 schemaVersion: 3" }),
+    }),
     plugins: pluginsSchema.optional(),
     slug: z
       .string()
@@ -116,6 +95,7 @@ export const courseManifestSchema = z
   .superRefine((course, ctx) => {
     const slugs = new Set<string>();
     let requiredCount = 0;
+    let finalExams = 0;
     course.lessons.forEach((lesson, index) => {
       if (slugs.has(lesson.slug)) {
         ctx.addIssue({
@@ -126,94 +106,88 @@ export const courseManifestSchema = z
       }
       slugs.add(lesson.slug);
       if (lesson.required) requiredCount += 1;
-      if (lesson.type === "article") {
-        const blocks = lesson.blocks ?? [];
-        const blockIds = new Set<string>();
-        for (const [blockIndex, block] of blocks.entries()) {
-          if (blockIds.has(block.id)) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ["lessons", index, "blocks", blockIndex, "id"],
-              message: `Block ID 重复: ${block.id}`,
-            });
-          }
-          blockIds.add(block.id);
-        }
-
-        const hasBlocks = blocks.length > 0;
-        if ((hasBlocks || lesson.completion) && course.schemaVersion !== 3) {
+      if (lesson.finalExam) {
+        finalExams += 1;
+        if (!lesson.required) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            path: ["lessons", index],
-            message: "blocks/completion 需要 schemaVersion: 3",
-          });
-        }
-
-        if (lesson.completion) {
-          const completion = lesson.completion;
-          const required = completion.requiredBlocks;
-          if (new Set(required).size !== required.length) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ["lessons", index, "completion", "requiredBlocks"],
-              message: "requiredBlocks 不能重复",
-            });
-          }
-          if (completion.mode === "manual") {
-            if (required.length > 0) {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["lessons", index, "completion", "requiredBlocks"],
-                message: "manual 完成模式不能声明 requiredBlocks",
-              });
-            }
-            if (lesson.completionPolicy !== "manual") {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["lessons", index, "completionPolicy"],
-                message: "manual 完成模式要求 completionPolicy=manual",
-              });
-            }
-          } else {
-            if (lesson.completionPolicy !== "server_validated") {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["lessons", index, "completionPolicy"],
-                message: "all/any 完成模式要求 completionPolicy=server_validated",
-              });
-            }
-            if (required.length === 0) {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["lessons", index, "completion", "requiredBlocks"],
-                message: "all/any 完成模式至少需要一个 requiredBlock",
-              });
-            }
-            const blocksById = new Map(blocks.map((block) => [block.id, block]));
-            for (const [requiredIndex, blockId] of required.entries()) {
-              if (!blocksById.has(blockId)) {
-                ctx.addIssue({
-                  code: z.ZodIssueCode.custom,
-                  path: ["lessons", index, "completion", "requiredBlocks", requiredIndex],
-                  message: `requiredBlock 不存在: ${blockId}`,
-                });
-              }
-            }
-          }
-        } else if (lesson.completionPolicy === "server_validated" && !hasBlocks) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["lessons", index, "completionPolicy"],
-            message: "server_validated 图文章节必须声明可验证的 blocks",
+            path: ["lessons", index, "finalExam"],
+            message: "finalExam 章节必须是必修章节",
           });
         }
       }
-      if (lesson.type === "interactive" && lesson.completionPolicy === "manual") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["lessons", index, "completionPolicy"],
-          message: "交互实验必须使用 reported 或 server_validated",
-        });
+
+      const blocks = lesson.blocks ?? [];
+      const blockIds = new Set<string>();
+      for (const [blockIndex, block] of blocks.entries()) {
+        if (blockIds.has(block.id)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["lessons", index, "blocks", blockIndex, "id"],
+            message: `Block ID 重复: ${block.id}`,
+          });
+        }
+        blockIds.add(block.id);
+      }
+
+      const completion = lesson.completion;
+      if (completion) {
+        const required = completion.requiredBlocks;
+        if (new Set(required).size !== required.length) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["lessons", index, "completion", "requiredBlocks"],
+            message: "requiredBlocks 不能重复",
+          });
+        }
+        if (completion.mode === "manual") {
+          if (required.length > 0) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["lessons", index, "completion", "requiredBlocks"],
+              message: "manual 完成模式不能声明 requiredBlocks",
+            });
+          }
+        } else {
+          if (required.length === 0) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["lessons", index, "completion", "requiredBlocks"],
+              message: "all/any 完成模式至少需要一个 requiredBlock",
+            });
+          }
+          const blocksById = new Map(blocks.map((block) => [block.id, block]));
+          for (const [requiredIndex, blockId] of required.entries()) {
+            if (!blocksById.has(blockId)) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ["lessons", index, "completion", "requiredBlocks", requiredIndex],
+                message: `requiredBlock 不存在: ${blockId}`,
+              });
+            }
+          }
+        }
+      }
+
+      if (lesson.finalExam) {
+        if (!completion || completion.mode === "manual") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["lessons", index, "finalExam"],
+            message: "finalExam 章节必须声明 all/any 正式完成规则",
+          });
+        } else {
+          const hasQuestion = completion.requiredBlocks.some(
+            (blockId) => blocks.find((block) => block.id === blockId)?.kind === "question",
+          );
+          if (!hasQuestion) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["lessons", index, "finalExam"],
+              message: "finalExam 章节必须包含必需的知识检查 Block",
+            });
+          }
+        }
       }
     });
 
@@ -224,22 +198,11 @@ export const courseManifestSchema = z
         message: "课程至少需要 1 个必修章节",
       });
     }
-
-    const finalIndexes = course.lessons
-      .map((lesson, index) => (lesson.type === "quiz" && lesson.finalExam ? index : -1))
-      .filter((index) => index >= 0);
-
-    if (finalIndexes.length !== 1) {
+    if (finalExams > 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["lessons"],
-        message: "课程必须且只能有一个 finalExam 测验",
-      });
-    } else if (finalIndexes[0] !== course.lessons.length - 1) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["lessons"],
-        message: "finalExam 必须是最后一个章节",
+        message: "课程最多只能有一个 finalExam 章节",
       });
     }
   });
@@ -338,8 +301,10 @@ export const quizFileSchema = z
     });
   });
 
-export type LessonManifest = z.infer<typeof lessonManifestSchema>;
-export type ArticleLessonManifest = Extract<LessonManifest, { type: "article" }>;
+export type ChapterManifest = z.infer<typeof lessonManifestSchema>;
+export type LessonManifest = ChapterManifest;
+/** Backwards-compatible alias while call sites migrate to ChapterManifest. */
+export type ArticleLessonManifest = ChapterManifest;
 export type ChapterBlock = z.infer<typeof chapterBlockSchema>;
 export type ChapterCompletion = z.infer<typeof chapterCompletionSchema>;
 export type CourseManifest = z.infer<typeof courseManifestSchema>;

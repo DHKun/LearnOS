@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileText, FlaskConical, ListChecks } from "lucide-react";
+import { FileText } from "lucide-react";
 
 import { CourseStudentsTable } from "@/components/admin/course-students-table";
 import { PageHeader } from "@/components/page";
@@ -13,12 +13,6 @@ import { getAdminCourseDetail } from "@/lib/services/courses";
 import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "课程详情" };
-
-const TYPE_ICON = {
-  article: FileText,
-  interactive: FlaskConical,
-  quiz: ListChecks,
-} as const;
 
 export default async function AdminCourseDetailPage({
   params,
@@ -105,7 +99,6 @@ export default async function AdminCourseDetailPage({
           <CardContent className="p-0">
             <ol className="divide-y divide-border">
               {detail.lessons.map((lesson, index) => {
-                const Icon = TYPE_ICON[lesson.type];
                 return (
                   <li key={lesson.id} className="flex items-start gap-3 px-5 py-3">
                     <span className="mt-0.5 font-mono text-xs text-muted-foreground">
@@ -121,8 +114,8 @@ export default async function AdminCourseDetailPage({
                         )}
                       </p>
                       <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Icon className="size-3" />
-                        {lesson.type} · {lesson.completionPolicy}
+                        <FileText className="size-3" />
+                        章节 · {lesson.completionPolicy === "manual" ? "手动完成" : "服务端验证"}
                       </p>
                     </div>
                   </li>

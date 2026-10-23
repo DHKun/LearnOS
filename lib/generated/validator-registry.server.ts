@@ -14,8 +14,8 @@ const VALIDATORS: Record<string, LabValidator> = {
   "http-from-zero/method-match": (submission) => validator1(submission),
   "http-from-zero/request-builder": (submission) => validator2(submission),
   "http-retry-basics/retry-lab": (submission) => validator3(submission),
-  "idempotency-lab": (submission) => validator4(submission),
-  "sql-injection-lab": (submission) => validator5(submission),
+  "idempotent-retries/idempotency-lab": (submission) => validator4(submission),
+  "sql-injection-basics/sql-injection-lab": (submission) => validator5(submission),
 };
 
 export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
@@ -23,8 +23,8 @@ export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
   "http-from-zero/method-match": "3b3630e3a567527ee756691fac8b83155ad75d34ca2c4bf75016e643e5e32ab7",
   "http-from-zero/request-builder": "3b3630e3a567527ee756691fac8b83155ad75d34ca2c4bf75016e643e5e32ab7",
   "http-retry-basics/retry-lab": "b2bee8bb072fbc75fa763eae5cb5b4744b65a9b33c191c74a5c1820aac2c1214",
-  "idempotency-lab": "b2bee8bb072fbc75fa763eae5cb5b4744b65a9b33c191c74a5c1820aac2c1214",
-  "sql-injection-lab": "25ee589627c4154cdf09e00ca821343e6f6ba9200b889f611f14bd47e753a33e",
+  "idempotent-retries/idempotency-lab": "b2bee8bb072fbc75fa763eae5cb5b4744b65a9b33c191c74a5c1820aac2c1214",
+  "sql-injection-basics/sql-injection-lab": "25ee589627c4154cdf09e00ca821343e6f6ba9200b889f611f14bd47e753a33e",
 };
 
 export function getValidator(id: string): LabValidator | undefined {

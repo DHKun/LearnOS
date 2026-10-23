@@ -157,14 +157,14 @@ export function SqlDataVsInstruction() {
   function change(next: Variant) {
     setVariant(next);
     sdk.track("concept_variant_changed", {
-      conceptId: "sql.data-vs-instruction",
+      conceptId: "sql-injection-basics/data-vs-instruction",
       variant: next,
     });
   }
 
   return (
     <ConceptFrame
-      conceptId="sql.data-vs-instruction"
+      conceptId="sql-injection-basics/data-vs-instruction"
       blockId="sql-data-vs-instruction"
       title="数据与指令：一句话为什么能改变程序"
       analogy={

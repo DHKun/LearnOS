@@ -1,4 +1,4 @@
-# Course Plugin Spec (Manifest v2 / v3)
+# Course Plugin Spec (Manifest v3)
 
 ## 1. 目录约定
 
@@ -6,99 +6,72 @@
 content/courses/<slug>/
   course.json
   lessons/*.mdx
+  assessments/*.server.json
   concepts/*.tsx
   activities/*.tsx
   simulation/*.ts
   validators.ts
-  quiz.server.json
   assets/*
 ```
 
 所有路径必须位于该课程目录内；生成器拒绝 `..`、绝对路径和跨课程引用。组件只能使用项目已审核的 npm 依赖与公共 UI/学习 SDK。
 
-## 2. Manifest v2 与 v3
+## 2. 唯一模型：Course → Chapter → Block
 
-v2 课程（`schemaVersion: 2` 或省略）继续完全兼容；v3 只新增混合章节字段。
-
-> v3 章节制作指南见 [`mixed-chapters.md`](mixed-chapters.md)。
-
-### v2
+课程清单必须声明 `schemaVersion: 3`。v2 兼容分支与 `legacyGlobalId` 已删除；所有章节都有 MDX 正文，模拟实验与正式题目作为可选 Block 声明。
 
 ```json
 {
-  "schemaVersion": 2,
-  "slug": "sql-injection-basics",
-  "title": "SQL 注入",
+  "schemaVersion": 3,
+  "slug": "http-from-zero",
+  "title": "HTTP 协议入门",
   "description": "...",
   "version": "1.0.0",
   "plugins": {
     "concepts": [
       {
-        "id": "data-vs-instruction",
-        "legacyGlobalId": "sql.data-vs-instruction",
-        "component": "concepts/sql-data-vs-instruction.tsx",
-        "export": "SqlDataVsInstruction",
-        "title": "数据与指令",
-        "analogy": "餐厅点餐"
+        "id": "request-flow",
+        "component": "concepts/http-concepts.tsx",
+        "export": "RequestFlow",
+        "title": "一次 HTTP 请求的旅程",
+        "analogy": "寄信与回信"
       }
     ],
     "activities": [
       {
-        "id": "sql-injection-lab",
-        "legacyGlobalId": "sql-injection-lab",
-        "component": "activities/sql-injection.tsx",
-        "export": "SqlInjectionActivity",
-        "title": "SQL 注入审计台",
-        "validator": {
-          "id": "sql-injection-lab",
-          "path": "validators.ts",
-          "export": "validateSqlInjectionLab"
-        }
+        "id": "request-builder",
+        "component": "activities/http-activities.tsx",
+        "export": "RequestBuilderActivity",
+        "title": "HTTP 请求构造器",
+        "validator": { "path": "validators.ts", "export": "validateRequestBuilder" }
       }
     ]
-  },
-  "lessons": []
-}
-```
-
-- 新插件默认全局 ID 为 `${courseSlug}/${localId}`。
-- `legacyGlobalId` 只用于已上线课程迁移，保存原有 activity/concept ID 与学习记录。
-- `id` 在单个插件内唯一；全局 ID 在所有课程间唯一。
-- `component`/`validator.path` 必须是课程目录内的相对路径；`export` 必须真实存在。
-- 不允许 URL、远程 JS、任意命令、用户上传代码。
-
-### v3 混合章节
-
-```json
-{
-  "schemaVersion": 3,
-  "plugins": {
-    "concepts": [],
-    "activities": []
   },
   "lessons": [
     {
       "slug": "request-response",
       "title": "请求与响应",
-      "type": "article",
       "source": "lessons/04-request-response.mdx",
-      "completionPolicy": "server_validated",
       "required": true,
+      "unit": "消息",
       "blocks": [
-        { "id": "request-lab", "kind": "simulation", "activityId": "course/request-builder" },
+        { "id": "request-lab", "kind": "simulation", "activityId": "http-from-zero/request-builder" },
         { "id": "request-check", "kind": "question", "source": "assessments/check.server.json", "passScore": 60 }
       ],
-      "completion": { "mode": "all", "requiredBlocks": ["request-lab", "request-check"] }
+      "completion": { "mode": "all", "requiredBlocks": ["request-lab"] }
     }
   ]
 }
 ```
 
+- 插件全局 ID 固定为 `${courseSlug}/${localId}`；不再支持自定义全局 ID。
+- `id` 在单个插件内唯一；全局 ID 在所有课程间唯一。
+- `component`/`validator.path` 必须是课程目录内的相对路径；`export` 必须真实存在。
+- 不允许 URL、远程 JS、任意命令、用户上传代码。
 - `blocks` 可省略/为空；纯文字章节仍然合法。
-- `completion.mode`: `manual | all | any`；`all/any` 要求 `completionPolicy: server_validated`。
-- `requiredBlocks` 必须存在且只能引用 simulation/question；动画不能作为可信完成条件。
-- Block `id` 在章节内唯一；MDX 中每个 Block 必须且只能渲染一次。
-- `schemaVersion: 2` 出现 `blocks/completion` 会被拒绝。
+- `completion` 可省略（手动完成）。`all/any` 必须列出 `requiredBlocks`，且只能引用 simulation/question。
+- Block `id` 在章节内唯一；MDX 中每个声明 Block 必须且只能渲染一次。
+- `finalExam` 可选，最多一个；若声明，必须是必修章节且包含必需的知识检查 Block。
 - 题库支持 `single`、`multiple`、`boolean`；boolean 不需要 options，客户端会规范化为“正确/错误”两个选项。
 
 ### MDX AST 校验
@@ -127,7 +100,7 @@ lib/generated/validator-registry.server.ts # 服务端 validator + 源码指纹
 
 ## 4. 验证器指纹
 
-生成器对 validator 源文件计算 SHA-256，作为 `validatorFingerprint`。旧课程首次同步会写入版本 2 指纹；此后 validator 内容变化会阻止已有学习记录的课程原地同步。不要再使用 `validator.toString()` 作为指纹（包装函数会改变字符串表现）。
+生成器对 validator 源文件计算 SHA-256，作为 `validatorFingerprint`。validator 内容变化会阻止已有学习记录的课程原地同步。不要再使用 `validator.toString()` 作为指纹（包装函数会改变字符串表现）。
 
 ## 5. 课程扫描与快照
 
@@ -140,7 +113,7 @@ pnpm courses:preflight    # 只读检查结构是否与已有学习记录兼容
 ```
 
 - `sourceDigest`：课程目录内全部文件的路径 + SHA-256；检测文案/组件/题库/validator 的任何变化。
-- `structuralDigest`：章节结构、完成策略、quiz 哈希/及格线/finalExam、activityId/validatorId/validator 指纹，以及 v3 必需 Block 的 `chapterHash`；用于避开学习记录不兼容的原地更新。
+- `structuralDigest`：章节顺序/必修/完成规则、必需 Block 的 `chapterHash`、finalExam、activityId/validatorId/validator 指纹；用于避开学习记录不兼容的原地更新。
 - `pnpm courses:scan` 不访问数据库、不执行构建、不依赖 Git；`/admin/deployments` 的管理员扫描使用同一套逻辑。
 - 版本号未变但源码变化 → 有更新并提示；结构变化且已有学习记录 → 版本冲突并阻止部署。
 - 部署时 `updater` 把项目复制为固定快照，后续 prepare/validate/build/sync 都基于该快照。

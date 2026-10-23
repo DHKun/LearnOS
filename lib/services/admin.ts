@@ -1,6 +1,4 @@
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
-import { getActivityDefinition } from "@/lib/activities/catalog";
-import { getValidator } from "@/lib/content/validators.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { supabaseServerUrl } from "@/lib/supabase/config";
 import { isOnline } from "@/lib/services/shared";
@@ -448,24 +446,16 @@ export async function updateCourse(
       throw new ApiError("VALIDATION_ERROR", "课程至少需要 1 个必修章节才能发布");
     }
 
-    const required = list.filter((lesson) => lesson.required);
-    const last = required[required.length - 1];
-    if (!last || last.type !== "quiz" || !(last.config as Record<string, unknown>)?.finalExam) {
-      throw new ApiError("VALIDATION_ERROR", "最后一个必修章节必须是最终测验 (finalExam)");
-    }
-
     for (const lesson of list) {
-      if (lesson.type === "interactive") {
-        const activityId = (lesson.config as Record<string, unknown>)?.activityId;
-        const activity =
-          typeof activityId === "string" ? getActivityDefinition(activityId) : null;
-        if (!activity || !getValidator(activity.validatorId)) {
-          throw new ApiError("VALIDATION_ERROR", `互动章节 ${lesson.title} 缺少有效的活动或验证器`);
-        }
-      }
-      if ((lesson.type === "article" || lesson.type === "quiz") && !lesson.content_ref) {
+      if (!lesson.content_ref) {
         throw new ApiError("VALIDATION_ERROR", `章节 ${lesson.title} 缺少内容资源`);
       }
+    }
+    const finalExams = list.filter(
+      (lesson) => (lesson.config as Record<string, unknown> | null)?.finalExam === true,
+    );
+    if (finalExams.length > 1) {
+      throw new ApiError("VALIDATION_ERROR", "课程最多只能有一个最终测验 (finalExam)");
     }
   }
 

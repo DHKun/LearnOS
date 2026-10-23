@@ -7,47 +7,66 @@
     {
       "slug": "why-retries-duplicate",
       "title": "超时的请求到底发生了什么",
-      "type": "article",
       "source": "01-why-retries-duplicate.mdx",
-      "completionPolicy": "manual",
       "required": true,
       "unit": "原理"
     },
     {
       "slug": "idempotency-keys",
       "title": "幂等键与去重存储",
-      "type": "article",
       "source": "02-idempotency-keys.mdx",
-      "completionPolicy": "manual",
       "required": true,
       "unit": "原理"
     },
     {
       "slug": "retry-lab",
       "title": "实验：让支付恰好发生一次",
-      "type": "interactive",
-      "completionPolicy": "server_validated",
       "required": true,
-      "activityId": "idempotency-lab",
-      "unit": "实验与测验"
+      "unit": "实验与测验",
+      "source": "lessons/03-retry-lab.mdx",
+      "blocks": [
+        {
+          "id": "retry-lab",
+          "kind": "simulation",
+          "activityId": "idempotent-retries/idempotency-lab",
+          "title": "恰好一次支付"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "retry-lab"
+        ]
+      }
     },
     {
       "slug": "final-quiz",
       "title": "最终测验",
-      "type": "quiz",
-      "source": "quiz.server.json",
-      "completionPolicy": "server_validated",
       "required": true,
+      "unit": "实验与测验",
+      "source": "lessons/04-final-assessment.mdx",
       "finalExam": true,
-      "unit": "实验与测验"
+      "blocks": [
+        {
+          "id": "final-assessment",
+          "kind": "question",
+          "source": "quiz.server.json",
+          "title": "最终测验"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-assessment"
+        ]
+      }
     }
   ],
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "plugins": {
     "concepts": [
       {
         "id": "lost-response",
-        "legacyGlobalId": "idempotency.lost-response",
         "component": "concepts/idempotency-lost-response.tsx",
         "export": "IdempotencyLostResponse",
         "title": "支付回执丢失：一次请求为什么扣了两次",
@@ -55,7 +74,6 @@
       },
       {
         "id": "deduplication",
-        "legacyGlobalId": "idempotency.deduplication",
         "component": "concepts/idempotency-deduplication.tsx",
         "export": "IdempotencyDeduplication",
         "title": "订单号去重：重复请求只执行一次",
@@ -65,12 +83,10 @@
     "activities": [
       {
         "id": "idempotency-lab",
-        "legacyGlobalId": "idempotency-lab",
         "component": "activities/idempotency.tsx",
         "export": "IdempotencyActivity",
         "title": "恰好一次支付",
         "validator": {
-          "id": "idempotency-lab",
           "path": "validators.ts",
           "export": "validateIdempotencyLab"
         }

@@ -3,14 +3,13 @@ import { createHash } from "node:crypto";
 import {
   loadAllCourses,
   readBlockQuizFile,
-  readQuizFile,
   type LoadedCourse,
 } from "@/lib/content/loader";
 import { getActivityDefinition } from "@/lib/activities/catalog";
 import { buildCourseUpdate, initialCourseStatus } from "@/lib/content/sync-policy";
 import { buildChapterStructure, chapterConfig, resolveChapterCompletion } from "@/lib/content/chapters";
 import type { ArticleLessonManifest } from "@/lib/content/manifest";
-import { getValidator, getValidatorFingerprint } from "@/lib/content/validators.server";
+import { getValidatorFingerprint } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -53,6 +52,10 @@ function chapterStructure(loaded: LoadedCourse, lesson: ArticleLessonManifest) {
   });
 }
 
+function completionPolicy(lesson: ArticleLessonManifest): "manual" | "server_validated" {
+  return resolveChapterCompletion(lesson).mode === "manual" ? "manual" : "server_validated";
+}
+
 export function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): boolean {
   if (loaded.manifest.lessons.length !== existing.length) return false;
   const sorted = [...existing].sort((a, b) => a.position - b.position);
@@ -63,54 +66,27 @@ export function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): bo
       row.slug !== lesson.slug ||
       row.position !== index ||
       row.required !== lesson.required ||
-      row.type !== lesson.type ||
-      row.completion_policy !== lesson.completionPolicy
+      row.type !== "article" ||
+      row.completion_policy !== completionPolicy(lesson)
     ) {
       return false;
     }
 
     const config = row.config ?? {};
-    if (lesson.type === "article") {
-      const completion = resolveChapterCompletion(lesson);
-      const existingCompletion = config.completion as
-        | { mode?: string; requiredBlocks?: string[] }
-        | undefined;
-      const existingMode = existingCompletion?.mode ?? "manual";
-      const existingRequired = [...(existingCompletion?.requiredBlocks ?? [])].sort();
-      const nextRequired = [...completion.requiredBlocks].sort();
-      if (existingMode !== completion.mode) return false;
-      if (existingMode === "manual") {
-        // Optional practice blocks may be added or changed without affecting progress.
-        return true;
-      }
-      if (existingRequired.join("|") !== nextRequired.join("|")) return false;
-      const next = chapterStructure(loaded, lesson);
-      if (config.chapterHash !== next.hash) return false;
-      return true;
-    }
-    if (lesson.type === "quiz") {
-      const quiz = readQuizFile(loaded, lesson);
-      // Grading rules and actual question content are frozen once learners exist.
-      if (Number(config.passScore) !== quiz.passScore) return false;
-      if (Boolean(config.finalExam) !== Boolean(lesson.finalExam)) return false;
-      if (config.quizHash !== sha256(canonicalJson(quiz))) return false;
-    }
-    if (lesson.type === "interactive") {
-      const activity = getActivityDefinition(lesson.activityId);
-      if (!activity) return false;
-      if (config.activityId !== lesson.activityId) return false;
-      if (config.validatorId !== activity.validatorId) return false;
-      const validator = getValidator(activity.validatorId);
-      if (!validator) return false;
-      const fingerprint = getValidatorFingerprint(activity.validatorId);
-      if (
-        config.validatorFingerprintVersion === 2 &&
-        config.validatorFingerprint !== fingerprint
-      ) {
-        return false;
-      }
-    }
-    return true;
+    const completion = resolveChapterCompletion(lesson);
+    const existingCompletion = config.completion as
+      | { mode?: string; requiredBlocks?: string[] }
+      | undefined;
+    const existingMode = existingCompletion?.mode ?? "manual";
+    // Practice blocks on a manual chapter never affect completion semantics.
+    if (existingMode !== completion.mode) return false;
+    if (Boolean(config.finalExam) !== Boolean(lesson.finalExam)) return false;
+    if (existingMode === "manual") return true;
+    const existingRequired = [...(existingCompletion?.requiredBlocks ?? [])].sort();
+    const nextRequired = [...completion.requiredBlocks].sort();
+    if (existingRequired.join("|") !== nextRequired.join("|")) return false;
+    const next = chapterStructure(loaded, lesson);
+    return config.chapterHash === next.hash;
   });
 }
 
@@ -120,7 +96,16 @@ export function structureMatches(loaded: LoadedCourse, existing: DbLesson[]): bo
  * - Refuses to change required structure once enrollments exist.
  */
 export async function syncCourses(
-  options: { publish?: boolean; publishNew?: boolean; refreshMetadata?: boolean } = {},
+  options: {
+    publish?: boolean;
+    publishNew?: boolean;
+    refreshMetadata?: boolean;
+    /**
+     * Explicit one-off migration for adopting the unified chapter model on a
+     * course that already has learners. Normal syncs keep the freeze.
+     */
+    adoptStructure?: boolean;
+  } = {},
 ): Promise<SyncSummary[]> {
   const db = createAdminClient();
   const courses = await loadAllCourses();
@@ -156,9 +141,13 @@ export async function syncCourses(
       if (lessonsError) throw lessonsError;
       existingLessons = (lessons ?? []) as DbLesson[];
 
-      if (enrollments > 0 && !structureMatches(loaded, existingLessons)) {
+      if (
+        enrollments > 0 &&
+        !options.adoptStructure &&
+        !structureMatches(loaded, existingLessons)
+      ) {
         throw new Error(
-          `课程 ${manifest.slug} 已有 ${enrollments} 条学习记录，拒绝改变必修结构、评分规则或题库内容（章节 ID/顺序/类型、完成策略、及格线、finalExam、题目内容、activityId、validator）。请使用新的 course slug 发布结构性升级。`,
+          `课程 ${manifest.slug} 已有 ${enrollments} 条学习记录，拒绝改变必修结构、评分规则或题库内容（章节 ID/顺序/类型、完成规则、finalExam、题目内容、activityId、validator）。请使用新的 course slug 发布结构性升级；平台模型迁移可显式使用 --adopt-structure。`,
         );
       }
 
@@ -194,47 +183,15 @@ export async function syncCourses(
 
     for (const [index, lesson] of manifest.lessons.entries()) {
       let config: Record<string, unknown> = lesson.unit ? { unit: lesson.unit } : {};
-      let contentRef: string | null = null;
-
-      if (lesson.type === "article") {
-        contentRef = lesson.source;
-        const completion = resolveChapterCompletion(lesson);
-        const hasChapter =
-          (lesson.blocks?.length ?? 0) > 0 ||
-          lesson.completion !== undefined ||
-          completion.mode !== "manual" ||
-          lesson.completionPolicy === "server_validated";
-        if (hasChapter) {
-          const structure = chapterStructure(loaded, lesson);
-          config = {
-            ...(lesson.unit ? { unit: lesson.unit } : {}),
-            ...chapterConfig(lesson, structure),
-          };
-        }
-      } else if (lesson.type === "interactive") {
-        const activity = getActivityDefinition(lesson.activityId);
-        if (!activity) throw new Error(`未注册的 activityId: ${lesson.activityId}`);
-        const validator = getValidator(activity.validatorId);
-        if (!validator) {
-          throw new Error(`缺少服务端验证器: ${activity.validatorId}`);
-        }
+      const hasChapter =
+        (lesson.blocks?.length ?? 0) > 0 ||
+        lesson.completion !== undefined ||
+        Boolean(lesson.finalExam);
+      if (hasChapter) {
+        const structure = chapterStructure(loaded, lesson);
         config = {
-          activityId: lesson.activityId,
-          validatorId: activity.validatorId,
-          validatorFingerprint: getValidatorFingerprint(activity.validatorId) ?? null,
-          validatorFingerprintVersion: 2,
           ...(lesson.unit ? { unit: lesson.unit } : {}),
-          ...(lesson.config ?? {}),
-        };
-      } else {
-        contentRef = lesson.source;
-        const quiz = readQuizFile(loaded, lesson);
-        config = {
-          passScore: quiz.passScore,
-          questionCount: quiz.questions.length,
-          finalExam: Boolean(lesson.finalExam),
-          ...(lesson.unit ? { unit: lesson.unit } : {}),
-          quizHash: sha256(canonicalJson(quiz)),
+          ...chapterConfig(lesson, structure),
         };
       }
 
@@ -244,10 +201,10 @@ export async function syncCourses(
           slug: lesson.slug,
           title: lesson.title,
           position: index,
-          type: lesson.type,
+          type: "article",
           required: lesson.required,
-          content_ref: contentRef,
-          completion_policy: lesson.completionPolicy,
+          content_ref: lesson.source,
+          completion_policy: completionPolicy(lesson),
           config,
         },
         { onConflict: "course_id,slug" },

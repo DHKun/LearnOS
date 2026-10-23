@@ -30,10 +30,10 @@ export const CONCEPT_COMPONENTS: Record<ConceptId, ComponentType> = {
   "http-from-zero/url-anatomy": Concept2,
   "http-retry-basics/deduplication": Concept3,
   "http-retry-basics/lost-response": Concept4,
-  "idempotency.deduplication": Concept5,
-  "idempotency.lost-response": Concept6,
-  "sql.data-vs-instruction": Concept7,
-  "sql.parameter-binding": Concept8,
+  "idempotent-retries/deduplication": Concept5,
+  "idempotent-retries/lost-response": Concept6,
+  "sql-injection-basics/data-vs-instruction": Concept7,
+  "sql-injection-basics/parameter-binding": Concept8,
 };
 
 export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityComponentProps>> = {
@@ -41,6 +41,6 @@ export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityCompo
   "http-from-zero/method-match": Activity1,
   "http-from-zero/request-builder": Activity2,
   "http-retry-basics/retry-lab": Activity3,
-  "idempotency-lab": Activity4,
-  "sql-injection-lab": Activity5,
+  "idempotent-retries/idempotency-lab": Activity4,
+  "sql-injection-basics/sql-injection-lab": Activity5,
 };

@@ -34,9 +34,7 @@ async function loadChapterLesson(enrollmentId: string, lessonId: string) {
 
   const loaded = loadCourse(course.slug);
   const manifestLesson = loaded.manifest.lessons.find((item) => item.slug === lesson.slug);
-  if (!manifestLesson || manifestLesson.type !== "article") {
-    throw new ApiError("SUBMISSION_NOT_ALLOWED");
-  }
+  if (!manifestLesson) throw new ApiError("SUBMISSION_NOT_ALLOWED");
 
   return { lesson, loaded, manifestLesson, enrollmentId };
 }

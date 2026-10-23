@@ -19,7 +19,7 @@ SELECT id, password_hash FROM users WHERE email = '' OR '1'='1' --'
 
 `--` 把后面的引号和条件全部注释掉。`OR '1'='1'` 永远为真，查询返回users表里的第一行，登录逻辑如果只看「有没有查到用户」，就会被绕过。
 
-<ConceptPlayer conceptId="sql.data-vs-instruction" blockId="sql-origin" />
+<ConceptPlayer conceptId="sql-injection-basics/data-vs-instruction" blockId="sql-origin" />
 
 <MiniCheck
   id="sql-data-instruction-check"

@@ -7,6 +7,22 @@ import {
   login,
 } from "./helpers";
 
+async function savedConceptStep(page: Page, blockId: string): Promise<number> {
+  return page.evaluate(async (id) => {
+    const current = await (await fetch("/api/enrollments/current")).json();
+    const lessonId = current?.data?.enrollment?.currentLessonId;
+    if (!lessonId) return -1;
+    const response = await (await fetch(`/api/learning/states/${lessonId}`)).json();
+    const state = response?.data?.state;
+    const block = state?.blocks?.[id];
+    return typeof block?.conceptStep === "number"
+      ? block.conceptStep
+      : typeof state?.conceptStep === "number"
+        ? state.conceptStep
+        : -1;
+  }, blockId);
+}
+
 async function joinAndOpen(
   page: Page,
   slug: string,
@@ -31,7 +47,7 @@ test.describe("概念动画", () => {
       page,
       "sql-injection-basics",
       /注入从哪里来/,
-      "sql.data-vs-instruction",
+      "sql-injection-basics/data-vs-instruction",
     );
     try {
       const concept = first.concept;
@@ -46,14 +62,16 @@ test.describe("概念动画", () => {
       await expect(concept.getByText("真实对象")).toBeVisible();
 
       await concept.getByRole("button", { name: "下一步" }).click();
-      await page.waitForTimeout(900);
+      await expect
+        .poll(() => savedConceptStep(page, "sql-origin"), { timeout: 20_000 })
+        .toBe(1);
       await page.reload();
-      const restored = page.locator('[data-concept-id="sql.data-vs-instruction"]');
+      const restored = page.locator('[data-concept-id="sql-injection-basics/data-vs-instruction"]');
       await expect(restored).toBeVisible({ timeout: 20_000 });
       await expect(restored.getByText(/2 \/ 4/)).toBeVisible();
 
       await page.getByRole("link", { name: /参数化查询为什么有效/ }).first().click();
-      const binding = page.locator('[data-concept-id="sql.parameter-binding"]');
+      const binding = page.locator('[data-concept-id="sql-injection-basics/parameter-binding"]');
       await expect(binding).toBeVisible({ timeout: 20_000 });
       await binding.getByRole("button", { name: "参数化查询", exact: true }).click();
       await expect(binding.getByText("固定模板")).toBeVisible();
@@ -71,7 +89,7 @@ test.describe("概念动画", () => {
       page,
       "idempotent-retries",
       /超时的请求到底发生了什么/,
-      "idempotency.lost-response",
+      "idempotent-retries/lost-response",
     );
     try {
       const lost = first.concept;
@@ -81,7 +99,7 @@ test.describe("概念动画", () => {
       await expect(lost.getByText("回执在网络中丢失")).toBeVisible();
 
       await page.getByRole("link", { name: /幂等键与去重存储/ }).first().click();
-      const dedup = page.locator('[data-concept-id="idempotency.deduplication"]');
+      const dedup = page.locator('[data-concept-id="idempotent-retries/deduplication"]');
       await expect(dedup).toBeVisible({ timeout: 20_000 });
       await dedup.getByRole("button", { name: "复用稳定键" }).click();
       await dedup.getByRole("button", { name: /服务端去重：关/ }).click();

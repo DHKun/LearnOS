@@ -13,18 +13,18 @@ describe("课程插件自动注册", () => {
       "http-from-zero/url-anatomy",
       "http-retry-basics/deduplication",
       "http-retry-basics/lost-response",
-      "idempotency.deduplication",
-      "idempotency.lost-response",
-      "sql.data-vs-instruction",
-      "sql.parameter-binding",
+      "idempotent-retries/deduplication",
+      "idempotent-retries/lost-response",
+      "sql-injection-basics/data-vs-instruction",
+      "sql-injection-basics/parameter-binding",
     ]);
     expect([...ACTIVITY_IDS].sort()).toEqual([
       "http-from-zero/cookie-lab",
       "http-from-zero/method-match",
       "http-from-zero/request-builder",
       "http-retry-basics/retry-lab",
-      "idempotency-lab",
-      "sql-injection-lab",
+      "idempotent-retries/idempotency-lab",
+      "sql-injection-basics/sql-injection-lab",
     ]);
   });
 

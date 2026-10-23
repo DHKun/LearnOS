@@ -5,10 +5,10 @@ export const CONCEPT_META = {
   "http-from-zero/url-anatomy": { title: "URL 的五个部分", analogy: "快递面单：运输方式、地址、房间号与备注" },
   "http-retry-basics/deduplication": { title: "订单号去重：重复请求只执行一次", analogy: "同一个快递订单号，仓库只发货一次" },
   "http-retry-basics/lost-response": { title: "支付回执丢失：一次请求为什么扣了两次", analogy: "付款成功但小票没打印，顾客又付了一次" },
-  "idempotency.deduplication": { title: "订单号去重：重复请求只执行一次", analogy: "同一个快递订单号，仓库只发货一次" },
-  "idempotency.lost-response": { title: "支付回执丢失：一次请求为什么扣了两次", analogy: "付款成功但小票没打印，顾客又付了一次" },
-  "sql.data-vs-instruction": { title: "数据与指令：一句话为什么能改变程序", analogy: "餐厅点餐：订单内容不应该变成厨房的新规则" },
-  "sql.parameter-binding": { title: "参数化查询：固定表格与填空", analogy: "表格结构固定，学生只能填写数据栏" },
+  "idempotent-retries/deduplication": { title: "订单号去重：重复请求只执行一次", analogy: "同一个快递订单号，仓库只发货一次" },
+  "idempotent-retries/lost-response": { title: "支付回执丢失：一次请求为什么扣了两次", analogy: "付款成功但小票没打印，顾客又付了一次" },
+  "sql-injection-basics/data-vs-instruction": { title: "数据与指令：一句话为什么能改变程序", analogy: "餐厅点餐：订单内容不应该变成厨房的新规则" },
+  "sql-injection-basics/parameter-binding": { title: "参数化查询：固定表格与填空", analogy: "表格结构固定，学生只能填写数据栏" },
 } as const;
 
 export type ConceptId = keyof typeof CONCEPT_META;
@@ -19,8 +19,8 @@ export const ACTIVITY_DEFINITIONS = {
   "http-from-zero/method-match": { title: "HTTP 方法匹配", validatorId: "http-from-zero/method-match" },
   "http-from-zero/request-builder": { title: "HTTP 请求构造器", validatorId: "http-from-zero/request-builder" },
   "http-retry-basics/retry-lab": { title: "恰好一次支付", validatorId: "http-retry-basics/retry-lab" },
-  "idempotency-lab": { title: "恰好一次支付", validatorId: "idempotency-lab" },
-  "sql-injection-lab": { title: "SQL 注入审计台", validatorId: "sql-injection-lab" },
+  "idempotent-retries/idempotency-lab": { title: "恰好一次支付", validatorId: "idempotent-retries/idempotency-lab" },
+  "sql-injection-basics/sql-injection-lab": { title: "SQL 注入审计台", validatorId: "sql-injection-basics/sql-injection-lab" },
 } as const;
 
 export type ActivityId = keyof typeof ACTIVITY_DEFINITIONS;

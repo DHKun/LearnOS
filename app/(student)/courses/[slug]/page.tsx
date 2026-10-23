@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CheckCircle2, Circle, FileText, FlaskConical, ListChecks } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, FileText } from "lucide-react";
 
 import { AbandonCourseButton, JoinCourseButton } from "@/components/learning/actions";
 import { Badge } from "@/components/ui/badge";
@@ -10,21 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { requireStudent } from "@/lib/auth/session";
 import { getCourseDetailBySlug } from "@/lib/services/courses";
-import type { LessonType } from "@/lib/types";
-
 export const metadata: Metadata = { title: "课程详情" };
-
-const TYPE_LABEL: Record<LessonType, string> = {
-  article: "图文",
-  interactive: "互动实验",
-  quiz: "测验",
-};
-
-const TYPE_ICON: Record<LessonType, React.ComponentType<{ className?: string }>> = {
-  article: FileText,
-  interactive: FlaskConical,
-  quiz: ListChecks,
-};
 
 export default async function CourseDetailPage({
   params,
@@ -125,7 +111,6 @@ export default async function CourseDetailPage({
             const progress = myLessonProgress[lesson.id];
             const completed = progress?.status === "completed";
             const inProgress = progress?.status === "in_progress";
-            const Icon = TYPE_ICON[lesson.type];
             const content = (
               <div className="flex items-center gap-4 px-4 py-4 sm:px-5">
                 <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border font-mono text-xs text-muted-foreground">
@@ -137,16 +122,11 @@ export default async function CourseDetailPage({
                     {!lesson.required && <Badge variant="outline">选做</Badge>}
                   </div>
                   <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Icon className="size-3.5" />
-                    {lesson.type === "article" && lesson.blocks && lesson.blocks.length > 0
-                      ? "混合章节"
-                      : TYPE_LABEL[lesson.type]}
-                    {lesson.type === "interactive" && " · 服务端验证"}
-                    {lesson.type === "article" &&
-                      lesson.completion?.mode !== undefined &&
-                      lesson.completion.mode !== "manual" &&
-                      " · 服务端验证"}
-                    {lesson.type === "quiz" && " · 服务端判分"}
+                    <FileText className="size-3.5" />
+                    {lesson.blocks && lesson.blocks.length > 0
+                      ? `${lesson.blocks.length} 个互动内容`
+                      : "图文阅读"}
+                    {lesson.completion && lesson.completion.mode !== "manual" && " · 服务端验证"}
                   </p>
                 </div>
                 <span className="shrink-0">

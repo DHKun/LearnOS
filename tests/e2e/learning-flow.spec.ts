@@ -97,8 +97,8 @@ test.describe("学生完整学习闭环（SQL 注入课程）", () => {
             .check();
         }
       }
-      await page.getByRole("button", { name: "提交测验" }).click();
-      await expect(page.getByText("测验通过，章节已完成")).toBeVisible({ timeout: 20_000 });
+      await page.getByRole("button", { name: "提交知识检查" }).click();
+      await expect(page.getByText("本章知识检查已通过")).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText("课程已完成，当前为只读复习模式")).toBeVisible({
         timeout: 20_000,
       });
@@ -201,8 +201,8 @@ test.describe("学生完整学习闭环（重试与幂等课程）", () => {
             .check();
         }
       }
-      await page.getByRole("button", { name: "提交测验" }).click();
-      await expect(page.getByText("测验通过，章节已完成")).toBeVisible({ timeout: 20_000 });
+      await page.getByRole("button", { name: "提交知识检查" }).click();
+      await expect(page.getByText("本章知识检查已通过")).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText("课程已完成，当前为只读复习模式")).toBeVisible({
         timeout: 20_000,
       });

@@ -108,7 +108,7 @@ describe("课程部署扫描", () => {
       path.join(dir, "course.json"),
       JSON.stringify(
         {
-          schemaVersion: 2,
+          schemaVersion: 3,
           slug: "brand-new-course",
           title: "新课程",
           description: "",
@@ -117,19 +117,19 @@ describe("课程部署扫描", () => {
             {
               slug: "intro",
               title: "介绍",
-              type: "article",
               source: "intro.mdx",
-              completionPolicy: "manual",
               required: true,
             },
             {
               slug: "final-quiz",
               title: "最终测验",
-              type: "quiz",
-              source: "quiz.server.json",
-              completionPolicy: "server_validated",
+              source: "final.mdx",
               required: true,
               finalExam: true,
+              blocks: [
+                { id: "final-check", kind: "question", source: "quiz.server.json" },
+              ],
+              completion: { mode: "all", requiredBlocks: ["final-check"] },
             },
           ],
           plugins: { concepts: [], activities: [] },
@@ -139,6 +139,7 @@ describe("课程部署扫描", () => {
       ),
     );
     fs.writeFileSync(path.join(dir, "intro.mdx"), "# 新课程\n");
+    fs.writeFileSync(path.join(dir, "final.mdx"), "# 最终测验\n\n<KnowledgeCheck blockId=\"final-check\" />\n");
     fs.writeFileSync(
       path.join(dir, "quiz.server.json"),
       JSON.stringify({
@@ -161,7 +162,8 @@ describe("课程部署扫描", () => {
     const snapshot = buildCourseSnapshot(dir, "brand-new-course");
     expect(snapshot.slug).toBe("brand-new-course");
     expect(snapshot.lessons).toHaveLength(2);
-    expect(snapshot.lessons[1].quizHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(snapshot.lessons[1].chapterHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(snapshot.lessons[1].finalExam).toBe(true);
 
     const scan = compareScan({
       courses: [snapshot],

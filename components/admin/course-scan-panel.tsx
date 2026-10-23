@@ -145,9 +145,11 @@ export function CourseUpdateDialog({
                     <div key={lesson.slug} className="flex flex-wrap gap-x-3 gap-y-1">
                       <span className="text-muted-foreground">{lesson.position + 1}.</span>
                       <span>{lesson.slug}</span>
-                      <span className="text-muted-foreground">{lesson.type}</span>
+                      <span className="text-muted-foreground">章节</span>
                       <span className="text-muted-foreground">
-                        {lesson.required ? "必修" : "选修"} / {lesson.completionPolicy}
+                        {lesson.required ? "必修" : "选修"} /{" "}
+                        {lesson.completionPolicy === "manual" ? "手动完成" : "服务端验证"}
+                        {lesson.finalExam ? " / 最终测验" : ""}
                       </span>
                       {lesson.activityId && <span>activity: {lesson.activityId}</span>}
                       {lesson.finalExam && <span className="text-primary">finalExam</span>}

@@ -20,6 +20,7 @@ Course
 - 只有知识检查的章节合法。
 - 同一章多个动画、多个实验、多个知识检查都合法。
 - **不要**为了普通段落、图片或表格声明 JSON Block；它们直接写在 MDX 里。
+- 没有独立的 `interactive` / `quiz` 章节类型；实验和正式测验都嵌入普通章节。v2 清单不再接受。
 
 ## 2. Manifest v3
 
@@ -54,9 +55,7 @@ Course
     {
       "slug": "request-response",
       "title": "请求与响应",
-      "type": "article",
       "source": "lessons/04-request-response.mdx",
-      "completionPolicy": "server_validated",
       "required": true,
       "blocks": [
         {
@@ -77,9 +76,8 @@ Course
 
 - `plugins` 可以整个省略，纯文字课程不需要任何插件。
 - `blocks` 可以省略或为空。
-- `schemaVersion: 2` 继续支持旧课程；v3 才能使用 `blocks` / `completion`。
-- `lesson.type` 继续使用 `article` / `interactive` / `quiz`。混合章节推荐 `article`。
-- 原有独立 `interactive` / `quiz` 章节不需要迁移。
+- 清单必须 `schemaVersion: 3`。
+- 所有章节统一使用 `source` 指向 MDX；`blocks` / `completion` / `finalExam` 可选。
 
 ## 3. Block 类型
 
@@ -136,18 +134,18 @@ Course
 }
 ```
 
-| mode | 含义 | completionPolicy |
-| --- | --- | --- |
-| `manual` | 学生阅读后手动完成；Block 可以是可选练习 | `manual` |
-| `all` | 所有 `requiredBlocks` 通过后自动完成 | `server_validated` |
-| `any` | 任意一个 `requiredBlocks` 通过后自动完成 | `server_validated` |
+| mode | 含义 |
+| --- | --- |
+| `manual` | 学生阅读后手动完成；Block 可以是可选练习 |
+| `all` | 所有 `requiredBlocks` 通过后自动完成 |
+| `any` | 任意一个 `requiredBlocks` 通过后自动完成 |
 
 规则：
 
 - `requiredBlocks` 必须引用真实存在的 Block。
-- `all/any` 不能为空，且章节必须 `server_validated`。
+- `all/any` 不能为空。
 - `manual` 不能声明 `requiredBlocks`。
-- `server_validated` 章节省略 `completion` 且声明了 blocks 时，默认等价于 `all`（推荐显式写出）。
+- 章节省略 `completion` 时就是手动完成；未列入 `requiredBlocks` 的 Block 只是可选练习。
 - 纯文字手动章节没必要写 `completion`。
 
 ## 5. MDX 组件
@@ -242,9 +240,7 @@ Content-Type: application/json
 {
   "slug": "intro",
   "title": "介绍",
-  "type": "article",
   "source": "lessons/01-intro.mdx",
-  "completionPolicy": "manual",
   "required": true
 }
 ```
@@ -263,9 +259,7 @@ Content-Type: application/json
 {
   "slug": "flow",
   "title": "请求流程",
-  "type": "article",
   "source": "lessons/02-flow.mdx",
-  "completionPolicy": "manual",
   "required": true
 }
 ```
@@ -294,7 +288,7 @@ Content-Type: application/json
 - 拒绝未注册的 Concept / Activity / Block。
 - 拒绝声明但没有在 MDX 渲染的 Block、重复渲染、类型不匹配。
 - 拒绝客户端组件导入 `validators.ts`、`*.server.json` 或 `assessments/`。
-- 校验题库、判断题、路径、符号链接与最终测验。
+- 校验题库、判断题、路径、符号链接与可选的最终测验。
 - 对已有学习记录的课程冻结必需 Block、validator 指纹、题库哈希和完成规则。
 - 允许普通文案/可选动画/不影响完成条件的可选 Block 变化。
 

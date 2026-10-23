@@ -288,7 +288,7 @@ components/             # 工作区、概念动画、原生互动组件、笔记
 lib/
   api/                  # 统一响应、错误码、Origin/CSRF、鉴权守卫
   auth/                 # 服务端会话、角色守卫、登录 Server Action
-  content/              # manifest v2/v3、MDX AST 校验、章节结构、内容加载、验证器注册表
+  content/              # Manifest v3 统一章节、MDX AST 校验、Block/完成规则、内容加载、验证器注册表
   deployments/          # 课程快照、扫描比较、部署类型
   learning/             # 同源 Learning SDK、Chapter/Block State、状态保存 Hook
   activities/           # 互动模拟纯函数与 activityId 目录

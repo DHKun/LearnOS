@@ -242,7 +242,7 @@ export function StudentDetailView({ initial }: { initial: AdminStudentDetail }) 
                 {data.lessons.map((lesson) => (
                   <TableRow key={lesson.lessonId}>
                     <TableCell className="font-medium">{lesson.title}</TableCell>
-                    <TableCell>{lesson.type}</TableCell>
+                    <TableCell>章节</TableCell>
                     <TableCell>{lesson.required ? "必修" : "选做"}</TableCell>
                     <TableCell>
                       <Badge variant={lesson.status === "completed" ? "success" : "outline"}>

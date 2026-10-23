@@ -144,14 +144,14 @@ export function IdempotencyLostResponse() {
   function change(next: Fault) {
     setFault(next);
     sdk.track("concept_variant_changed", {
-      conceptId: "idempotency.lost-response",
+      conceptId: "idempotent-retries/lost-response",
       fault: next,
     });
   }
 
   return (
     <ConceptFrame
-      conceptId="idempotency.lost-response"
+      conceptId="idempotent-retries/lost-response"
       blockId="idempotency-lost-response"
       title="支付回执丢失：一次请求为什么扣了两次"
       analogy={

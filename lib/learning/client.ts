@@ -82,20 +82,12 @@ export class LearningClient implements LearningSDK {
     }
   }
 
-  async submit(submission: Record<string, unknown>) {
-    const result = await apiFetch<{
-      passed: boolean;
-      feedback: Record<string, unknown>;
-    }>("/api/learning/submissions", {
-      method: "POST",
-      body: JSON.stringify({
-        id: createUuid(),
-        enrollmentId: this.enrollmentId,
-        lessonId: this.lessonId,
-        submission,
-      }),
-    });
-    return { passed: result.passed, feedback: result.feedback };
+  async submit(
+    _submission: Record<string, unknown>,
+  ): Promise<{ passed: boolean; feedback?: Record<string, unknown> }> {
+    // Formal graded content is always submitted through a BlockScope, which
+    // replaces this method with the authenticated block endpoint.
+    throw new Error("BLOCK_SUBMISSION_REQUIRED");
   }
 
   async refreshState(): Promise<LearningStateSnapshot> {

@@ -38,7 +38,7 @@ function runGenerator(root: string): { ok: boolean; stderr: string } {
 function writeMinimalCourse(
   root: string,
   slug: string,
-  activities: { id: string; validatorId: string }[],
+  activities: { id: string }[],
 ): void {
   const dir = path.join(root, "content/courses", slug);
   fs.mkdirSync(path.join(dir, "activities"), { recursive: true });
@@ -50,7 +50,7 @@ function writeMinimalCourse(
     path.join(dir, "course.json"),
     JSON.stringify(
       {
-        schemaVersion: 2,
+        schemaVersion: 3,
         slug,
         title: slug,
         description: "",
@@ -68,7 +68,6 @@ function writeMinimalCourse(
               component: `activities/${activity.id}.tsx`,
               export: `Activity${activity.id.replace(/[^a-zA-Z0-9]/g, "")}`,
               validator: {
-                id: activity.validatorId,
                 path: "validators.ts",
                 export: "validate",
               },
@@ -99,11 +98,6 @@ describe("课程插件生成器", () => {
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     manifest.slug = "new-course";
     manifest.title = "新复制的课程";
-    for (const concept of manifest.plugins.concepts) delete concept.legacyGlobalId;
-    for (const activity of manifest.plugins.activities) delete activity.legacyGlobalId;
-    for (const lesson of manifest.lessons) {
-      if (lesson.type === "interactive") lesson.activityId = "new-course/sql-injection-lab";
-    }
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
     const result = runGenerator(root);
@@ -122,7 +116,7 @@ describe("课程插件生成器", () => {
       path.join(root, "lib/generated/validator-registry.server.ts"),
       "utf8",
     );
-    expect(validators).toContain("sql-injection-lab");
+    expect(validators).toContain("new-course/sql-injection-lab");
   });
 
   it("纯文字课程可以没有 plugins 声明", () => {
@@ -150,16 +144,16 @@ describe("课程插件生成器", () => {
     expect(catalog).not.toContain("plain-text/");
   });
 
-  it("拒绝重复的 Validator ID", () => {
+  it("验证器 ID 使用课程命名空间，不同课程的同名活动不会冲突", () => {
     const root = tempRoot();
-    writeMinimalCourse(root, "duplicate-validator", [
-      { id: "lab-a", validatorId: "shared-validator" },
-      { id: "lab-b", validatorId: "shared-validator" },
-    ]);
+    writeMinimalCourse(root, "course-a", [{ id: "lab" }]);
+    writeMinimalCourse(root, "course-b", [{ id: "lab" }]);
 
     const result = runGenerator(root);
-    expect(result.ok).toBe(false);
-    expect(result.stderr).toContain("Validator ID 重复: shared-validator");
+    expect(result.ok, result.stderr).toBe(true);
+    const catalog = fs.readFileSync(path.join(root, "lib/generated/course-catalog.ts"), "utf8");
+    expect(catalog).toContain('"course-a/lab"');
+    expect(catalog).toContain('"course-b/lab"');
   });
 
   it("拒绝客户端组件导入服务端答案/验证器", () => {
@@ -178,7 +172,7 @@ describe("课程插件生成器", () => {
       path.join(dir, "course.json"),
       JSON.stringify(
         {
-          schemaVersion: 2,
+          schemaVersion: 3,
           slug: "leaky-client",
           title: "泄漏客户端",
           description: "",
@@ -219,7 +213,7 @@ describe("课程插件生成器", () => {
       path.join(dir, "course.json"),
       JSON.stringify(
         {
-          schemaVersion: 2,
+          schemaVersion: 3,
           slug: "symlink-course",
           title: "符号链接课程",
           description: "",

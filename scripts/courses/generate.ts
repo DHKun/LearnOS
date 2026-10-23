@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 
 type ConceptDeclaration = {
   id: string;
-  legacyGlobalId?: string;
   component: string;
   export: string;
   title: string;
@@ -14,11 +13,10 @@ type ConceptDeclaration = {
 
 type ActivityDeclaration = {
   id: string;
-  legacyGlobalId?: string;
   component: string;
   export: string;
   title?: string;
-  validator: { id?: string; path: string; export: string };
+  validator: { path: string; export: string };
 };
 
 type LegacyManifest = {
@@ -110,7 +108,7 @@ function main() {
     const courseDir = path.dirname(file);
     const plugins = manifest.plugins ?? { concepts: [], activities: [] };
     for (const concept of plugins.concepts ?? []) {
-      const globalId = concept.legacyGlobalId ?? `${manifest.slug}/${concept.id}`;
+      const globalId = `${manifest.slug}/${concept.id}`;
       if (concepts.some((item) => item.globalId === globalId)) {
         fail(`概念 ID 重复: ${globalId}`);
       }
@@ -120,11 +118,11 @@ function main() {
       concepts.push({ ...concept, globalId, file: componentFile });
     }
     for (const activity of plugins.activities ?? []) {
-      const globalId = activity.legacyGlobalId ?? `${manifest.slug}/${activity.id}`;
+      const globalId = `${manifest.slug}/${activity.id}`;
       if (activities.some((item) => item.globalId === globalId)) {
         fail(`活动 ID 重复: ${globalId}`);
       }
-      const validatorId = activity.validator.id ?? globalId;
+      const validatorId = globalId;
       if (activities.some((item) => item.validatorId === validatorId)) {
         fail(`Validator ID 重复: ${validatorId}`);
       }

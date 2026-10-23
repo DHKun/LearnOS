@@ -123,7 +123,11 @@ function KnowledgeCheckInner({ block }: { block: PublicChapterBlock }) {
           const multiple = question.type === "multiple";
           const selected = state.answers[question.id];
           return (
-            <div key={question.id} className="rounded-lg border border-border p-3">
+            <div
+              key={question.id}
+              data-question-id={question.id}
+              className="rounded-lg border border-border p-3"
+            >
               <p className="text-sm font-medium">
                 <span className="mr-2 font-mono text-xs text-muted-foreground">
                   {String(index + 1).padStart(2, "0")}
@@ -150,6 +154,7 @@ function KnowledgeCheckInner({ block }: { block: PublicChapterBlock }) {
                       <input
                         type={multiple ? "checkbox" : "radio"}
                         name={`${block.id}-${question.id}`}
+                        value={option.id}
                         checked={checked}
                         disabled={readOnly || passed}
                         onChange={() => select(question.id, option.id, multiple)}

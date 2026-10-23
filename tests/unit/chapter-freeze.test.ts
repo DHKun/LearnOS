@@ -44,8 +44,11 @@ function dbRow(lesson: ArticleLessonManifest, config: Record<string, unknown>): 
     slug: lesson.slug,
     position: 0,
     required: lesson.required,
-    type: lesson.type,
-    completion_policy: lesson.completionPolicy,
+    type: "article",
+    completion_policy:
+      lesson.completion && lesson.completion.mode !== "manual"
+        ? "server_validated"
+        : "manual",
     config,
   };
 }
@@ -53,8 +56,7 @@ function dbRow(lesson: ArticleLessonManifest, config: Record<string, unknown>): 
 describe("混合章节同步冻结", () => {
   const loaded = loadCourse("http-from-zero");
   const base = loaded.manifest.lessons.find(
-    (lesson): lesson is ArticleLessonManifest =>
-      lesson.type === "article" && lesson.slug === "request-response",
+    (lesson): lesson is ArticleLessonManifest => lesson.slug === "request-response",
   )!;
 
   it("未变化的章节结构兼容", () => {

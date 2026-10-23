@@ -44,9 +44,9 @@ HTTP 状态：`400 BAD_REQUEST`、`401 UNAUTHENTICATED`、`403 FORBIDDEN`、`404
 
 `GET /api/courses/:slug` → `{ course, lessons, myEnrollment, myLessonProgress }`
 
-- `lessons`: `{ id, slug, title, type, position, required, completionPolicy, unit?, activityId? }`。
+- `lessons`: `{ id, slug, title, position, required, unit?, blocks?, completion? }`。
+- 章节统一为 `article`（数据库保留 type 列兼容历史），正文为 MDX；模拟/题目以 Block 声明。
 - 非 published 课程只有已报名学生可读。
-- `activityId` 只对交互章节返回。
 
 ### 1.4 当前进行中的课程
 
@@ -124,21 +124,7 @@ HTTP 状态：`400 BAD_REQUEST`、`401 UNAUTHENTICATED`、`403 FORBIDDEN`、`404
 
 返回 `{ version, updatedAt }`。版本不匹配 → `409 STATE_VERSION_CONFLICT`。
 
-### 1.12 提交互动实验
-
-`POST /api/learning/submissions` body：
-
-```json
-{ "id": "uuid", "enrollmentId": "uuid", "lessonId": "uuid", "submission": { } }
-```
-
-返回 `{ accepted, duplicate, passed, feedback, lessonStatus, courseProgress, pointsAwarded? }`。
-
-- 仅 `server_validated` 交互章节；服务端验证器判定。
-- 同一 `id` 重放返回首次结果，不重复发分。
-- 通过时首次完成章节 +10。
-
-### 1.12.1 提交章节 Block（Manifest v3）
+### 1.12 提交章节 Block（正式判分）
 
 `POST /api/learning/blocks/submit` body：
 
@@ -184,48 +170,15 @@ HTTP 状态：`400 BAD_REQUEST`、`401 UNAUTHENTICATED`、`403 FORBIDDEN`、`404
 
 返回 `{ lessonStatus, courseProgress, enrollmentStatus, pointsAwarded, alreadyCompleted }`。
 
-- 图文章节（manual）或 reported 交互章节；幂等。
-- 测验 → `400 QUIZ_REQUIRES_SUBMISSION`；server_validated interactive → `400 SERVER_VALIDATION_REQUIRED`。
-- v3 混合章节的 `all/any` 完成规则 → `400 COMPLETION_NOT_ALLOWED`，必须通过 Block 提交接口。
+- 仅手动完成章节；幂等。
+- `server_validated`（声明了 `all/any` 完成规则）章节 → `400 COMPLETION_NOT_ALLOWED`，必须通过 Block 提交接口。
+- 首次完成 +10。
 
-### 1.14 获取测验
-
-`GET /api/quizzes/:lessonId` → `{ lessonId, title, passScore, questions }`
-
-```json
-{ "questions": [{ "id": "q1", "prompt": "...", "type": "single",
-  "options": [{ "id": "a", "label": "..." }] }] }
-```
-
-- 绝不包含 `answer` 或 `explanation`。
-- 需要该课程的 enrollment（active 或 completed）。
-
-### 1.15 提交测验
-
-`POST /api/quizzes/:lessonId/submit` body：
-
-```json
-{ "attemptId": "uuid", "enrollmentId": "uuid", "answers": { "q1": "b", "q2": ["a", "c"] } }
-```
-
-返回：
-
-```json
-{ "attemptId": "...", "score": 80, "passed": true, "correctCount": 4, "questionCount": 5,
-  "passScore": 70, "duplicate": false, "courseProgress": { "total": 4, "completed": 4, "percent": 100 },
-  "lessonStatus": "completed", "enrollmentStatus": "completed", "pointsAwarded": 60 }
-```
-
-- 服务端评分；达到 `passScore` 才完成章节。
-- 失败可重试；同一 `attemptId` 幂等。
-- 首次通过章节 +10；`finalExam` 首次通过额外 +50。
-- 全部必修完成后 enrollment 变 `completed`。
-
-### 1.16 读取笔记
+### 1.14 读取笔记
 
 `GET /api/notes/:lessonId` → `{ content, updatedAt }`。
 
-### 1.17 保存笔记
+### 1.15 保存笔记
 
 `PUT /api/notes/:lessonId` body `{ "content": "markdown" }`
 
@@ -307,7 +260,7 @@ lessonCount, enrollmentCount, activeCount, completedCount }] }`
 
 `PATCH /api/admin/courses/:id` body `{ title?, description?, status? }` → `{ ok: true, id }`
 
-- 发布前校验：至少 1 个必修章节、最后一个必修章节为 `finalExam` 测验、交互章节 validator 已注册、文章/测验有内容资源。
+- 发布前校验：至少 1 个必修章节、每个章节都有 MDX 内容资源、最多一个 `finalExam`（可选）。
 - 状态：`draft | published | archived`。
 
 ### 2.10 课程学员名单

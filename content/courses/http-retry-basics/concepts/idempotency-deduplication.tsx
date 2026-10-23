@@ -135,7 +135,7 @@ export function IdempotencyDeduplication() {
     setKeyMode(nextMode);
     setDedupe(nextDedupe);
     sdk.track("concept_variant_changed", {
-      conceptId: "idempotency.deduplication",
+      conceptId: "http-retry-basics/deduplication",
       keyMode: nextMode,
       dedupe: nextDedupe,
     });
@@ -143,7 +143,7 @@ export function IdempotencyDeduplication() {
 
   return (
     <ConceptFrame
-      conceptId="idempotency.deduplication"
+      conceptId="http-retry-basics/deduplication"
       blockId="idempotency-deduplication"
       title="订单号去重：重复请求只执行一次"
       analogy={
