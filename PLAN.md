@@ -219,8 +219,8 @@ tests/e2e/admin-detail.spec.ts          1 test
             构建日志、系统/课程版本、自动/手动回滚、部署任务持久化；
             性能专项、审计修复、单站点原生活动重构；见 docs/decisions.md / docs/architecture.md
 测试结果：lint 0 error（1 既有 warning）；typecheck 通过；Vitest 19 文件 / 126 passed；
-          build 通过；Playwright 18 passed；security scan 75 资源通过；courses:validate 4/4；
-          真实 Compose 部署 2026.10.22-11 成功；构建失败/健康失败自动回滚已验证
+          build 通过；Playwright 18 passed（本地）+ 线上混合课程 E2E 通过；security scan 75 资源通过；courses:validate 4/4；
+          真实 Compose 部署 2026.10.23-01 成功；线上 health / 管理扫描 / HTTP 混合课程已验证
 失败 / 阻塞：无（本地）；托管云端、SMTP、TLS、第二台主机未验证
 下一个门禁：无（本地 Release）
 ```
@@ -377,6 +377,11 @@ tests/e2e/admin-detail.spec.ts          1 test
 | `pnpm test:e2e` | ✅ 18 passed（最终全部 E2E） |
 | `pnpm security:scan` | ✅ 75 个客户端资源通过，未发现服务端密钥/测验解析泄漏 |
 | 真实 HTTP 课程 | 纯文字、动画、模拟实验、知识检查、all/any、最终测验均实际完成；DB 记录 completed、积分 140 |
+| Docker Compose 发布 | ✅ 版本 `2026.10.23-01` 成功；health 返回新版本，旧镜像保留为上一版本 |
+| 线上混合课程 E2E | ✅ 在 `http://10.66.66.2:3000` 实际跑通 `http-mixed.spec.ts`（九章完整闭环） |
+| 线上扫描 | ✅ 升级后 `/admin/deployments/scan` 显示 4 门课程全部 latest、无冲突/失败 |
 | 状态恢复 | 章节刷新后 Cookie 实验参数恢复；两个 Concept 的 step 分别保存（2 / 0） |
 
+> 升级路径说明：运行中的旧 Web（`2026.10.22-11`）扫描器不认识 v3 的 `article + server_validated`，因此本次先直接创建 `deployment_jobs` 记录，由 updater 完成一次性代码升级；升级后的新 Web 扫描已恢复 4/4 latest，后续课程更新可正常使用 `/admin/deployments` 页面。
+>
 > 未验证：慢网/断网、真实 SMTP/TLS/云端 staging、第二台干净主机、并发压力测试。文档见 `docs/mixed-chapters.md`。
