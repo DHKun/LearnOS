@@ -1,0 +1,46 @@
+## 服务器不会只回答“有”或“没有”
+
+HTTP 响应至少表达处理结果；它还可以告诉客户端正文是什么类型、要不要缓存，以及正文内容本身。
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-store
+
+{"id":2,"title":"HTTP 入门"}
+```
+
+第一行是状态行，包含协议版本、三位数字状态码和便于人阅读的原因短语。现代客户端应以**状态码**而不是短语作为判断依据。
+
+<ConceptPlayer conceptId="http-fundamentals/status" blockId="status-families" />
+
+## 五类状态码怎么记？
+
+| 类别 | 常见含义 | 例子 |
+| --- | --- | --- |
+| 1xx | 信息性响应 | 100 Continue |
+| 2xx | 请求已被成功处理 | 200 OK、201 Created、204 No Content |
+| 3xx | 需要进一步操作或使用已有缓存 | 301、302、304 |
+| 4xx | 请求一方需要检查的情况 | 400、401、403、404、405、415 |
+| 5xx | 服务器一方处理失败 | 500、502、503 |
+
+## 不要把这些代码混为一谈
+
+- `200 OK`：请求成功，很多查询接口会返回它。
+- `201 Created`：成功创建了资源，可以使用 `Location` 提示新资源地址。
+- `204 No Content`：操作成功，但没有响应正文。
+- `304 Not Modified`：用于条件请求，通知客户端现有缓存表示仍可使用；不是一个带着新资源正文的普通 200。
+- `400 Bad Request`：服务器无法或不愿处理客户端请求中的某些错误。
+- `404 Not Found`：当前目标资源未找到，或服务器不愿透露它存在。
+- `405 Method Not Allowed`：目标资源存在但该方法不被允许，通常应有 `Allow` Header。
+- `500 Internal Server Error`：服务器处理过程出现意外。
+
+<Callout type="warning" title="容易犯的错误">
+状态码是协议层面表达的结果，不等于业务是否成功。例如一个 API 可能 HTTP 返回 200，却在 JSON 中包含 `success: false`。排错时需要同时看状态码与响应内容。
+</Callout>
+
+## 正式知识检查
+
+本章不强制做模拟实验。答题达到及格线以后，系统自动标记章节完成。
+
+<KnowledgeCheck blockId="response-check" />

@@ -195,7 +195,7 @@ async function runSample(browser, student, _index) {
     await page.waitForURL("**/courses");
     out.login = Date.now() - loginStart;
 
-    await page.goto(`${base}/courses/http-from-zero`, { waitUntil: "domcontentloaded" });
+    await page.goto(`${base}/courses/http-fundamentals`, { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: "参加课程" }).click();
     await page.waitForURL(/\/learn\//);
     const learnUrl = page.url();
@@ -231,10 +231,10 @@ async function runSample(browser, student, _index) {
     // Client-side chapter switch through the course directory.
     await resetLag(page);
     const nav = page.getByRole("navigation", { name: "课程章节" });
-    const link = nav.getByRole("link").filter({ hasText: "浏览器与服务器" });
+    const link = nav.getByRole("link").filter({ hasText: "URL：找到正确的资源" });
     const switchStart = Date.now();
     await link.click();
-    await page.getByRole("heading", { name: "浏览器与服务器" }).waitFor();
+    await page.getByRole("heading", { name: "URL：找到正确的资源" }).waitFor();
     out.chapterSwitch = Date.now() - switchStart;
     await page.waitForTimeout(250);
     out.chapterLag = await lagSinceReset(page);

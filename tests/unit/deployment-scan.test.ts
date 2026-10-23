@@ -8,7 +8,7 @@ import { buildCourseSnapshot } from "@/lib/deployments/course-snapshot";
 import { compareScan } from "@/lib/deployments/scan";
 
 const repoRoot = process.cwd();
-const sourceCourse = path.join(repoRoot, "content/courses/sql-injection-basics");
+const sourceCourse = path.join(repoRoot, "content/courses/http-fundamentals");
 const temporary: string[] = [];
 
 function tempDir(): string {
@@ -18,7 +18,7 @@ function tempDir(): string {
 }
 
 function copyCourse(): string {
-  const target = path.join(tempDir(), "sql-injection-basics");
+  const target = path.join(tempDir(), "http-fundamentals");
   fs.cpSync(sourceCourse, target, { recursive: true });
   return target;
 }
@@ -47,8 +47,8 @@ afterEach(() => {
 describe("课程部署扫描", () => {
   it("源码未变化时标记为已是最新", () => {
     const dir = copyCourse();
-    const baseline = buildCourseSnapshot(dir, "sql-injection-basics");
-    const current = buildCourseSnapshot(dir, "sql-injection-basics");
+    const baseline = buildCourseSnapshot(dir, "http-fundamentals");
+    const current = buildCourseSnapshot(dir, "http-fundamentals");
     const scan = compare(baseline, current);
     expect(scan.items[0].status).toBe("latest");
     expect(scan.counts.latest).toBe(1);
@@ -57,26 +57,26 @@ describe("课程部署扫描", () => {
 
   it("版本号未递增但 MDX 发生变化时仍识别并提示", () => {
     const dir = copyCourse();
-    const baseline = buildCourseSnapshot(dir, "sql-injection-basics");
-    const mdx = path.join(dir, "01-where-injection-comes-from.mdx");
+    const baseline = buildCourseSnapshot(dir, "http-fundamentals");
+    const mdx = path.join(dir, "lessons/02-url.mdx");
     fs.appendFileSync(mdx, "\n\n新增一段说明。\n");
-    const current = buildCourseSnapshot(dir, "sql-injection-basics");
+    const current = buildCourseSnapshot(dir, "http-fundamentals");
 
     const scan = compare(baseline, current);
     expect(scan.items[0].status).toBe("updated");
     expect(scan.items[0].warnings.join("；")).toContain("版本号");
-    expect(scan.items[0].changes.modified).toContain("01-where-injection-comes-from.mdx");
+    expect(scan.items[0].changes.modified).toContain("lessons/02-url.mdx");
     expect(scan.items[0].structuralDigest).toBe(baseline.structuralDigest);
   });
 
   it("已有学习记录时评分规则变化被识别为版本冲突", () => {
     const dir = copyCourse();
-    const baseline = buildCourseSnapshot(dir, "sql-injection-basics");
-    const quizPath = path.join(dir, "quiz.server.json");
+    const baseline = buildCourseSnapshot(dir, "http-fundamentals");
+    const quizPath = path.join(dir, "assessments/response.server.json");
     const quiz = JSON.parse(fs.readFileSync(quizPath, "utf8"));
     quiz.passScore = 80;
     fs.writeFileSync(quizPath, JSON.stringify(quiz, null, 2));
-    const current = buildCourseSnapshot(dir, "sql-injection-basics");
+    const current = buildCourseSnapshot(dir, "http-fundamentals");
 
     const scan = compare(baseline, current, 1);
     expect(scan.items[0].status).toBe("conflict");
@@ -86,12 +86,12 @@ describe("课程部署扫描", () => {
 
   it("无学习记录的结构变化允许部署但提示", () => {
     const dir = copyCourse();
-    const baseline = buildCourseSnapshot(dir, "sql-injection-basics");
-    const quizPath = path.join(dir, "quiz.server.json");
+    const baseline = buildCourseSnapshot(dir, "http-fundamentals");
+    const quizPath = path.join(dir, "assessments/response.server.json");
     const quiz = JSON.parse(fs.readFileSync(quizPath, "utf8"));
     quiz.passScore = 80;
     fs.writeFileSync(quizPath, JSON.stringify(quiz, null, 2));
-    const current = buildCourseSnapshot(dir, "sql-injection-basics");
+    const current = buildCourseSnapshot(dir, "http-fundamentals");
 
     const scan = compare(baseline, current, 0);
     expect(scan.items[0].status).toBe("updated");
@@ -179,34 +179,35 @@ describe("课程部署扫描", () => {
 
   it("新增不影响完成条件的可选 Block 不改变结构摘要", () => {
     const root = tempDir();
-    const target = path.join(root, "http-from-zero");
-    fs.cpSync(path.join(repoRoot, "content/courses/http-from-zero"), target, { recursive: true });
-    const baseline = buildCourseSnapshot(target, "http-from-zero");
+    const target = path.join(root, "http-fundamentals");
+    fs.cpSync(path.join(repoRoot, "content/courses/http-fundamentals"), target, { recursive: true });
+    const baseline = buildCourseSnapshot(target, "http-fundamentals");
 
     const manifestPath = path.join(target, "course.json");
     const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
     const chapter = manifest.lessons.find(
-      (lesson: { slug: string }) => lesson.slug === "request-response",
+      (lesson: { slug: string }) => lesson.slug === "request",
     );
+    chapter.blocks ??= [];
     chapter.blocks.push({
       id: "optional-check",
       kind: "question",
-      source: "assessments/status-check.server.json",
+      source: "assessments/headers.server.json",
     });
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     fs.appendFileSync(
-      path.join(target, "lessons/04-request-response.mdx"),
+      path.join(target, "lessons/04-request.mdx"),
       "\n\n<KnowledgeCheck blockId=\"optional-check\" />\n",
     );
 
-    const changed = buildCourseSnapshot(target, "http-from-zero");
+    const changed = buildCourseSnapshot(target, "http-fundamentals");
     expect(changed.sourceDigest).not.toBe(baseline.sourceDigest);
     expect(changed.structuralDigest).toBe(baseline.structuralDigest);
   });
 
   it("移除已部署课程会阻止部署，避免线上记录指向缺失内容", () => {
     const dir = copyCourse();
-    const baseline = buildCourseSnapshot(dir, "sql-injection-basics");
+    const baseline = buildCourseSnapshot(dir, "http-fundamentals");
     const scan = compareScan({
       courses: [],
       failures: [],

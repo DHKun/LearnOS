@@ -11,7 +11,7 @@ import type { ArticleLessonManifest } from "@/lib/content/manifest";
 import { structureMatches, type DbLesson } from "../../scripts/courses/sync";
 
 function oneLessonCourse(lesson: ArticleLessonManifest): LoadedCourse {
-  const loaded = loadCourse("http-from-zero");
+  const loaded = loadCourse("http-fundamentals");
   return {
     ...loaded,
     manifest: {
@@ -54,9 +54,9 @@ function dbRow(lesson: ArticleLessonManifest, config: Record<string, unknown>): 
 }
 
 describe("混合章节同步冻结", () => {
-  const loaded = loadCourse("http-from-zero");
+  const loaded = loadCourse("http-fundamentals");
   const base = loaded.manifest.lessons.find(
-    (lesson): lesson is ArticleLessonManifest => lesson.slug === "request-response",
+    (lesson): lesson is ArticleLessonManifest => lesson.slug === "request",
   )!;
 
   it("未变化的章节结构兼容", () => {
@@ -75,7 +75,7 @@ describe("混合章节同步冻结", () => {
         {
           id: "optional-note",
           kind: "question",
-          source: "assessments/status-check.server.json",
+          source: "assessments/headers.server.json",
         },
       ],
     };
@@ -87,7 +87,7 @@ describe("混合章节同步冻结", () => {
     const { config } = configFor(course, base);
     const changed: ArticleLessonManifest = {
       ...base,
-      blocks: [{ id: "request-lab", kind: "simulation", activityId: "http-from-zero/method-match" }],
+      blocks: [{ id: "request-lab", kind: "simulation", activityId: "http-fundamentals/method-matcher" }],
       completion: { mode: "all", requiredBlocks: ["request-lab"] },
     };
     expect(structureMatches(oneLessonCourse(changed), [dbRow(changed, config)])).toBe(false);

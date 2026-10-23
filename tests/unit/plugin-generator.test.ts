@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 const repoRoot = process.cwd();
 const tsxBin = path.join(repoRoot, "node_modules", ".bin", "tsx");
 const generator = path.join(repoRoot, "scripts", "courses", "generate.ts");
-const sourceCourse = path.join(repoRoot, "content", "courses", "sql-injection-basics");
+const sourceCourse = path.join(repoRoot, "content", "courses", "http-fundamentals");
 const temporary: string[] = [];
 
 function tempRoot(): string {
@@ -108,15 +108,15 @@ describe("课程插件生成器", () => {
       path.join(root, "lib/generated/course-components.tsx"),
       "utf8",
     );
-    expect(catalog).toContain('"new-course/sql-injection-lab"');
-    expect(catalog).toContain('"new-course/data-vs-instruction"');
-    expect(components).toContain("content/courses/new-course/activities/sql-injection");
+    expect(catalog).toContain('"new-course/request-console"');
+    expect(catalog).toContain('"new-course/url"');
+    expect(components).toContain("content/courses/new-course/activities/http-activities");
 
     const validators = fs.readFileSync(
       path.join(root, "lib/generated/validator-registry.server.ts"),
       "utf8",
     );
-    expect(validators).toContain("new-course/sql-injection-lab");
+    expect(validators).toContain("new-course/request-console");
   });
 
   it("纯文字课程可以没有 plugins 声明", () => {

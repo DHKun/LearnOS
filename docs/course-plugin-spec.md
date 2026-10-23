@@ -23,7 +23,7 @@ content/courses/<slug>/
 ```json
 {
   "schemaVersion": 3,
-  "slug": "http-from-zero",
+  "slug": "http-fundamentals",
   "title": "HTTP 协议入门",
   "description": "...",
   "version": "1.0.0",
@@ -55,7 +55,7 @@ content/courses/<slug>/
       "required": true,
       "unit": "消息",
       "blocks": [
-        { "id": "request-lab", "kind": "simulation", "activityId": "http-from-zero/request-builder" },
+        { "id": "request-lab", "kind": "simulation", "activityId": "http-fundamentals/request-console" },
         { "id": "request-check", "kind": "question", "source": "assessments/check.server.json", "passScore": 60 }
       ],
       "completion": { "mode": "all", "requiredBlocks": ["request-lab"] }

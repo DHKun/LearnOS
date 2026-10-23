@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { expect, type Page } from "@playwright/test";
 
@@ -110,7 +112,7 @@ export async function getLessons(courseId: string) {
   const db = serviceClient();
   const { data, error } = await db
     .from("lessons")
-    .select("id,slug,title,type,position,required")
+    .select("id,slug,title,type,position,required,completion_policy,config")
     .eq("course_id", courseId)
     .order("position");
   if (error) throw error;
@@ -121,6 +123,8 @@ export async function getLessons(courseId: string) {
     type: "article" | "interactive" | "quiz";
     position: number;
     required: boolean;
+    completion_policy: string;
+    config: Record<string, unknown>;
   }[];
 }
 
@@ -140,6 +144,81 @@ export async function getEnrollments(studentId: string) {
     last_seen_at: string | null;
     last_interaction_at: string | null;
   }[];
+}
+
+/** Published course row for concurrency tests; no content directory required. */
+export async function createTestCourse(label: string) {
+  const db = serviceClient();
+  const slug = `e2e-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const { data, error } = await db
+    .from("courses")
+    .insert({
+      slug,
+      title: `E2E ${label}`,
+      description: "",
+      status: "published",
+      content_version: "1.0.0",
+    })
+    .select("id,slug")
+    .single();
+  if (error) throw error;
+  return data as { id: string; slug: string };
+}
+
+export async function deleteTestCourse(courseId: string) {
+  const db = serviceClient();
+  await db.from("enrollments").delete().eq("course_id", courseId);
+  await db.from("courses").delete().eq("id", courseId);
+}
+
+/**
+ * Complete every required chapter except the final exam through the same
+ * transaction functions the UI uses. This keeps long E2E flows focused on the
+ * interaction being tested without bypassing server-side completion rules.
+ */
+export async function completeRequiredChapters(
+  studentId: string,
+  courseId: string,
+  enrollmentId: string,
+) {
+  const db = serviceClient();
+  const lessons = await getLessons(courseId);
+  for (const lesson of lessons) {
+    const config = lesson.config as {
+      blocks?: { id: string; kind: "simulation" | "question" }[];
+      completion?: { requiredBlocks?: string[] };
+      finalExam?: boolean;
+    };
+    if (config.finalExam) continue;
+    if (lesson.completion_policy === "manual") {
+      const { error } = await db.rpc("complete_lesson", {
+        p_student: studentId,
+        p_enrollment: enrollmentId,
+        p_lesson: lesson.id,
+        p_source: "manual",
+      });
+      if (error) throw error;
+      continue;
+    }
+    const blocks = new Map((config.blocks ?? []).map((block) => [block.id, block]));
+    for (const blockId of config.completion?.requiredBlocks ?? []) {
+      const block = blocks.get(blockId);
+      if (!block) throw new Error(`missing block ${lesson.slug}/${blockId}`);
+      const { error } = await db.rpc("save_block_result", {
+        p_student: studentId,
+        p_enrollment: enrollmentId,
+        p_lesson: lesson.id,
+        p_block_id: blockId,
+        p_block_kind: block.kind,
+        p_attempt_id: randomUUID(),
+        p_request_hash: `e2e:${lesson.slug}:${blockId}`,
+        p_passed: true,
+        p_score: 100,
+        p_feedback: {},
+      });
+      if (error) throw error;
+    }
+  }
 }
 
 export async function getEvents(enrollmentId: string) {

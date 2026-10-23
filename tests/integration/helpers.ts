@@ -48,7 +48,7 @@ export async function deleteTestUser(userId: string) {
   await db.auth.admin.deleteUser(userId);
 }
 
-export async function getCourse(slug = "sql-injection-basics") {
+export async function getCourse(slug = "http-fundamentals") {
   const db = serviceClient();
   const { data, error } = await db
     .from("courses")
@@ -57,6 +57,31 @@ export async function getCourse(slug = "sql-injection-basics") {
     .single();
   if (error) throw error;
   return data as { id: string; slug: string; status: string };
+}
+
+/** A published course row for concurrency tests; no content directory needed. */
+export async function createTestCourse(label: string) {
+  const db = serviceClient();
+  const slug = `it-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const { data, error } = await db
+    .from("courses")
+    .insert({
+      slug,
+      title: `IT ${label}`,
+      description: "",
+      status: "published",
+      content_version: "1.0.0",
+    })
+    .select("id,slug")
+    .single();
+  if (error) throw error;
+  return data as { id: string; slug: string };
+}
+
+export async function deleteTestCourse(courseId: string) {
+  const db = serviceClient();
+  await db.from("enrollments").delete().eq("course_id", courseId);
+  await db.from("courses").delete().eq("id", courseId);
 }
 
 export async function getLessons(courseId: string) {

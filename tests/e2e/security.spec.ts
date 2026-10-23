@@ -16,20 +16,20 @@ import {
 
 const QUIZ_FILE = path.join(
   process.cwd(),
-  "content/courses/sql-injection-basics/quiz.server.json",
+  "content/courses/http-fundamentals/assessments/final.server.json",
 );
 
-type QuizFile = { questions: { id: string; answer: string | string[] }[] };
+type QuizFile = { questions: { id: string; answer: string | string[] | boolean }[] };
 
 test.describe("服务端权威与越权防护", () => {
   test("伪造完成、重放、版本冲突、跨用户访问与答案保密", async ({ page, browser }) => {
     const studentA = await createTestStudent("secure-a");
     const studentB = await createTestStudent("secure-b");
-    const course = await getCourseBySlug("sql-injection-basics");
+    const course = await getCourseBySlug("http-fundamentals");
     const lessons = await getLessons(course.id);
-    const article = lessons.find((lesson) => lesson.slug === "where-injection-comes-from")!;
-    const lab = lessons.find((lesson) => lesson.slug === "query-audit-lab")!;
-    const quizLesson = lessons.find((lesson) => lesson.slug === "final-quiz")!;
+    const article = lessons.find((lesson) => lesson.slug === "internet-http")!;
+    const lab = lessons.find((lesson) => lesson.slug === "request")!;
+    const quizLesson = lessons.find((lesson) => lesson.slug === "final")!;
 
     try {
       await login(page, studentA.email, studentA.password);
@@ -57,8 +57,8 @@ test.describe("服务端权威与越权防护", () => {
           attemptId: crypto.randomUUID(),
           enrollmentId,
           lessonId: lab.id,
-          blockId: "query-audit-lab",
-          submission: { defences: ["escape-quotes"] },
+          blockId: "request-lab",
+          submission: { method: "GET", path: "/api/books/99" },
         },
       );
       expect(wrong.status).toBe(200);
@@ -67,7 +67,7 @@ test.describe("服务端权威与越权防护", () => {
 
       // 3. 正确的实验结论通过并只发一次积分；重放同一 attemptId 幂等
       const attemptId = crypto.randomUUID();
-      const submission = { defences: ["parameterize"] };
+      const submission = { method: "GET", path: "/api/books/2" };
       const correct = await api<{ passed: boolean; pointsAwarded: number }>(
         page,
         "/api/learning/blocks/submit",
@@ -76,7 +76,7 @@ test.describe("服务端权威与越权防护", () => {
           attemptId,
           enrollmentId,
           lessonId: lab.id,
-          blockId: "query-audit-lab",
+          blockId: "request-lab",
           submission,
         },
       );
@@ -92,7 +92,7 @@ test.describe("服务端权威与越权防护", () => {
           attemptId,
           enrollmentId,
           lessonId: lab.id,
-          blockId: "query-audit-lab",
+          blockId: "request-lab",
           submission,
         },
       );
@@ -109,8 +109,8 @@ test.describe("服务端权威与越权防护", () => {
           attemptId,
           enrollmentId,
           lessonId: lab.id,
-          blockId: "query-audit-lab",
-          submission: { defences: ["type-cast"] },
+          blockId: "request-lab",
+          submission: { method: "POST", path: "/api/books/2" },
         },
       );
       expect(reusedSubmission.status).toBe(409);
@@ -221,7 +221,7 @@ test.describe("服务端权威与越权防护", () => {
 
       // 7. 题目答案不下发；失败可重试，通过后幂等
       await page.goto(`/learn/${course.id}?lesson=${quizLesson.id}`);
-      await expect(page.getByText("最终测验", { exact: false }).first()).toBeVisible({
+      await expect(page.getByRole("heading", { name: "总结与结业测验" }).first()).toBeVisible({
         timeout: 20_000,
       });
       const pageHtml = await page.content();
@@ -237,7 +237,7 @@ test.describe("服务端权威与越权防护", () => {
           attemptId: failedAttemptId,
           enrollmentId,
           lessonId: quizLesson.id,
-          blockId: "final-assessment",
+          blockId: "final-check",
           submission: { answers: {} },
         },
       );
@@ -247,7 +247,10 @@ test.describe("服务端权威与越权防护", () => {
 
       const quizFile = JSON.parse(fs.readFileSync(QUIZ_FILE, "utf8")) as QuizFile;
       const answers: Record<string, string | string[]> = {};
-      for (const question of quizFile.questions) answers[question.id] = question.answer;
+      for (const question of quizFile.questions) {
+        answers[question.id] =
+          typeof question.answer === "boolean" ? String(question.answer) : question.answer;
+      }
 
       const passedAttemptId = crypto.randomUUID();
       const passedAttempt = await api<{ passed: boolean; pointsAwarded: number }>(
@@ -258,7 +261,7 @@ test.describe("服务端权威与越权防护", () => {
           attemptId: passedAttemptId,
           enrollmentId,
           lessonId: quizLesson.id,
-          blockId: "final-assessment",
+          blockId: "final-check",
           submission: { answers },
         },
       );
@@ -275,7 +278,7 @@ test.describe("服务端权威与越权防护", () => {
           attemptId: passedAttemptId,
           enrollmentId,
           lessonId: quizLesson.id,
-          blockId: "final-assessment",
+          blockId: "final-check",
           submission: { answers },
         },
       );
@@ -292,7 +295,7 @@ test.describe("服务端权威与越权防护", () => {
           attemptId: passedAttemptId,
           enrollmentId,
           lessonId: quizLesson.id,
-          blockId: "final-assessment",
+          blockId: "final-check",
           submission: { answers: {} },
         },
       );

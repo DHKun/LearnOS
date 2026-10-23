@@ -22,7 +22,7 @@ describe("PostgreSQL RLS：角色隔离与写保护", () => {
     studentB = await createTestUser("student");
     admin = await createTestUser("admin");
 
-    const course = await getCourse("sql-injection-basics");
+    const course = await getCourse("http-fundamentals");
     const lessons = await getLessons(course.id);
     lessonId = lessons[0].id;
 

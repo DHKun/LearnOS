@@ -84,7 +84,7 @@ async function measureStudent(browser, student) {
     result.login = Date.now() - loginStart;
 
     const backStart = Date.now();
-    await page.goto(`${base}/courses/sql-injection-basics`);
+    await page.goto(`${base}/courses/http-fundamentals`);
     await page.getByRole("heading", { level: 1 }).waitFor();
     await page.goBack();
     await page.getByRole("heading", { name: /你好/ }).waitFor();
@@ -95,19 +95,19 @@ async function measureStudent(browser, student) {
     result.apiMe = Date.now() - apiStart;
 
     const detailStart = Date.now();
-    await page.goto(`${base}/courses/sql-injection-basics`);
+    await page.goto(`${base}/courses/http-fundamentals`);
     await page.getByRole("heading", { level: 1 }).waitFor();
     result.courseDetail = Date.now() - detailStart;
 
     const joinStart = Date.now();
     await page.getByRole("button", { name: "参加课程" }).click();
     await page.waitForURL(/\/learn\//);
-    await page.getByRole("heading", { name: "注入从哪里来" }).waitFor();
+    await page.getByRole("heading", { name: "互联网中的浏览器与服务器" }).waitFor();
     result.joinToLearn = Date.now() - joinStart;
 
     const lessonStart = Date.now();
-    await page.getByRole("link", { name: /参数化查询为什么有效/ }).click();
-    await page.getByRole("heading", { name: "参数化查询为什么有效" }).waitFor();
+    await page.getByRole("link", { name: /URL：找到正确的资源/ }).click();
+    await page.getByRole("heading", { name: "URL：找到正确的资源" }).waitFor();
     result.lessonSwitch = Date.now() - lessonStart;
 
     const notesReadyStart = Date.now();
@@ -124,8 +124,8 @@ async function measureStudent(browser, student) {
     result.activityLoad = Date.now() - labStart;
 
     const labWarmStart = Date.now();
-    await page.getByRole("link", { name: /参数化查询为什么有效/ }).click();
-    await page.getByRole("heading", { name: "参数化查询为什么有效" }).waitFor();
+    await page.getByRole("link", { name: /URL：找到正确的资源/ }).click();
+    await page.getByRole("heading", { name: "URL：找到正确的资源" }).waitFor();
     await page.getByRole("link", { name: /实验：审计一条登录查询/ }).click();
     await page.getByTestId("sql-activity").waitFor({ timeout: 20_000 });
     result.activityWarm = Date.now() - labWarmStart;

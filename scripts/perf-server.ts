@@ -48,7 +48,7 @@ async function main() {
   const { data: course, error: courseError } = await db
     .from("courses")
     .select("id,slug")
-    .eq("slug", "sql-injection-basics")
+    .eq("slug", "http-fundamentals")
     .single();
   if (courseError) throw courseError;
 

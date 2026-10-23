@@ -1,0 +1,41 @@
+## 认证与授权不是同一件事
+
+**认证 Authentication** 回答“你是谁”；**授权 Authorization** 回答“你可以做什么”。登录成功只证明系统识别了某个账号，并不意味着该账号自动获得全部管理权限。
+
+假设有一条需要管理员才能访问的接口 `/api/admin/reports`：
+
+| 当前身份 | 可能响应 | 原因 |
+| --- | --- | --- |
+| 未登录 | `401 Unauthorized` | 需要有效认证；正常情况下还会提供认证挑战 |
+| 已登录的普通用户 | `403 Forbidden` | 身份有效，但缺少权限 |
+| 已登录的管理员 | `200 OK` | 通过授权检查后返回数据 |
+
+## 401 和 403 的区别
+
+`401 Unauthorized` 这个名字里虽然有 Unauthorized，但实际主要表示**缺乏有效认证凭据**。HTTP 标准要求 401 响应包含适用的 `WWW-Authenticate` 挑战信息。
+
+`403 Forbidden` 则表示服务器理解请求，但拒绝执行。它可以与权限不足有关，也可能是其他策略原因。服务器有时会出于保密目的返回 404，不一定愿意明确告诉客户端某资源存在。
+
+## 登录态从哪来？
+
+常见方式包括服务端 Session + Cookie，或向 API 提供访问令牌。Cookie 是浏览器按规则保存和携带的一种机制；Token 是表达凭据的一种载体。两者可以组合，而不是天然相互排斥。
+
+```http
+GET /api/profile HTTP/1.1
+Host: api.example.test
+Cookie: session=demo-123
+```
+
+```http
+GET /api/profile HTTP/1.1
+Host: api.example.test
+Authorization: Bearer example-token
+```
+
+以上均为教学用假值。无论使用哪种方式，服务端都需要验证凭据并进行授权。
+
+## 授权为什么必须在服务器执行？
+
+隐藏前端“管理员入口”按钮只能改善界面体验，不能真正阻止用户构造请求。安全的系统必须在 API 和数据访问层检查身份、资源归属和权限。
+
+<KnowledgeCheck blockId="auth-check" />

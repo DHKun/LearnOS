@@ -274,7 +274,7 @@ pnpm exec playwright install chromium
 # 无 root 的 Linux 沙箱可参考“故障排查”
 ```
 
-E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、两门旧课程完整闭环、`http-from-zero` 九章混合课程（纯文字/动画/模拟/知识检查/all/any/最终测验/刷新恢复）、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
+E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、`http-fundamentals` 十五章完整闭环（图文/动画/模拟/知识检查/结业测验/刷新恢复）、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
 
 ## 目录结构
 
@@ -295,7 +295,7 @@ lib/
   activities/           # 互动模拟纯函数与 activityId 目录
   services/             # 报名/进度/互动/测验/笔记/积分/报表/部署
   supabase/             # browser/server/admin 客户端与中间件
-content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器；含 http-from-zero 示范课程
+content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器；含 http-fundamentals 课程
 supabase/migrations/    # schema、RLS、事务函数、Block 结果/尝试表、部署任务表
 tests/                  # unit、integration（RLS/事务）、e2e（Playwright）
 scripts/                # 课程同步/校验/快照、种子、性能脚本、安全扫描

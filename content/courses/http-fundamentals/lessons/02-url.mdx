@@ -1,0 +1,48 @@
+## URL 就是“资源的地址”吗？
+
+在浏览器地址栏里，你看到的这一长串文字叫 URL（统一资源定位符）。它告诉浏览器使用哪种方案、去哪里、请求什么目标。与简单的“文件路径”不同，URL 还可能带着查询参数和片段。
+
+以这个示例为例：
+
+```text
+https://docs.example.test:8443/articles/http?page=2&sort=new#examples
+```
+
+<ConceptPlayer conceptId="http-fundamentals/url" blockId="url-parts" />
+
+## 逐项拆解
+
+| 部分 | 示例 | 作用 |
+| --- | --- | --- |
+| Scheme（方案） | `https` | 决定访问方案，HTTPS 表示 HTTP 经 TLS 保护 |
+| Host（主机） | `docs.example.test` | 标识目标主机名 |
+| Port（端口） | `8443` | 指定连接端口；省略时采用方案默认端口 |
+| Path（路径） | `/articles/http` | 表示希望访问的目标资源 |
+| Query（查询） | `page=2&sort=new` | 传递筛选、分页等参数 |
+| Fragment（片段） | `examples` | 主要由客户端解释的页面定位信息 |
+
+HTTP 默认端口通常是 80，HTTPS 默认端口通常是 443；但服务完全可以运行在其他端口。端口不是 URL 路径的一部分。
+
+## 容易搞混的三件事
+
+**第一，Path 和 Query 不一样。** `/articles` 常表示资源集合，`?page=2` 则可能改变返回哪一页。不过具体如何解释由服务器决定，不能认为任何网站的参数都有相同语义。
+
+**第二，Fragment 通常不会发送给服务器。** 浏览器导航到带有 `#examples` 的地址时，片段主要用于定位页面里的元素或客户端状态。不要把它当作服务端收到的查询参数。
+
+**第三，URL 不等于真实磁盘路径。** `/users/1` 可能由一段路由代码处理，并不代表服务器硬盘上真的有 `users/1` 文件。
+
+<Callout type="warning" title="关于 URL 中的秘密">
+不要把密码、长期有效的令牌等敏感信息直接放到公开可见的 URL 查询参数里。URL 可能进入浏览器历史、服务器日志和其他记录系统。
+</Callout>
+
+## 用三个地址试着判断
+
+```text
+https://shop.example.test/products/8
+https://shop.example.test/products/8?color=blue
+https://shop.example.test/products/8#reviews
+```
+
+思考：哪个部分变化时，可能影响服务器收到的请求目标？哪个部分通常只影响浏览器定位？
+
+结论：Query 通常属于请求目标的一部分；Fragment 不属于发送给 HTTP 服务器的请求目标。

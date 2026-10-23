@@ -1,0 +1,69 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "a1",
+      "prompt": "客户端没有有效的登录凭据，访问需认证的资源，通常应该收到？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "401"
+        },
+        {
+          "id": "b",
+          "label": "403"
+        },
+        {
+          "id": "c",
+          "label": "304"
+        },
+        {
+          "id": "d",
+          "label": "201"
+        }
+      ],
+      "answer": "a",
+      "explanation": "401 表示需要有效认证，通常伴随 WWW-Authenticate 挑战。"
+    },
+    {
+      "id": "a2",
+      "prompt": "身份已被识别，但没有权限访问某管理页面，通常应该收到？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "200"
+        },
+        {
+          "id": "b",
+          "label": "403"
+        },
+        {
+          "id": "c",
+          "label": "304"
+        },
+        {
+          "id": "d",
+          "label": "204"
+        }
+      ],
+      "answer": "b",
+      "explanation": "403 表示服务器理解请求但拒绝执行。"
+    },
+    {
+      "id": "a3",
+      "prompt": "Cookie 中的 session 值应该直接当作用户的真实身份和权限，无需服务端校验。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "服务端必须验证会话并根据真实权限授权。"
+    },
+    {
+      "id": "a4",
+      "prompt": "使用 HTTPS 就能保证登录接口完全不可能出现越权漏洞。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "HTTPS 保护传输，不替代认证授权和业务逻辑校验。"
+    }
+  ]
+}

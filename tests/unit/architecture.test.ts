@@ -26,17 +26,14 @@ describe("单站点原生互动架构", () => {
   });
 
   it("模拟实验 Block 使用课程命名空间的 activityId 并已注册组件", () => {
-    const manifest = read("content/courses/sql-injection-basics/course.json");
-    const idempotency = read("content/courses/idempotent-retries/course.json");
+    const manifest = read("content/courses/http-fundamentals/course.json");
     const registry = read("lib/generated/course-components.tsx");
-    expect(manifest).toContain('"activityId": "sql-injection-basics/sql-injection-lab"');
-    expect(idempotency).toContain('"activityId": "idempotent-retries/idempotency-lab"');
+    expect(manifest).toContain('"activityId": "http-fundamentals/request-console"');
+    expect(manifest).toContain('"activityId": "http-fundamentals/method-matcher"');
     expect(manifest).not.toContain("legacyGlobalId");
-    expect(idempotency).not.toContain("legacyGlobalId");
     expect(manifest).not.toContain("entryUrl");
-    expect(idempotency).not.toContain("entryUrl");
-    expect(registry).toContain("sql-injection-basics/sql-injection-lab");
-    expect(registry).toContain("idempotent-retries/idempotency-lab");
+    expect(registry).toContain("http-fundamentals/request-console");
+    expect(registry).toContain("http-fundamentals/method-matcher");
     expect(read("components/activities/registry.tsx")).toContain("ACTIVITY_COMPONENTS");
   });
 });

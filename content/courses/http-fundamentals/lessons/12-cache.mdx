@@ -1,0 +1,42 @@
+## 为什么刷新网页，有时不用再下载完整内容？
+
+缓存允许客户端或中间层复用已有响应表示，减少等待时间和网络传输。但缓存是否可以直接使用、何时必须验证，需要由缓存规则决定。
+
+常见响应头包括 `Cache-Control`、`ETag`、`Last-Modified`，它们表达的含义并不相同。
+
+<ConceptPlayer conceptId="http-fundamentals/cache" blockId="cache-flow" />
+
+## ETag 与条件请求
+
+假设服务器第一次返回：
+
+```http
+HTTP/1.1 200 OK
+ETag: "book-v1"
+Cache-Control: no-cache
+Content-Type: application/json
+
+{"id":2,"title":"HTTP 入门"}
+```
+
+注意：`no-cache` 不是“禁止保存”。它常意味着缓存**在复用之前必须向源服务器验证**。如果希望避免存储，通常使用 `no-store`。
+
+下次客户端可以发送条件请求：
+
+```http
+GET /api/books/2 HTTP/1.1
+Host: api.example.test
+If-None-Match: "book-v1"
+```
+
+如果表示未发生变化，服务器可以返回 `304 Not Modified`。304 不附带新的完整资源正文，客户端根据规则复用原来的缓存表示。
+
+## 动手：两轮请求，观察 200 → 304
+
+本课缓存模拟固定了资源版本 `"book-v1"`。先看第一次 200 和 ETag，再带上相同的 ETag 发起条件请求，观察 304。通过条件请求实验后本章自动完成。
+
+<SimulationBlock blockId="cache-lab" />
+
+## 一个重要辨析
+
+`304` 不是客户端错误，也不能等价理解为“页面没有内容”。它表示可以复用之前保存的表示。

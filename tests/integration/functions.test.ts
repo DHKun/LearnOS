@@ -5,7 +5,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getPoints } from "@/lib/services/points";
 
 import {
+  createTestCourse,
   createTestUser,
+  deleteTestCourse,
   deleteTestUser,
   getCourse,
   getLessons,
@@ -52,7 +54,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   beforeAll(async () => {
     student = await createTestUser("student");
     otherStudent = await createTestUser("student");
-    const course = await getCourse("sql-injection-basics");
+    const course = await getCourse("http-fundamentals");
     courseId = course.id;
     lessons = await getLessons(courseId);
 
@@ -238,7 +240,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   });
 
   it("server_validated 章节拒绝直接 complete，Block 结果由事务判定", async () => {
-    const lab = lessons.find((lesson) => lesson.slug === "query-audit-lab")!;
+    const lab = lessons.find((lesson) => lesson.slug === "request")!;
     const manualAwards = lessons.filter(
       (lesson) => lesson.completion_policy === "manual",
     ).length * 10;
@@ -256,7 +258,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
       p_student: student.id,
       p_enrollment: enrollmentId,
       p_lesson: lab.id,
-      p_block_id: "query-audit-lab",
+      p_block_id: "request-lab",
       p_block_kind: "simulation",
       p_attempt_id: failedId,
       p_request_hash: "hash-false",
@@ -274,7 +276,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         p_student: student.id,
         p_enrollment: enrollmentId,
         p_lesson: lab.id,
-        p_block_id: "query-audit-lab",
+        p_block_id: "request-lab",
         p_block_kind: "simulation",
         p_attempt_id: passedId,
         p_request_hash: "hash-true",
@@ -292,7 +294,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         p_student: student.id,
         p_enrollment: enrollmentId,
         p_lesson: lab.id,
-        p_block_id: "query-audit-lab",
+        p_block_id: "request-lab",
         p_block_kind: "simulation",
         p_attempt_id: passedId,
         p_request_hash: "hash-true",
@@ -310,7 +312,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         p_student: student.id,
         p_enrollment: enrollmentId,
         p_lesson: lab.id,
-        p_block_id: "query-audit-lab",
+        p_block_id: "request-lab",
         p_block_kind: "simulation",
         p_attempt_id: passedId,
         p_request_hash: "different-payload",
@@ -322,7 +324,37 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   });
 
   it("最终测验使用必需 Block，重复提交不重复发分并结课", async () => {
-    const finalLesson = lessons.find((lesson) => lesson.slug === "final-quiz")!;
+    const finalLesson = lessons.find((lesson) => lesson.slug === "final")!;
+
+    // Complete every other required chapter so the final exam actually closes
+    // the course. Manual chapters were completed above; request-lab already
+    // passed. The remaining chapters are server-validated blocks.
+    for (const lesson of lessons) {
+      if (!lesson.required || lesson.slug === "final" || lesson.slug === "request") continue;
+      if (lesson.completion_policy === "manual") continue;
+      const config = lesson.config as {
+        blocks?: { id: string; kind: "simulation" | "question" }[];
+        completion?: { requiredBlocks?: string[] };
+      };
+      const blocks = new Map((config.blocks ?? []).map((block) => [block.id, block]));
+      for (const blockId of config.completion?.requiredBlocks ?? []) {
+        const block = blocks.get(blockId);
+        if (!block) throw new Error(`missing block ${lesson.slug}/${blockId}`);
+        await rpc("save_block_result", {
+          p_student: student.id,
+          p_enrollment: enrollmentId,
+          p_lesson: lesson.id,
+          p_block_id: blockId,
+          p_block_kind: block.kind,
+          p_attempt_id: randomUUID(),
+          p_request_hash: `${lesson.slug}:${blockId}:pass`,
+          p_passed: true,
+          p_score: 100,
+          p_feedback: {},
+        });
+      }
+    }
+    expect(await pointsTotal(student.id)).toBe(140);
     const before = await pointsTotal(student.id);
 
     const failedAttempt = randomUUID();
@@ -330,7 +362,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
       p_student: student.id,
       p_enrollment: enrollmentId,
       p_lesson: finalLesson.id,
-      p_block_id: "final-assessment",
+      p_block_id: "final-check",
       p_block_kind: "question",
       p_attempt_id: failedAttempt,
       p_request_hash: "answers-failed",
@@ -350,7 +382,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
       p_student: student.id,
       p_enrollment: enrollmentId,
       p_lesson: finalLesson.id,
-      p_block_id: "final-assessment",
+      p_block_id: "final-check",
       p_block_kind: "question",
       p_attempt_id: passAttempt,
       p_request_hash: "answers-v1",
@@ -369,7 +401,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         p_student: student.id,
         p_enrollment: enrollmentId,
         p_lesson: finalLesson.id,
-        p_block_id: "final-assessment",
+        p_block_id: "final-check",
         p_block_kind: "question",
         p_attempt_id: passAttempt,
         p_request_hash: "answers-v1",
@@ -387,7 +419,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         p_student: student.id,
         p_enrollment: enrollmentId,
         p_lesson: finalLesson.id,
-        p_block_id: "final-assessment",
+        p_block_id: "final-check",
         p_block_kind: "question",
         p_attempt_id: passAttempt,
         p_request_hash: "different-answers",
@@ -403,46 +435,54 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
     expect(completed.status).toBe("completed");
     expect(completed.completed_at).not.toBeNull();
 
-    const otherCourse = await getCourse("idempotent-retries");
-    const joined = await rpc<{ id: string; status: string }>("join_course", {
-      p_student: student.id,
-      p_course: otherCourse.id,
-    });
-    expect(joined.status).toBe("active");
+    const otherCourse = await createTestCourse("other");
+    try {
+      const joined = await rpc<{ id: string; status: string }>("join_course", {
+        p_student: student.id,
+        p_course: otherCourse.id,
+      });
+      expect(joined.status).toBe("active");
 
-    const { count } = await db()
-      .from("enrollments")
-      .select("id", { count: "exact", head: true })
-      .eq("student_id", student.id)
-      .eq("status", "active");
-    expect(count).toBe(1);
+      const { count } = await db()
+        .from("enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", student.id)
+        .eq("status", "active");
+      expect(count).toBe(1);
+    } finally {
+      await deleteTestCourse(otherCourse.id);
+    }
   });
 
   it("并发参加不同课程时数据库只保留一条 active", async () => {
     const concurrencyStudent = await createTestUser("student");
     try {
-      const courseA = await getCourse("sql-injection-basics");
-      const courseB = await getCourse("idempotent-retries");
+      const courseA = await createTestCourse("concurrent-a");
+      const courseB = await createTestCourse("concurrent-b");
+      try {
+        const results = await Promise.allSettled([
+          rpc("join_course", { p_student: concurrencyStudent.id, p_course: courseA.id }),
+          rpc("join_course", { p_student: concurrencyStudent.id, p_course: courseB.id }),
+        ]);
 
-      const results = await Promise.allSettled([
-        rpc("join_course", { p_student: concurrencyStudent.id, p_course: courseA.id }),
-        rpc("join_course", { p_student: concurrencyStudent.id, p_course: courseB.id }),
-      ]);
+        const fulfilled = results.filter((result) => result.status === "fulfilled");
+        const rejected = results.filter(
+          (result): result is PromiseRejectedResult => result.status === "rejected",
+        );
+        expect(fulfilled).toHaveLength(1);
+        expect(rejected).toHaveLength(1);
+        expect(String(rejected[0].reason)).toContain("ACTIVE_COURSE_EXISTS");
 
-      const fulfilled = results.filter((result) => result.status === "fulfilled");
-      const rejected = results.filter(
-        (result): result is PromiseRejectedResult => result.status === "rejected",
-      );
-      expect(fulfilled).toHaveLength(1);
-      expect(rejected).toHaveLength(1);
-      expect(String(rejected[0].reason)).toContain("ACTIVE_COURSE_EXISTS");
-
-      const { count } = await db()
-        .from("enrollments")
-        .select("id", { count: "exact", head: true })
-        .eq("student_id", concurrencyStudent.id)
-        .eq("status", "active");
-      expect(count).toBe(1);
+        const { count } = await db()
+          .from("enrollments")
+          .select("id", { count: "exact", head: true })
+          .eq("student_id", concurrencyStudent.id)
+          .eq("status", "active");
+        expect(count).toBe(1);
+      } finally {
+        await deleteTestCourse(courseA.id);
+        await deleteTestCourse(courseB.id);
+      }
     } finally {
       await deleteTestUser(concurrencyStudent.id);
     }
@@ -451,17 +491,22 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   it("部分唯一索引直接阻止第二条 active 记录", async () => {
     const directStudent = await createTestUser("student");
     try {
-      const courseA = await getCourse("sql-injection-basics");
-      const courseB = await getCourse("idempotent-retries");
-      await rpc("join_course", { p_student: directStudent.id, p_course: courseA.id });
+      const courseA = await createTestCourse("direct-a");
+      const courseB = await createTestCourse("direct-b");
+      try {
+        await rpc("join_course", { p_student: directStudent.id, p_course: courseA.id });
 
-      const { error } = await db().from("enrollments").insert({
-        student_id: directStudent.id,
-        course_id: courseB.id,
-        status: "active",
-      });
-      expect(error).not.toBeNull();
-      expect(error?.code).toBe("23505");
+        const { error } = await db().from("enrollments").insert({
+          student_id: directStudent.id,
+          course_id: courseB.id,
+          status: "active",
+        });
+        expect(error).not.toBeNull();
+        expect(error?.code).toBe("23505");
+      } finally {
+        await deleteTestCourse(courseA.id);
+        await deleteTestCourse(courseB.id);
+      }
     } finally {
       await deleteTestUser(directStudent.id);
     }
@@ -489,7 +534,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   it("积分总数使用数据库聚合，不受明细 1000 条限制", async () => {
     const bulkStudent = await createTestUser("student");
     try {
-      const course = await getCourse("sql-injection-basics");
+      const course = await getCourse("http-fundamentals");
       const joined = await rpc<{ id: string }>("join_course", {
         p_student: bulkStudent.id,
         p_course: course.id,

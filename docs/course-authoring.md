@@ -24,7 +24,7 @@ content/courses/<course-slug>/
 ```json
 {
   "schemaVersion": 3,
-  "slug": "http-from-zero",
+  "slug": "http-fundamentals",
   "title": "HTTP 协议入门",
   "description": "从一次请求开始理解 HTTP。",
   "version": "1.0.0",
@@ -40,7 +40,7 @@ content/courses/<course-slug>/
         {
           "id": "request-lab",
           "kind": "simulation",
-          "activityId": "http-from-zero/request-builder",
+          "activityId": "http-fundamentals/request-console",
           "title": "构造一个请求"
         },
         {
@@ -129,7 +129,7 @@ content/courses/<course-slug>/
 混合章节还可以使用：
 
 ```mdx
-<ConceptPlayer conceptId="http-from-zero/request-flow" blockId="flow-1" />
+<ConceptPlayer conceptId="http-fundamentals/request" blockId="flow-1" />
 <SimulationBlock blockId="request-lab" />
 <KnowledgeCheck blockId="request-check" />
 ```

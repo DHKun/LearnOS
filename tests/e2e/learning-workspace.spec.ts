@@ -13,7 +13,7 @@ import {
 } from "./helpers";
 
 async function enrollInHttpCourse(page: Page) {
-  const course = await getCourseBySlug("http-from-zero");
+  const course = await getCourseBySlug("http-fundamentals");
   await page.goto(`/courses/${course.slug}`);
   await page.getByRole("button", { name: "参加课程" }).click();
   await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`), { timeout: 20_000 });
@@ -50,7 +50,7 @@ test.describe("常驻浮动笔记", () => {
       await expect(panel).toBeVisible();
       await expect(page.getByRole("textbox", { name: "章节笔记" })).toBeVisible();
       // 非模态：正文仍然可读，页面没有模态遮罩。
-      await expect(page.getByRole("heading", { name: "互联网与 HTTP" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "互联网中的浏览器与服务器" })).toBeVisible();
       await expect(page.locator('[aria-modal="true"]')).toHaveCount(0);
       await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
 
@@ -74,15 +74,15 @@ test.describe("常驻浮动笔记", () => {
 
       // 切换章节加载对应笔记；切回后原笔记仍在。
       const nav = page.getByRole("navigation", { name: "课程章节" });
-      await nav.getByRole("link").filter({ hasText: "浏览器与服务器" }).click();
-      await expect(page.getByRole("heading", { name: "浏览器与服务器" })).toBeVisible();
+      await nav.getByRole("link").filter({ hasText: "URL：找到正确的资源" }).click();
+      await expect(page.getByRole("heading", { name: "URL：找到正确的资源" })).toBeVisible();
       await page.getByTestId("notes-toggle").click();
       await expect(page.getByRole("textbox", { name: "章节笔记" })).toHaveValue("", {
         timeout: 20_000,
       });
       await page.keyboard.press("Escape");
-      await nav.getByRole("link").filter({ hasText: "互联网与 HTTP" }).click();
-      await expect(page.getByRole("heading", { name: "互联网与 HTTP" })).toBeVisible();
+      await nav.getByRole("link").filter({ hasText: "互联网中的浏览器与服务器" }).click();
+      await expect(page.getByRole("heading", { name: "互联网中的浏览器与服务器" })).toBeVisible();
       await page.getByTestId("notes-toggle").click();
       await expect(page.getByRole("textbox", { name: "章节笔记" })).toHaveValue(note, {
         timeout: 20_000,
@@ -153,44 +153,46 @@ test.describe("章节自动结章与状态同步", () => {
       await login(page, student.email, student.password);
       const course = await enrollInHttpCourse(page);
       const lessons = await getLessons(course.id);
-      const methods = lessons.find((lesson) => lesson.slug === "http-methods")!;
+      const methods = lessons.find((lesson) => lesson.slug === "methods")!;
       const enrollment = (await getEnrollments(student.id))[0];
 
       await page.goto(`/learn/${course.id}?lesson=${methods.id}`);
-      await expect(page.getByRole("heading", { name: "HTTP 方法" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "HTTP 方法与操作语义" })).toBeVisible();
 
       const nav = page.getByRole("navigation", { name: "课程章节" });
-      const item = nav.getByRole("link").filter({ hasText: "HTTP 方法" });
-      await expect(item).toContainText("第 5 章");
+      const item = nav.getByRole("link").filter({ hasText: "HTTP 方法与操作语义" });
+      await expect(item).toContainText("第 6 章");
       await expect(item).toHaveAttribute("data-status", "in_progress");
-      await expect(page.getByTestId("course-progress-text")).toContainText("0 / 9");
+      await expect(page.getByTestId("course-progress-text")).toContainText("0 / 15");
 
       // 1. 第一个必需实验通过后，章节不能自动完成。
-      const methodLab = page.getByTestId("http-method-match");
-      await methodLab.getByRole("button", { name: "GET", exact: true }).first().click();
-      await methodLab.getByRole("button", { name: "POST", exact: true }).nth(1).click();
-      await methodLab.getByRole("button", { name: "PUT", exact: true }).nth(2).click();
-      await methodLab.getByRole("button", { name: "DELETE", exact: true }).nth(3).click();
-      await methodLab.getByRole("button", { name: "提交方法匹配" }).click();
-      await expect(page.getByText("四种场景的语义与方法全部匹配。")).toBeVisible({
+      const methodLab = page.getByTestId("http-fundamentals-methods");
+      await methodLab.getByLabel("读取指定的图书").selectOption("GET");
+      await methodLab.getByLabel("向集合中创建一条新记录").selectOption("POST");
+      await methodLab.getByLabel("用完整表示替换指定资源").selectOption("PUT");
+      await methodLab.getByLabel("删除指定资源").selectOption("DELETE");
+      await methodLab.getByRole("button", { name: "提交匹配结果" }).click();
+      await expect(page.getByText("四个方法的典型语义匹配正确。")).toBeVisible({
         timeout: 20_000,
       });
       await expect(page.getByTestId("chapter-completed-banner")).toBeHidden();
       await expect(item).toHaveAttribute("data-status", "in_progress");
       await expect(
-        page.locator('[data-block-result="methods-lab"]'),
+        page.locator('[data-block-result="method-lab"]'),
       ).toHaveAttribute("data-passed", "true");
       await expect(
-        page.locator('[data-block-result="methods-check"]'),
+        page.locator('[data-block-result="method-check"]'),
       ).toHaveAttribute("data-passed", "false");
       expect(await getPointsTotal(student.id)).toBe(0);
 
       // 2. 第二个必需知识检查通过后立即结章，不强制跳页。
-      const methodsCheck = page.locator('[data-block-id="methods-check"]');
-      await methodsCheck.getByRole("radio", { name: "POST" }).check();
-      await methodsCheck.getByRole("checkbox", { name: "GET" }).check();
-      await methodsCheck.getByRole("checkbox", { name: "HEAD" }).check();
-      await methodsCheck.getByRole("radio", { name: "正确" }).check();
+      const methodsCheck = page.locator('[data-block-id="method-check"]');
+      await methodsCheck.locator('[data-question-id="m1"] input[value="true"]').check();
+      await methodsCheck.locator('[data-question-id="m2"] input[value="a"]').check();
+      await methodsCheck.locator('[data-question-id="m2"] input[value="c"]').check();
+      await methodsCheck.locator('[data-question-id="m2"] input[value="d"]').check();
+      await methodsCheck.locator('[data-question-id="m3"] input[value="c"]').check();
+      await methodsCheck.locator('[data-question-id="m4"] input[value="false"]').check();
       await methodsCheck.getByRole("button", { name: "提交知识检查" }).click();
       await expect(page.getByText("本章知识检查已通过")).toBeVisible({ timeout: 20_000 });
 
@@ -203,7 +205,7 @@ test.describe("章节自动结章与状态同步", () => {
       // 左侧章节目录与课程总进度同步更新。
       await expect(item).toHaveAttribute("data-status", "completed", { timeout: 20_000 });
       await expect(item).toContainText("已完成");
-      await expect(page.getByTestId("course-progress-text")).toContainText("1 / 9", {
+      await expect(page.getByTestId("course-progress-text")).toContainText("1 / 15", {
         timeout: 20_000,
       });
 
@@ -219,13 +221,9 @@ test.describe("章节自动结章与状态同步", () => {
               attemptId,
               enrollmentId,
               lessonId,
-              blockId: "methods-check",
+              blockId: "method-check",
               submission: {
-                answers: {
-                  "q-create": "post",
-                  "q-safe": ["get", "head"],
-                  "q-delete-status": true,
-                },
+                answers: { m1: "true", m2: ["a", "c", "d"], m3: "c", m4: "false" },
               },
             }),
           });

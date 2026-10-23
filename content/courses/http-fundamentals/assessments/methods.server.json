@@ -1,0 +1,73 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "m1",
+      "prompt": "GET 方法在 HTTP 语义中属于安全（safe）方法。",
+      "type": "boolean",
+      "answer": true,
+      "explanation": "安全是约定的请求语义，并不是说 GET 在网络中天然安全或一定不会产生副作用。"
+    },
+    {
+      "id": "m2",
+      "prompt": "哪些 HTTP 方法在标准语义中是幂等的？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "GET"
+        },
+        {
+          "id": "b",
+          "label": "POST"
+        },
+        {
+          "id": "c",
+          "label": "PUT"
+        },
+        {
+          "id": "d",
+          "label": "DELETE"
+        }
+      ],
+      "answer": [
+        "a",
+        "c",
+        "d"
+      ],
+      "explanation": "PUT 和 DELETE 幂等；POST 一般不保证幂等；GET 也是幂等。"
+    },
+    {
+      "id": "m3",
+      "prompt": "希望替换某个已知 URI 的完整资源表述，最符合的通常是什么方法？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "GET"
+        },
+        {
+          "id": "b",
+          "label": "POST"
+        },
+        {
+          "id": "c",
+          "label": "PUT"
+        },
+        {
+          "id": "d",
+          "label": "HEAD"
+        }
+      ],
+      "answer": "c",
+      "explanation": "PUT 的典型语义是创建或替换目标资源的表述。"
+    },
+    {
+      "id": "m4",
+      "prompt": "同一个 POST 重复提交一定安全且只创建一次记录。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "POST 一般不保证幂等；需要业务侧幂等键等机制。"
+    }
+  ]
+}

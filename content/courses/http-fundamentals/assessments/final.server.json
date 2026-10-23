@@ -1,0 +1,385 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f01",
+      "prompt": "浏览器通常以什么角色向 Web 服务发起 HTTP 请求？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "客户端"
+        },
+        {
+          "id": "b",
+          "label": "数据库"
+        },
+        {
+          "id": "c",
+          "label": "域名解析器"
+        },
+        {
+          "id": "d",
+          "label": "网卡驱动"
+        }
+      ],
+      "answer": "a"
+    },
+    {
+      "id": "f02",
+      "prompt": "URL 中 fragment（# 后面）的片段是否通常会作为 HTTP 请求目标的一部分发送到服务器？",
+      "type": "boolean",
+      "answer": false
+    },
+    {
+      "id": "f03",
+      "prompt": "https://site.test:8443/docs?q=go 中，端口是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "443"
+        },
+        {
+          "id": "b",
+          "label": "80"
+        },
+        {
+          "id": "c",
+          "label": "8443"
+        },
+        {
+          "id": "d",
+          "label": "/docs"
+        }
+      ],
+      "answer": "c"
+    },
+    {
+      "id": "f04",
+      "prompt": "GET /books/2 HTTP/1.1 中的 GET 表示？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "协议版本"
+        },
+        {
+          "id": "b",
+          "label": "请求方法"
+        },
+        {
+          "id": "c",
+          "label": "响应状态"
+        },
+        {
+          "id": "d",
+          "label": "主机名"
+        }
+      ],
+      "answer": "b"
+    },
+    {
+      "id": "f05",
+      "prompt": "HTTP 响应状态码 404 表示？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "成功创建"
+        },
+        {
+          "id": "b",
+          "label": "未修改"
+        },
+        {
+          "id": "c",
+          "label": "无响应内容"
+        },
+        {
+          "id": "d",
+          "label": "目标资源未找到"
+        }
+      ],
+      "answer": "d"
+    },
+    {
+      "id": "f06",
+      "prompt": "HTTP 201 常用于？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "资源已创建"
+        },
+        {
+          "id": "b",
+          "label": "客户端未经授权"
+        },
+        {
+          "id": "c",
+          "label": "缓存未变化"
+        },
+        {
+          "id": "d",
+          "label": "网关故障"
+        }
+      ],
+      "answer": "a"
+    },
+    {
+      "id": "f07",
+      "prompt": "HTTP 204 响应允许携带新的响应正文吗？",
+      "type": "boolean",
+      "answer": false
+    },
+    {
+      "id": "f08",
+      "prompt": "哪些方法在 HTTP 标准语义中是幂等的？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "GET"
+        },
+        {
+          "id": "b",
+          "label": "PUT"
+        },
+        {
+          "id": "c",
+          "label": "POST"
+        },
+        {
+          "id": "d",
+          "label": "DELETE"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "d"
+      ]
+    },
+    {
+      "id": "f09",
+      "prompt": "POST 方法通常天然幂等吗？",
+      "type": "boolean",
+      "answer": false
+    },
+    {
+      "id": "f10",
+      "prompt": "请求中的 Accept: application/json 主要是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "指定请求体格式"
+        },
+        {
+          "id": "b",
+          "label": "指定端口"
+        },
+        {
+          "id": "c",
+          "label": "声明客户端可接受的响应格式"
+        },
+        {
+          "id": "d",
+          "label": "包含登录凭据"
+        }
+      ],
+      "answer": "c"
+    },
+    {
+      "id": "f11",
+      "prompt": "当请求 Body 是 JSON 时通常应该使用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "Accept: text/html"
+        },
+        {
+          "id": "b",
+          "label": "Content-Type: application/json"
+        },
+        {
+          "id": "c",
+          "label": "ETag: W/1"
+        },
+        {
+          "id": "d",
+          "label": "Host: json"
+        }
+      ],
+      "answer": "b"
+    },
+    {
+      "id": "f12",
+      "prompt": "HTTP 请求中用来发送已有 Cookie 的 Header 名称是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "Cookie"
+        },
+        {
+          "id": "b",
+          "label": "Set-Cookie"
+        },
+        {
+          "id": "c",
+          "label": "Authorization-Info"
+        },
+        {
+          "id": "d",
+          "label": "Origin"
+        }
+      ],
+      "answer": "a"
+    },
+    {
+      "id": "f13",
+      "prompt": "服务器下发 Cookie 使用哪个响应头？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "Accept"
+        },
+        {
+          "id": "b",
+          "label": "Cache-Control"
+        },
+        {
+          "id": "c",
+          "label": "Cookie"
+        },
+        {
+          "id": "d",
+          "label": "Set-Cookie"
+        }
+      ],
+      "answer": "d"
+    },
+    {
+      "id": "f14",
+      "prompt": "HttpOnly 能禁止 JavaScript 读取 Cookie，但不保证阻止所有由 XSS 发起的请求。",
+      "type": "boolean",
+      "answer": true
+    },
+    {
+      "id": "f15",
+      "prompt": "访问需要有效认证的接口但未提供凭据，常见状态码是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "200"
+        },
+        {
+          "id": "b",
+          "label": "401"
+        },
+        {
+          "id": "c",
+          "label": "403"
+        },
+        {
+          "id": "d",
+          "label": "304"
+        }
+      ],
+      "answer": "b"
+    },
+    {
+      "id": "f16",
+      "prompt": "已认证但缺乏访问管理页的权限，通常对应？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "201"
+        },
+        {
+          "id": "b",
+          "label": "400"
+        },
+        {
+          "id": "c",
+          "label": "403"
+        },
+        {
+          "id": "d",
+          "label": "304"
+        }
+      ],
+      "answer": "c"
+    },
+    {
+      "id": "f17",
+      "prompt": "HTTPS 可以替代服务器端权限验证。",
+      "type": "boolean",
+      "answer": false
+    },
+    {
+      "id": "f18",
+      "prompt": "If-None-Match 与哪一个响应头配合实现条件请求？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "ETag"
+        },
+        {
+          "id": "b",
+          "label": "Allow"
+        },
+        {
+          "id": "c",
+          "label": "Retry-After"
+        },
+        {
+          "id": "d",
+          "label": "Date"
+        }
+      ],
+      "answer": "a"
+    },
+    {
+      "id": "f19",
+      "prompt": "服务器返回 304 Not Modified 时，意味着可使用已有缓存表示。",
+      "type": "boolean",
+      "answer": true
+    },
+    {
+      "id": "f20",
+      "prompt": "浏览器开发者工具 Network 面板可以帮助检查什么？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "请求 URL/方法"
+        },
+        {
+          "id": "b",
+          "label": "响应状态码"
+        },
+        {
+          "id": "c",
+          "label": "Header 与正文"
+        },
+        {
+          "id": "d",
+          "label": "网站管理员后台密码"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "c"
+      ]
+    }
+  ]
+}

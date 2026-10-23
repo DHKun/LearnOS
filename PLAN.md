@@ -541,3 +541,21 @@ tests/e2e/admin-detail.spec.ts          1 test
 - 专注模式正文变宽；
 - 章节抽屉、笔记抽屉、代码块、表格、概念动画、模拟实验不溢出；
 - `/courses` 仍保持 1280px 容器。
+
+## 20. 课程替换：仅保留 HTTP 从零到会用（2026-10-23）
+
+**目标**：移除旧课程包与数据库记录，只保留用户上传的 `http-fundamentals`。
+
+### 20.1 已完成
+
+- [x] 新课程解压到 `content/courses/http-fundamentals/`，`pnpm courses:validate` 通过（15 章、7 概念、7 活动、36 题）。
+- [x] 删除旧内容目录：`http-from-zero`、`http-retry-basics`、`idempotent-retries`、`sql-injection-basics`。
+- [x] 删除旧课程数据库记录及级联学习数据（4 条 enrollment、笔记/进度/积分）；删除前已备份到 `/tmp/learnos-before-course-replace.dump`。
+- [x] `pnpm courses:sync --publish-new` 插入并发布 `http-fundamentals`；数据库中只剩该课程。
+- [x] 测试迁移到新课程：单元 92、集成 29、E2E 20 通过；旧课程专属的 `http-mixed` 用例由新课程闭环覆盖。
+- [x] 并发/多课程用例改用测试专用课程行，不把旧课程重新写回 `content/courses`。
+
+### 20.2 注意
+
+- 删除旧课程会删除其学习记录；本次已先备份数据库，旧课程无法通过内容目录恢复。
+- 部署扫描会把“已部署但本地删除”的旧课程列为 `removed` 阻塞项；本次属于显式课程替换，部署时需以新课程快照重建基线，不能走普通 `createDeploymentJob` 扫描。

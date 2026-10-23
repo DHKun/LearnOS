@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 
 import {
   api,
+  createTestCourse,
   createTestStudent,
+  deleteTestCourse,
   deleteTestStudent,
   getCourseBySlug,
   getEnrollments,
@@ -17,8 +19,9 @@ test.describe("课程占用：并发、幂等与恢复", () => {
     browser,
   }) => {
     const student = await createTestStudent("concurrent");
-    const sqlCourse = await getCourseBySlug("sql-injection-basics");
-    const retryCourse = await getCourseBySlug("idempotent-retries");
+    const mainCourse = await getCourseBySlug("http-fundamentals");
+    const courseA = await createTestCourse("concurrent-a");
+    const courseB = await createTestCourse("concurrent-b");
 
     const contextA = await browser.newContext();
     const contextB = await browser.newContext();
@@ -29,88 +32,101 @@ test.describe("课程占用：并发、幂等与恢复", () => {
       await login(pageA, student.email, student.password);
       await login(pageB, student.email, student.password);
 
-      await pageA.goto("/courses/sql-injection-basics");
-      await pageB.goto("/courses/idempotent-retries");
-
-      // 同时提交两个不同课程的报名请求
-      await Promise.allSettled([
-        pageA.getByRole("button", { name: "参加课程" }).click(),
-        pageB.getByRole("button", { name: "参加课程" }).click(),
+      // 同时提交两个不同课程的报名请求。
+      const results = await Promise.all([
+        api<{ id: string }>(pageA, "/api/enrollments", "POST", { courseId: courseA.id }),
+        api<{ id: string }>(pageB, "/api/enrollments", "POST", { courseId: courseB.id }),
       ]);
-      await pageA.waitForTimeout(2500);
+      const succeeded = results.filter((result) => result.status === 200);
+      const rejected = results.filter((result) => result.status === 409);
+      expect(succeeded).toHaveLength(1);
+      expect(rejected).toHaveLength(1);
+      expect(rejected[0].body?.error?.code).toBe("ACTIVE_COURSE_EXISTS");
 
-      const enrollments = await getEnrollments(student.id);
-      const active = enrollments.filter((row) => row.status === "active");
-      expect(active).toHaveLength(1);
-      expect(enrollments).toHaveLength(1);
+      const activeEnrollment = succeeded[0].body!.data!;
+      const winnerCourseId =
+        results[0].status === 200 ? courseA.id : courseB.id;
+      const winnerPage = results[0].status === 200 ? pageA : pageB;
 
-      const winner = active[0].course_id === sqlCourse.id ? pageA : pageB;
-      const loser = winner === pageA ? pageB : pageA;
-      await expect(loser.getByText("请先完成或退出当前课程")).toBeVisible({ timeout: 20_000 });
-
-      // 同一课程重复报名幂等：返回同一条 enrollment
-      const repeat = await api<{ id: string }>(winner, "/api/enrollments", "POST", {
-        courseId: active[0].course_id,
+      // 同一课程重复报名幂等。
+      const repeat = await api<{ id: string }>(winnerPage, "/api/enrollments", "POST", {
+        courseId: winnerCourseId,
       });
       expect(repeat.status).toBe(200);
-      expect(repeat.body?.data?.id).toBe(active[0].id);
+      expect(repeat.body?.data?.id).toBe(activeEnrollment.id);
       expect(await getEnrollments(student.id)).toHaveLength(1);
 
-      // 完成一个章节并写笔记，然后退出再恢复
-      const lessons = await getLessons(active[0].course_id);
-      const article = lessons.find((lesson) => lesson.type === "article")!;
+      // 退出测试课程，进入正式课程。
+      const abandonTest = await api(
+        winnerPage,
+        `/api/enrollments/${activeEnrollment.id}/abandon`,
+        "POST",
+        {},
+      );
+      expect(abandonTest.status).toBe(200);
 
-      const complete = await api(winner, `/api/lessons/${article.id}/complete`, "POST", {
-        enrollmentId: active[0].id,
+      const joinMain = await api<{ id: string }>(winnerPage, "/api/enrollments", "POST", {
+        courseId: mainCourse.id,
+      });
+      expect(joinMain.status).toBe(200);
+      const mainEnrollment = joinMain.body!.data!;
+
+      // 完成一个手动章节并写笔记。
+      const lessons = await getLessons(mainCourse.id);
+      const article = lessons.find(
+        (lesson) => lesson.completion_policy === "manual" && lesson.required,
+      )!;
+      const complete = await api(winnerPage, `/api/lessons/${article.id}/complete`, "POST", {
+        enrollmentId: mainEnrollment.id,
       });
       expect(complete.status).toBe(200);
       expect(complete.body?.data?.lessonStatus).toBe("completed");
 
       const noteContent = "退出前写下的私人笔记";
-      const note = await api(winner, `/api/notes/${article.id}`, "PUT", {
+      const note = await api(winnerPage, `/api/notes/${article.id}`, "PUT", {
         content: noteContent,
       });
       expect(note.status).toBe(200);
 
-      const abandon = await api(winner, `/api/enrollments/${active[0].id}/abandon`, "POST", {});
-      expect(abandon.status).toBe(200);
-      expect(abandon.body?.data?.status).toBe("abandoned");
+      // 退出正式课程，加入另一门测试课程；此时再进正式课程应被占用拒绝。
+      const abandonMain = await api(
+        winnerPage,
+        `/api/enrollments/${mainEnrollment.id}/abandon`,
+        "POST",
+        {},
+      );
+      expect(abandonMain.status).toBe(200);
 
-      const currentAfterAbandon = await api(winner, "/api/enrollments/current");
-      expect(currentAfterAbandon.status).toBe(200);
-      expect(currentAfterAbandon.body?.data).toBeNull();
-
-      // 报名另一门课程应成功（退出已释放占用）
-      const otherCourseId =
-        active[0].course_id === sqlCourse.id ? retryCourse.id : sqlCourse.id;
-      const switchCourse = await api(winner, "/api/enrollments", "POST", {
-        courseId: otherCourseId,
-      });
+      const otherTestCourseId =
+        winnerCourseId === courseA.id ? courseB.id : courseA.id;
+      const switchCourse = await api<{ id: string }>(
+        winnerPage,
+        "/api/enrollments",
+        "POST",
+        { courseId: otherTestCourseId },
+      );
       expect(switchCourse.status).toBe(200);
 
-      // 再切回原课程时复用原 enrollment，并恢复进度与笔记
-      const resume = await api<{ id: string; status: string }>(
-        winner,
-        "/api/enrollments",
-        "POST",
-        { courseId: active[0].course_id },
-      );
-      expect(resume.status).toBe(409);
-      expect(resume.body?.error?.code).toBe("ACTIVE_COURSE_EXISTS");
+      const blockedMain = await api(winnerPage, "/api/enrollments", "POST", {
+        courseId: mainCourse.id,
+      });
+      expect(blockedMain.status).toBe(409);
+      expect(blockedMain.body?.error?.code).toBe("ACTIVE_COURSE_EXISTS");
 
-      await api(winner, `/api/enrollments/${switchCourse.body?.data?.id}/abandon`, "POST", {});
-      const resumeAgain = await api<{ id: string; status: string }>(
-        winner,
+      // 退出测试课程，恢复正式课程；进度和笔记仍在。
+      await api(winnerPage, `/api/enrollments/${switchCourse.body?.data?.id}/abandon`, "POST", {});
+      const resume = await api<{ id: string; status: string }>(
+        winnerPage,
         "/api/enrollments",
         "POST",
-        { courseId: active[0].course_id },
+        { courseId: mainCourse.id },
       );
-      expect(resumeAgain.status).toBe(200);
-      expect(resumeAgain.body?.data?.id).toBe(active[0].id);
-      expect(resumeAgain.body?.data?.status).toBe("active");
+      expect(resume.status).toBe(200);
+      expect(resume.body?.data?.id).toBe(mainEnrollment.id);
+      expect(resume.body?.data?.status).toBe("active");
 
       const restoredNote = await api<{ content: string }>(
-        winner,
+        winnerPage,
         `/api/notes/${article.id}`,
       );
       expect(restoredNote.body?.data?.content).toBe(noteContent);
@@ -118,43 +134,46 @@ test.describe("课程占用：并发、幂等与恢复", () => {
       const currentRestored = await api<{
         lessonProgress: Record<string, { status: string }>;
         courseProgress: { completed: number };
-      }>(winner, "/api/enrollments/current");
+      }>(winnerPage, "/api/enrollments/current");
       expect(currentRestored.body?.data?.lessonProgress[article.id]?.status).toBe("completed");
       expect(currentRestored.body?.data?.courseProgress.completed).toBeGreaterThanOrEqual(1);
       expect(await getPointsTotal(student.id)).toBe(10);
 
-      // 数据库层面仍只有一条 active；历史课程记录保留为 abandoned
       const finalEnrollments = await getEnrollments(student.id);
       expect(finalEnrollments.filter((row) => row.status === "active")).toHaveLength(1);
-      expect(finalEnrollments).toHaveLength(2);
+      expect(finalEnrollments).toHaveLength(3);
     } finally {
       await contextA.close();
       await contextB.close();
       await deleteTestStudent(student.id);
+      await deleteTestCourse(courseA.id);
+      await deleteTestCourse(courseB.id);
     }
   });
 
   test("不同学生可以同时各占一门课程", async () => {
     const studentA = await createTestStudent("pair-a");
     const studentB = await createTestStudent("pair-b");
-    const sqlCourse = await getCourseBySlug("sql-injection-basics");
-    const retryCourse = await getCourseBySlug("idempotent-retries");
+    const courseA = await createTestCourse("pair-a");
+    const courseB = await createTestCourse("pair-b");
 
     try {
       const db = serviceClient();
       const joinA = await db.rpc("join_course", {
         p_student: studentA.id,
-        p_course: sqlCourse.id,
+        p_course: courseA.id,
       });
       const joinB = await db.rpc("join_course", {
         p_student: studentB.id,
-        p_course: retryCourse.id,
+        p_course: courseB.id,
       });
       expect(joinA.error).toBeNull();
       expect(joinB.error).toBeNull();
     } finally {
       await deleteTestStudent(studentA.id);
       await deleteTestStudent(studentB.id);
+      await deleteTestCourse(courseA.id);
+      await deleteTestCourse(courseB.id);
     }
   });
 });

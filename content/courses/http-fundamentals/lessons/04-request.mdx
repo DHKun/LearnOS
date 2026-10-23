@@ -1,0 +1,51 @@
+## 请求是浏览器发给服务器的“任务说明”
+
+当我们说“发送 HTTP 请求”，重点不是点击按钮这个动作，而是一条具有结构的消息。先观察一个示意报文：
+
+```http
+GET /api/books/2 HTTP/1.1
+Host: api.example.test
+Accept: application/json
+
+```
+
+<ConceptPlayer conceptId="http-fundamentals/request" blockId="request-message" />
+
+## HTTP/1.1 请求长什么样？
+
+请求报文的第一行称为请求行，包含三部分：
+
+- **方法 Method**：希望执行什么操作，例如 GET。
+- **请求目标 Request Target**：希望操作哪个资源，例如 `/api/books/2`。
+- **协议版本**：此处用 HTTP/1.1 的文本形式展示。
+
+接下来是 Header。`Host` 指定目标主机，`Accept` 表达希望收到什么类型的表示。空行之后可以有 Body，也可以没有。
+
+```http
+POST /api/notes HTTP/1.1
+Host: api.example.test
+Content-Type: application/json
+Accept: application/json
+
+{"title":"今天学会了 HTTP"}
+```
+
+第二条请求的 Body 是一段 JSON。它是**客户端提交的数据**，不是 HTTP 协议要求每个请求都必须携带的内容。
+
+## 真实理解：请求不是按路径自动成功的
+
+请求目标、方法、Header 和 Body 组合起来，才能说明客户端到底要做什么。`GET /api/books/2` 和 `DELETE /api/books/2` 面向相同资源，却具有完全不同的语义。
+
+<Callout type="note" title="教学模拟边界">
+下方是纯 JavaScript 虚拟服务器。路径和数据都是课程预设的示例资源，不会访问互联网或修改真实数据。
+</Callout>
+
+## 动手：HTTP 请求工作台
+
+目标：使用 `GET /api/books/2` 获得 `200 OK` 和书籍 JSON。你可以先试其他方法和路径，再回来完成任务。
+
+<SimulationBlock blockId="request-lab" />
+
+## 本章检查点
+
+请辨认模拟器里显示的请求方法、路径、请求头以及服务器返回的状态码。**只要完成本章必需实验并经服务端验证通过，本章便自动标记完成。**

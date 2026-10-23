@@ -8,23 +8,22 @@ import { ACTIVITY_IDS, CONCEPT_IDS } from "@/lib/generated/course-catalog";
 describe("课程插件自动注册", () => {
   it("生成目录包含所有已安装课程的概念与活动", () => {
     expect([...CONCEPT_IDS].sort()).toEqual([
-      "http-from-zero/headers-cookies",
-      "http-from-zero/request-flow",
-      "http-from-zero/url-anatomy",
-      "http-retry-basics/deduplication",
-      "http-retry-basics/lost-response",
-      "idempotent-retries/deduplication",
-      "idempotent-retries/lost-response",
-      "sql-injection-basics/data-vs-instruction",
-      "sql-injection-basics/parameter-binding",
+      "http-fundamentals/cache",
+      "http-fundamentals/cookie",
+      "http-fundamentals/journey",
+      "http-fundamentals/request",
+      "http-fundamentals/status",
+      "http-fundamentals/tls",
+      "http-fundamentals/url",
     ]);
     expect([...ACTIVITY_IDS].sort()).toEqual([
-      "http-from-zero/cookie-lab",
-      "http-from-zero/method-match",
-      "http-from-zero/request-builder",
-      "http-retry-basics/retry-lab",
-      "idempotent-retries/idempotency-lab",
-      "sql-injection-basics/sql-injection-lab",
+      "http-fundamentals/cache-console",
+      "http-fundamentals/cookie-console",
+      "http-fundamentals/diagnosis-console",
+      "http-fundamentals/final-mission",
+      "http-fundamentals/json-console",
+      "http-fundamentals/method-matcher",
+      "http-fundamentals/request-console",
     ]);
   });
 
@@ -33,10 +32,7 @@ describe("课程插件自动注册", () => {
       path.join(process.cwd(), "lib/generated/course-components.tsx"),
       "utf8",
     );
-    expect(generated).toContain("content/courses/sql-injection-basics/");
-    expect(generated).toContain("content/courses/idempotent-retries/");
-    expect(generated).toContain("content/courses/http-retry-basics/");
-    expect(generated).toContain("content/courses/http-from-zero/");
+    expect(generated).toContain("content/courses/http-fundamentals/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

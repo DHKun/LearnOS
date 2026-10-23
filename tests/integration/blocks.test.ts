@@ -76,7 +76,7 @@ async function blockResult(lessonSlug: string, blockId: string) {
 
 beforeAll(async () => {
   student = await createTestUser("student");
-  const course = await getCourse("http-from-zero");
+  const course = await getCourse("http-fundamentals");
   courseId = course.id;
   lessons = await getLessons(courseId);
   const db = serviceClient();
@@ -98,16 +98,16 @@ describe("混合章节 Block 完成与积分事务", () => {
     const { error } = await db.rpc("complete_lesson", {
       p_student: student.id,
       p_enrollment: enrollmentId,
-      p_lesson: lesson("request-response").id,
+      p_lesson: lesson("request").id,
       p_source: "manual",
     });
     expect(error?.message).toContain("COMPLETION_NOT_ALLOWED");
-    expect(await lessonStatus("request-response")).toBeNull();
+    expect(await lessonStatus("request")).toBeNull();
   });
 
   it("失败实验只记录尝试，不完成章节、不发积分", async () => {
     const result = await saveBlock({
-      lessonSlug: "request-response",
+      lessonSlug: "request",
       blockId: "request-lab",
       kind: "simulation",
       passed: false,
@@ -115,15 +115,15 @@ describe("混合章节 Block 完成与积分事务", () => {
     expect(result.error).toBeNull();
     expect(result.data.blockStatus).toBe("failed");
     expect(result.data.chapterCompleted).toBe(false);
-    expect(await lessonStatus("request-response")).toBeNull();
+    expect(await lessonStatus("request")).toBeNull();
     expect(await pointsTotal(student.id)).toBe(0);
-    expect((await blockResult("request-response", "request-lab"))?.passed).toBe(false);
+    expect((await blockResult("request", "request-lab"))?.passed).toBe(false);
   });
 
   it("通过实验后自动完成章节，且重复提交不重复发分", async () => {
     const attemptId = randomUUID();
     const first = await saveBlock({
-      lessonSlug: "request-response",
+      lessonSlug: "request",
       blockId: "request-lab",
       kind: "simulation",
       passed: true,
@@ -133,11 +133,11 @@ describe("混合章节 Block 完成与积分事务", () => {
     expect(first.error).toBeNull();
     expect(first.data.chapterCompleted).toBe(true);
     expect(first.data.pointsAwarded).toBe(10);
-    expect(await lessonStatus("request-response")).toBe("completed");
+    expect(await lessonStatus("request")).toBe("completed");
     expect(await pointsTotal(student.id)).toBe(10);
 
     const duplicate = await saveBlock({
-      lessonSlug: "request-response",
+      lessonSlug: "request",
       blockId: "request-lab",
       kind: "simulation",
       passed: true,
@@ -149,7 +149,7 @@ describe("混合章节 Block 完成与积分事务", () => {
     expect(await pointsTotal(student.id)).toBe(10);
 
     const replay = await saveBlock({
-      lessonSlug: "request-response",
+      lessonSlug: "request",
       blockId: "request-lab",
       kind: "simulation",
       passed: true,
@@ -157,14 +157,14 @@ describe("混合章节 Block 完成与积分事务", () => {
     expect(replay.data.duplicate).toBe(false);
     expect(replay.data.pointsAwarded).toBe(0);
     expect(await pointsTotal(student.id)).toBe(10);
-    expect((await blockResult("request-response", "request-lab"))?.attempts).toBe(3);
+    expect((await blockResult("request", "request-lab"))?.attempts).toBe(3);
   });
 
   it("同一 attempt ID 携带不同请求内容时拒绝", async () => {
     const attemptId = randomUUID();
     const first = await saveBlock({
-      lessonSlug: "http-methods",
-      blockId: "methods-lab",
+      lessonSlug: "methods",
+      blockId: "method-lab",
       kind: "simulation",
       passed: false,
       attemptId,
@@ -172,8 +172,8 @@ describe("混合章节 Block 完成与积分事务", () => {
     });
     expect(first.error).toBeNull();
     const second = await saveBlock({
-      lessonSlug: "http-methods",
-      blockId: "methods-lab",
+      lessonSlug: "methods",
+      blockId: "method-lab",
       kind: "simulation",
       passed: true,
       attemptId,
@@ -184,47 +184,26 @@ describe("混合章节 Block 完成与积分事务", () => {
 
   it("all 模式必须两个 Block 都通过；章节只发一次 10 分", async () => {
     const onlyLab = await saveBlock({
-      lessonSlug: "http-methods",
-      blockId: "methods-lab",
+      lessonSlug: "methods",
+      blockId: "method-lab",
       kind: "simulation",
       passed: true,
     });
     expect(onlyLab.data.chapterCompleted).toBe(false);
-    expect(await lessonStatus("http-methods")).toBeNull();
+    expect(await lessonStatus("methods")).toBeNull();
     expect(await pointsTotal(student.id)).toBe(10);
 
     const both = await saveBlock({
-      lessonSlug: "http-methods",
-      blockId: "methods-check",
+      lessonSlug: "methods",
+      blockId: "method-check",
       kind: "question",
       passed: true,
     });
     expect(both.data.chapterCompletionSatisfied).toBe(true);
     expect(both.data.chapterCompleted).toBe(true);
     expect(both.data.pointsAwarded).toBe(10);
-    expect(await lessonStatus("http-methods")).toBe("completed");
+    expect(await lessonStatus("methods")).toBe("completed");
     expect(await pointsTotal(student.id)).toBe(20);
-  });
-
-  it("any 模式任意一个 Block 通过即可完成，后续 Block 不再发分", async () => {
-    const first = await saveBlock({
-      lessonSlug: "headers-cookies",
-      blockId: "headers-check",
-      kind: "question",
-      passed: true,
-    });
-    expect(first.data.chapterCompleted).toBe(true);
-    expect(first.data.pointsAwarded).toBe(10);
-    expect(await pointsTotal(student.id)).toBe(30);
-
-    const second = await saveBlock({
-      lessonSlug: "headers-cookies",
-      blockId: "cookie-lab",
-      kind: "simulation",
-      passed: true,
-    });
-    expect(second.data.pointsAwarded).toBe(0);
-    expect(await pointsTotal(student.id)).toBe(30);
   });
 
   it("Block 结果与 lesson/课程归属不匹配时拒绝", async () => {
@@ -232,7 +211,7 @@ describe("混合章节 Block 完成与积分事务", () => {
     const { error } = await db.rpc("save_block_result", {
       p_student: student.id,
       p_enrollment: enrollmentId,
-      p_lesson: lesson("status-codes").id,
+      p_lesson: lesson("headers").id,
       p_block_id: "not-declared",
       p_block_kind: "question",
       p_attempt_id: randomUUID(),

@@ -1,0 +1,406 @@
+{
+  "schemaVersion": 3,
+  "slug": "http-fundamentals",
+  "title": "HTTP 从零到会用：浏览器网络交互实战",
+  "description": "零基础、以网页为起点的 HTTP 互动教程。15 个章节将文字讲解、JS/SVG 分步动画、纯浏览器 HTTP 模拟、诊断任务和服务端知识检查自由组合；学完能读懂 HTTP 报文，并能解释请求失败的真正原因。所有实验均为本地模拟，不向外部站点发包。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "journey",
+        "component": "concepts/http-concepts.tsx",
+        "export": "JourneyConcept",
+        "title": "浏览器访问网站的旅程",
+        "analogy": "邮局寄信：地址、路线与回应"
+      },
+      {
+        "id": "url",
+        "component": "concepts/http-concepts.tsx",
+        "export": "UrlConcept",
+        "title": "拆解一个 URL",
+        "analogy": "快递单上的地址与备注"
+      },
+      {
+        "id": "request",
+        "component": "concepts/http-concepts.tsx",
+        "export": "MessageConcept",
+        "title": "请求与响应报文",
+        "analogy": "请求单和处理回执"
+      },
+      {
+        "id": "status",
+        "component": "concepts/http-concepts.tsx",
+        "export": "StatusConcept",
+        "title": "HTTP 状态码怎么读",
+        "analogy": "办事窗口的办理结果"
+      },
+      {
+        "id": "cookie",
+        "component": "concepts/http-concepts.tsx",
+        "export": "CookieConcept",
+        "title": "Cookie 和会话",
+        "analogy": "出示会员卡，但卡不是本人"
+      },
+      {
+        "id": "tls",
+        "component": "concepts/http-concepts.tsx",
+        "export": "TlsConcept",
+        "title": "HTTPS 保护了什么",
+        "analogy": "建立加密通道后再传递消息"
+      },
+      {
+        "id": "cache",
+        "component": "concepts/http-concepts.tsx",
+        "export": "CacheConcept",
+        "title": "缓存与条件请求",
+        "analogy": "拿旧版本号询问有没有更新"
+      }
+    ],
+    "activities": [
+      {
+        "id": "request-console",
+        "component": "activities/http-activities.tsx",
+        "export": "RequestConsole",
+        "title": "HTTP 请求工作台",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateRequestConsole"
+        }
+      },
+      {
+        "id": "method-matcher",
+        "component": "activities/http-activities.tsx",
+        "export": "MethodMatcher",
+        "title": "HTTP 方法与语义实验",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateMethodMatcher"
+        }
+      },
+      {
+        "id": "json-console",
+        "component": "activities/http-activities.tsx",
+        "export": "JsonConsole",
+        "title": "JSON 与内容类型实验",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateJsonConsole"
+        }
+      },
+      {
+        "id": "cookie-console",
+        "component": "activities/http-activities.tsx",
+        "export": "CookieConsole",
+        "title": "Cookie 自动携带实验",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateCookieConsole"
+        }
+      },
+      {
+        "id": "cache-console",
+        "component": "activities/http-activities.tsx",
+        "export": "CacheConsole",
+        "title": "ETag 缓存实验",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateCacheConsole"
+        }
+      },
+      {
+        "id": "diagnosis-console",
+        "component": "activities/http-activities.tsx",
+        "export": "DiagnosisConsole",
+        "title": "故障诊断工作台",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateDiagnosisConsole"
+        }
+      },
+      {
+        "id": "final-mission",
+        "component": "activities/http-activities.tsx",
+        "export": "FinalMission",
+        "title": "HTTP 综合任务",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateFinalMission"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "internet-http",
+      "title": "互联网中的浏览器与服务器",
+      "source": "lessons/01-internet-http.mdx",
+      "required": true,
+      "unit": "基础"
+    },
+    {
+      "slug": "url",
+      "title": "URL：找到正确的资源",
+      "source": "lessons/02-url.mdx",
+      "required": true,
+      "unit": "基础"
+    },
+    {
+      "slug": "journey",
+      "title": "从地址栏到网页",
+      "source": "lessons/03-journey.mdx",
+      "required": true,
+      "unit": "基础"
+    },
+    {
+      "slug": "request",
+      "title": "请求报文：告诉服务器你要什么",
+      "source": "lessons/04-request.mdx",
+      "required": true,
+      "unit": "报文",
+      "blocks": [
+        {
+          "id": "request-lab",
+          "kind": "simulation",
+          "activityId": "http-fundamentals/request-console",
+          "title": "HTTP 请求工作台"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "request-lab"
+        ]
+      }
+    },
+    {
+      "slug": "response",
+      "title": "响应报文与状态码",
+      "source": "lessons/05-response.mdx",
+      "required": true,
+      "unit": "报文",
+      "blocks": [
+        {
+          "id": "response-check",
+          "kind": "question",
+          "source": "assessments/response.server.json",
+          "title": "状态码理解检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "response-check"
+        ]
+      }
+    },
+    {
+      "slug": "methods",
+      "title": "HTTP 方法与操作语义",
+      "source": "lessons/06-methods.mdx",
+      "required": true,
+      "unit": "报文",
+      "blocks": [
+        {
+          "id": "method-lab",
+          "kind": "simulation",
+          "activityId": "http-fundamentals/method-matcher",
+          "title": "方法匹配实验"
+        },
+        {
+          "id": "method-check",
+          "kind": "question",
+          "source": "assessments/methods.server.json",
+          "title": "安全与幂等检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "method-lab",
+          "method-check"
+        ]
+      }
+    },
+    {
+      "slug": "headers",
+      "title": "Header：描述请求和响应",
+      "source": "lessons/07-headers.mdx",
+      "required": true,
+      "unit": "数据",
+      "blocks": [
+        {
+          "id": "headers-check",
+          "kind": "question",
+          "source": "assessments/headers.server.json",
+          "title": "Header 理解检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "headers-check"
+        ]
+      }
+    },
+    {
+      "slug": "json-body",
+      "title": "Body 与 JSON：提交数据",
+      "source": "lessons/08-json-body.mdx",
+      "required": true,
+      "unit": "数据",
+      "blocks": [
+        {
+          "id": "json-lab",
+          "kind": "simulation",
+          "activityId": "http-fundamentals/json-console",
+          "title": "发送一条 JSON 便签"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "json-lab"
+        ]
+      }
+    },
+    {
+      "slug": "cookie",
+      "title": "Cookie 与 Session：无状态中的登录",
+      "source": "lessons/09-cookie.mdx",
+      "required": true,
+      "unit": "状态",
+      "blocks": [
+        {
+          "id": "cookie-lab",
+          "kind": "simulation",
+          "activityId": "http-fundamentals/cookie-console",
+          "title": "Cookie 作用域配置"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "cookie-lab"
+        ]
+      }
+    },
+    {
+      "slug": "auth",
+      "title": "认证、授权与 401/403",
+      "source": "lessons/10-auth.mdx",
+      "required": true,
+      "unit": "状态",
+      "blocks": [
+        {
+          "id": "auth-check",
+          "kind": "question",
+          "source": "assessments/auth.server.json",
+          "title": "身份与权限检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "auth-check"
+        ]
+      }
+    },
+    {
+      "slug": "https",
+      "title": "HTTPS、TLS 与安全边界",
+      "source": "lessons/11-https.mdx",
+      "required": true,
+      "unit": "进阶"
+    },
+    {
+      "slug": "cache",
+      "title": "缓存与 304：不必重复传输",
+      "source": "lessons/12-cache.mdx",
+      "required": true,
+      "unit": "进阶",
+      "blocks": [
+        {
+          "id": "cache-lab",
+          "kind": "simulation",
+          "activityId": "http-fundamentals/cache-console",
+          "title": "ETag 条件请求实验"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "cache-lab"
+        ]
+      }
+    },
+    {
+      "slug": "debugging",
+      "title": "排查 HTTP 问题",
+      "source": "lessons/13-debugging.mdx",
+      "required": true,
+      "unit": "实战",
+      "blocks": [
+        {
+          "id": "diagnosis-lab",
+          "kind": "simulation",
+          "activityId": "http-fundamentals/diagnosis-console",
+          "title": "诊断三类故障"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "diagnosis-lab"
+        ]
+      }
+    },
+    {
+      "slug": "practice",
+      "title": "综合实战：完成三个 HTTP 任务",
+      "source": "lessons/14-practice.mdx",
+      "required": true,
+      "unit": "实战",
+      "blocks": [
+        {
+          "id": "final-lab",
+          "kind": "simulation",
+          "activityId": "http-fundamentals/final-mission",
+          "title": "三阶段 HTTP 模拟任务"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-lab"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "总结与结业测验",
+      "source": "lessons/15-final.mdx",
+      "required": true,
+      "unit": "结业",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "HTTP 综合结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}
