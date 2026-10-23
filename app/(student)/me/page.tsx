@@ -44,6 +44,12 @@ export default async function MePage() {
         }
       />
 
+      <div className="flex justify-end">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/account/connections">账号与登录方式</Link>
+        </Button>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="已完成课程" value={completedCourses.length} hint="支持复习" />
         <StatCard label="学习记录" value={history.length} hint="含进行中与已退出" />

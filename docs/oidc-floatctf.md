@@ -1,0 +1,112 @@
+# FloatCTF OIDC 接入（Supabase custom:floatctf）
+
+## 状态
+
+**代码脚手架已就绪，生产入口默认关闭（`FLOATCTF_OIDC_ENABLED=false`）。**
+
+在目标 Supabase Auth `gotrue:v2.197.0` 与 FloatCTF 当前 `main` 上完成真实协议测试后，发现两个必须由 FloatCTF 或 Supabase Auth 侧修复的兼容性障碍。本文保留复现步骤与安全实现，避免用伪造邮箱验证、直信 ID Token 访问 RLS 或自建 JWT 绕过。
+
+## 架构
+
+```text
+浏览器 → LearnOS /login
+      → supabase.auth.signInWithOAuth("custom:floatctf")
+      → Supabase Auth /auth/v1/authorize
+      → FloatCTF OIDC authorize/login/consent
+      → Supabase /auth/v1/callback（code + PKCE）
+      → LearnOS /auth/callback（Supabase 会话）
+      → profiles（默认 student）→ /courses
+```
+
+- FloatCTF：外部 OIDC Identity Provider。
+- Supabase Auth：唯一的会话管理者；不把 FloatCTF ID Token 当 Supabase JWT。
+- LearnOS：profiles 角色、准入策略与全部学习业务。
+
+## 已实现
+
+- 登录页「使用 FloatCTF 登录」入口（由 `FLOATCTF_OIDC_ENABLED=true` 开启）。
+- `/auth/callback`：`exchangeCodeForSession`、安全 `next` 白名单、停用用户处理、错误回登录页。
+- 首次登录：只创建 `student` profile；角色绝不读取 FloatCTF 资料。
+- 已有账号手动绑定：`/account/connections` + `linkIdentity`，保留原 `auth.users.id` 与全部学习记录。
+- 准入 Hook：`before_user_created_floatctf` 只放行 `custom:floatctf`；公开邮箱注册返回 403。
+- `pnpm oidc:setup`：Discovery 校验 + 幂等创建/更新 `custom:floatctf`。
+- Supabase 配置：`enable_manual_linking=true`、邮箱确认开启（防止未验证邮箱自动合并）、OIDC 入口默认关闭。
+- profile 触发器支持从 `name/preferred_username/nickname/sub` 生成显示名。
+
+## 实测结果（2026-10-23）
+
+环境：GoTrue `v2.197.0`；FloatCTF 最新 `main`（Rust API + PostgreSQL/Redis/RustFS，测试账号 `1000000/testuser`）；真实 Chromium。
+
+### FloatCTF 侧通过
+
+- Discovery：issuer、authorization/token/jwks/userinfo 端点正确。
+- `response_types_supported=["code"]`、`code_challenge_methods_supported=["S256"]`。
+- JWKS 可验，ID Token 为 RS256；`iss/aud/nonce/at_hash` 正确。
+- Token 端点：`client_secret_basic` 与 `client_secret_post` 均可；实测返回 `token_type: "Bearer"`。
+- UserInfo：`sub/preferred_username/nickname/name` 正常；`openid email` 时 `email_verified` 恒为 `false`。
+- 完整 PKCE 授权码流程（授权码 → token → UserInfo）通过。
+
+### Supabase 侧阻塞
+
+**阻塞 1：GoTrue custom OIDC 不调用 UserInfo。**
+
+`gotrue:v2.197.0` 的 `CustomOIDCProvider.GetUserData` 在响应含 `id_token` 时直接解析 ID Token 并返回；只有没有 ID Token 时才调用 UserInfo。FloatCTF 按 OIDC Core §5.4 只在 UserInfo 返回 `preferred_username/nickname/email`，ID Token 仅含 `sub/iss/aud/...`。
+
+结果：Supabase 只能得到 `sub`，拿不到用户名/邮箱；使用 `email_optional=true` 可创建学生，但显示名只能回退。
+
+**阻塞 2：FloatCTF CSP 与 Supabase 两跳回调不兼容（决定性）。**
+
+FloatCTF 登录页 CSP：`form-action 'self' <Supabase callback origin>`。Supabase 的 `/auth/v1/callback` 会在 token 交换后再 302 到 LearnOS 的 `/auth/callback`，最终跳转 origin 不在 FloatCTF 的 `form-action` 白名单中。
+
+真实 Chromium 报错：
+
+```text
+Sending form data to 'https://<floatctf>/oauth/login' violates the following
+Content Security Policy directive:
+"form-action 'self' http://127.0.0.1:54321".
+```
+
+用三端口最小页面独立复现：Chrome 对表单 POST 后的跨源重定向目标也执行 `form-action` 校验。直接访问本地 FloatCTF HTTPS 端口同样复现，排除 Pinggy/隧道伪影。
+
+## 解除阻塞所需变更（二选一）
+
+1. **FloatCTF（推荐）**：CSP `form-action` 增加 RP 最终回跳 origin（LearnOS 的 `/auth/callback` origin），并可选在 ID Token 中加入 `preferred_username/nickname`（不要加入未验证 email 以避免自动合并）。
+2. **Supabase Auth**：升级/补丁 GoTrue 使其对 custom OIDC 调用 UserInfo；同时仍需解决 FloatCTF CSP 的两跳回调问题，或在 Supabase callback 与 LearnOS 之间改为同源不跳转的方案。
+
+在任一项完成前，不应把 `FLOATCTF_OIDC_ENABLED` 设为 true。
+
+## 配置步骤
+
+```bash
+# 1. 在 FloatCTF 创建 OIDC 应用，登记：
+#    <Supabase URL>/auth/v1/callback
+#    （本地为 http://127.0.0.1:54321/auth/v1/callback，需 allow_loopback_redirect_uris）
+
+# 2. LearnOS 环境
+FLOATCTF_OIDC_ENABLED=true
+FLOATCTF_ALLOW_SIGNUP=true
+FLOATCTF_OIDC_ISSUER=https://ctf.example.com
+FLOATCTF_OIDC_CLIENT_ID=...
+FLOATCTF_OIDC_CLIENT_SECRET=...
+
+# 3. 创建/更新 Supabase custom:floatctf
+pnpm oidc:setup
+
+# 4. 验证
+pnpm oidc:setup --check
+```
+
+## 安全约束
+
+- 不按邮箱自动合并：FloatCTF email 未验证；Supabase `enable_confirmations=true`，OIDC scope 不请求 email。
+- 手动绑定必须从已登录 LearnOS 账号发起；绑定保留 `auth.users.id`、profiles、enrollments、notes、points。
+- OIDC 用户默认 student；只有 `profiles.role`（管理员显式操作）能成为 admin。
+- 停用用户：callback 与页面守卫均检查 `profiles.disabled_at`，并清除 Supabase 会话。
+- 管理员邮箱密码登录保留；公开邮箱注册由 DB Hook 拒绝。
+
+## 回滚
+
+- 删除 Supabase custom provider：
+  `curl -X DELETE "$SUPABASE_URL/auth/v1/admin/custom-providers/custom:floatctf" -H "Authorization: Bearer $SERVICE_ROLE_KEY" -H "apikey: $SERVICE_ROLE_KEY"`
+- 将 `FLOATCTF_OIDC_ENABLED=false`，登录页回到邮箱密码。
+- 保留 migration 与 profiles 不变；不影响已有用户 ID 与学习数据。

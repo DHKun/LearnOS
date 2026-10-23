@@ -33,7 +33,8 @@
     "predev": "pnpm courses:prepare",
     "prebuild": "pnpm courses:prepare",
     "pretypecheck": "pnpm courses:prepare",
-    "courses:scan": "tsx scripts/courses/scan.ts"
+    "courses:scan": "tsx scripts/courses/scan.ts",
+    "oidc:setup": "tsx scripts/oidc/configure-floatctf.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.15",

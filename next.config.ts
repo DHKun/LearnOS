@@ -21,7 +21,9 @@ const nextConfig: NextConfig = {
       "frame-src 'self'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      // Supabase OAuth returns to /auth/callback via a top-level redirect, so
+      // the Supabase origin must be allowed as a form/redirect target.
+      "form-action 'self' " + (process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""),
       "object-src 'none'",
     ]
       .join("; ")

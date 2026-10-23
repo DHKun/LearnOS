@@ -375,3 +375,15 @@
 5. 部署时旧课程会显示 `removed`；本次以新课程快照重建部署基线后创建部署任务，跳过普通扫描的 removal 阻塞。
 
 **影响**：旧课程的全部学习记录不可恢复（仅有整库备份）；回滚旧镜像也不能恢复旧课程 UI，因为数据库行已删除。后续新增课程应使用新的 course slug，并按正常扫描/部署流程发布。
+
+## D45 — FloatCTF OIDC 先按阻塞处理，不绕过 Supabase 安全边界
+
+**背景**：目标为 Supabase `custom:floatctf` + GoTrue v2.197，FloatCTF 最新 `main`。真实协议测试发现 GoTrue custom OIDC 不调用 UserInfo，且 FloatCTF 的 CSP 不允许 Supabase 回调后的 LearnOS 最终跳转。
+
+**决定**：
+
+1. 实现并保留安全脚手架：登录入口、callback、student-only 准入、手动绑定、准入 Hook、provider 配置脚本；入口默认关闭。
+2. 不使用 custom OAuth2 替代 OIDC、不直接信任 ID Token 建 Supabase 会话、不伪造 `email_verified`、不按邮箱自动合并。
+3. 文档化复现与外部修复要求；在 FloatCTF/Supabase 修复前不启用生产入口。
+
+**影响**：OIDC 功能尚未达到可上线状态；管理员密码登录与现有学习业务不受影响。解除阻塞后只需启用 flag 并重跑真实 SSO E2E。

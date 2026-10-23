@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { getSessionProfile } from "@/lib/auth/session";
+import { isFloatctfLoginEnabled } from "@/lib/auth/floatctf";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "登录" };
@@ -19,6 +20,15 @@ export default async function LoginPage({
 
   const params = await searchParams;
   const disabled = params.reason === "disabled";
+  const reasonMessage =
+    params.reason === "oauth_failed"
+      ? "FloatCTF 登录未完成，请重试或使用邮箱密码登录。"
+      : params.reason === "signup_closed"
+        ? "FloatCTF 新用户准入暂未开放，请联系管理员创建账号。"
+        : params.reason === "oauth_denied"
+          ? "你已取消 FloatCTF 授权。"
+          : null;
+  const showFloatctf = isFloatctfLoginEnabled();
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
@@ -93,7 +103,7 @@ export default async function LoginPage({
           </div>
           <h2 className="font-serif text-2xl font-semibold tracking-tight">登录</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            使用管理员发放的邮箱与初始密码登录。
+            使用 FloatCTF 账号登录，或使用管理员发放的邮箱与初始密码。
           </p>
 
           {disabled && (
@@ -101,8 +111,13 @@ export default async function LoginPage({
               账号已被停用，请联系管理员。
             </div>
           )}
+          {reasonMessage && (
+            <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {reasonMessage}
+            </div>
+          )}
 
-          <LoginForm />
+          <LoginForm next={params.next} showFloatctf={showFloatctf} />
         </div>
       </section>
     </div>

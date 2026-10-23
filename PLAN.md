@@ -559,3 +559,26 @@ tests/e2e/admin-detail.spec.ts          1 test
 
 - 删除旧课程会删除其学习记录；本次已先备份数据库，旧课程无法通过内容目录恢复。
 - 部署扫描会把“已部署但本地删除”的旧课程列为 `removed` 阻塞项；本次属于显式课程替换，部署时需以新课程快照重建基线，不能走普通 `createDeploymentJob` 扫描。
+
+## 21. FloatCTF OIDC 接入（进行中，外部兼容性阻塞）
+
+### 21.1 已实现
+
+- [x] 登录页 FloatCTF 入口（默认关闭）、`/auth/callback`、安全 `next`、停用用户处理。
+- [x] 首次登录仅创建 student profile；不读取 FloatCTF 角色。
+- [x] `/account/connections` 手动绑定（`linkIdentity`），保留原用户 ID 与学习记录。
+- [x] Supabase 准入 Hook：公开邮箱注册 403，只放行 `custom:floatctf`；管理员创建账号不受影响。
+- [x] `pnpm oidc:setup`：Discovery 校验 + 幂等 provider 配置。
+- [x] 真实 FloatCTF 的 Discovery/JWKS/PKCE/Token/UserInfo/`email_verified=false` 测试。
+- [x] 真实 Chromium 复现 GoTrue custom OIDC 与 FloatCTF CSP 的两项兼容性障碍。
+
+### 21.2 阻塞
+
+- GoTrue v2.197 的 custom OIDC 在收到 ID Token 时不调用 UserInfo；FloatCTF 只在 UserInfo 提供 profile/email。
+- FloatCTF CSP 只允许 Supabase callback origin；Supabase 再跳转 LearnOS origin 被 Chrome `form-action` 拦截。
+- 解除需改 FloatCTF CSP/ID Token，或升级/补丁 Supabase Auth；未绕过安全边界。
+
+### 21.3 测试
+
+- `tests/unit/oidc.test.ts`：安全 next、身份识别、显示名。
+- 手工实测记录见 `docs/oidc-floatctf.md`。
