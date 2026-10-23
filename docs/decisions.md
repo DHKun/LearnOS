@@ -387,3 +387,16 @@
 3. 文档化复现与外部修复要求；在 FloatCTF/Supabase 修复前不启用生产入口。
 
 **影响**：OIDC 功能尚未达到可上线状态；管理员密码登录与现有学习业务不受影响。解除阻塞后只需启用 flag 并重跑真实 SSO E2E。
+
+## D46 — OIDC 接入的安全边界与已知攻击面处理
+
+**背景**：FloatCTF SSO 引入三个新的可控输入面：IdP 返回的 `user_metadata`、callback 的查询参数、以及跨主机/代理下的重定向目标。第 8–10 轮复查中共发现并修复两个真实缺陷，并以测试固化。
+
+**决定**：
+
+1. **重定向以请求 origin 为准**：Next 会把 `request.url` 归一化到配置的公开 origin；若实际访问主机不同（`127.0.0.1` vs `localhost`、反代场景），跳到配置 origin 会丢失绑定在该主机上的会话 Cookie。改为读取 `Host` 头（回退 `x-forwarded-proto`），并在解析后强制同源，不同源一律回落 `/login?reason=oauth_failed`——`new URL("//evil.example", base)` 会跨源。
+2. **角色只来自 `profiles.role`**：`app_metadata.role`、`user_metadata.role/is_admin` 等一律不参与角色判定；显示名仅作展示并做长度截断与控制字符清洗，非字符串值回落默认名。
+3. **绑定失败按会话状态分流**：绑定必须从已登录会话发起；会话失效时回到登录页并给出可操作原因，而不是丢到受保护页面后无提示地弹回登录页。
+4. **不做邮箱自动合并**：OIDC scope 不请求 `email`，Supabase 侧开启邮箱确认，避免 `email_verified=false` 被当作已验证触发自动关联。
+
+**影响**：`docs/oidc-floatctf.md` 记录复现与验证方式；`tests/unit/callback-redirect.test.ts`、`tests/unit/oidc-adversarial.test.ts`、`tests/e2e/floatctf-sso.spec.ts` 覆盖上述边界。剩余风险仍是上游 CSP 两跳阻塞，不在此决定范围内。
