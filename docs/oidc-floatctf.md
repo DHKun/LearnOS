@@ -136,3 +136,23 @@ pnpm oidc:setup --check
 
 - 真实 SSO 的首次登录、重复登录、已有账号绑定、停用账号、失败回跳、退出重登：因阻塞 2 未能在浏览器中完成。
 - 生产部署：未部署。`FLOATCTF_OIDC_ENABLED=false`，线上行为与改动前一致。
+
+## 对照实验：仅修补 CSP 后的链路结果（2026-10-23）
+
+为确认「阻塞 2 解除后 LearnOS 侧是否可用」，在本地 FloatCTF 副本上做了**仅供验证、不提交**的最小补丁：`pages::html` 的 `form-action` 追加一个由环境变量提供的额外 origin（`FCTF_TEST_EXTRA_FORM_ORIGIN`），并重新编译 `floatctf` crate。
+
+结果：
+
+1. CSP 拦截消失，浏览器顺利通过 FloatCTF 登录页并回到 `<Supabase>/auth/v1/callback`。
+2. 链路推进到 Supabase 的 token 交换，GoTrue 日志给出新的失败点：
+
+```text
+"error":"failed to verify ID token: failed to verify signature: fetching keys context deadline exceeded"
+"error":"context deadline exceeded","error_code":"request_timeout","status":504
+```
+
+3. 根因是 GoTrue 拉取 JWKS 超时（默认约 10s），而经公网隧道单次请求耗时约 4.6–5.3s。该现象属于测试隧道特性，不是协议缺陷：在正常网络下 JWKS 可缓存。
+
+结论：**CSP 是本链路唯一的结构性阻塞**；解除后剩余问题只是测试环境的隧道延迟。这也说明阻塞 1（GoTrue 不调用 UserInfo）不会阻断登录本身——`email_optional=true` 已让 Supabase 接受无邮箱的 OIDC 用户，代价是 `user_metadata` 里没有用户名，需要由 LearnOS 侧回退显示名。
+
+环境已复原：补丁未进入任何提交，FloatCTF 二进制已回退到未打补丁版本使用，LearnOS `FLOATCTF_OIDC_ENABLED=false`。
