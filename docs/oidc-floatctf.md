@@ -199,3 +199,82 @@ pnpm oidc:setup --check
 结论：**CSP 是本链路唯一的结构性阻塞**；解除后剩余问题只是测试环境的隧道延迟。这也说明阻塞 1（GoTrue 不调用 UserInfo）不会阻断登录本身——`email_optional=true` 已让 Supabase 接受无邮箱的 OIDC 用户，代价是 `user_metadata` 里没有用户名，需要由 LearnOS 侧回退显示名。
 
 环境已复原：补丁未进入任何提交，FloatCTF 二进制已回退到未打补丁版本使用，LearnOS `FLOATCTF_OIDC_ENABLED=false`。
+
+## 上线清单（环境就绪后照做）
+
+前置条件：公网 HTTPS 可达的 FloatCTF，且已修复 CSP 两跳问题（见「解除阻塞所需变更」）。
+
+### 1. FloatCTF 侧
+
+1. 在 FloatCTF 控制台创建 OIDC 应用（客户端类型：机密 / confidential）。
+2. 登记回调地址：`https://<SUPABASE_URL_HOST>/auth/v1/callback`。
+   - 必须是 https；本地开发才使用 `http://127.0.0.1:54321/auth/v1/callback`（需开启 `allow_loopback_redirect_uris`）。
+3. 勾选 scope：`openid`、`profile`（**不要**勾 `email`：FloatCTF 不验证邮箱，勾选只会带来无用的未验证邮箱 claim）。
+4. 记录 `client_id` / `client_secret`（secret 只显示一次）。
+5. 确认 `homepage_url` 指向 LearnOS 的公开地址（CSP 修复后会用到）。
+
+### 2. Supabase 侧
+
+```bash
+# 指向远端项目（本地开发可省略）
+npx supabase link --project-ref <ref>
+
+# 应用迁移（含 profiles 触发器与准入 Hook）
+npx supabase db push
+```
+
+迁移包含 `before_user_created_floatctf`：只放行 `custom:floatctf`，公开邮箱注册返回 403。管理员用 Admin API 建号不受影响。
+
+> 若远端项目的 `auth` schema 不允许普通迁移角色建函数，按 `supabase/migrations/20261024000100_floatctf_admission.sql` 的内容以 `supabase_admin` 执行一次。
+
+### 3. 应用侧环境变量
+
+```bash
+FLOATCTF_OIDC_ENABLED=true
+FLOATCTF_ALLOW_SIGNUP=true
+FLOATCTF_OIDC_ISSUER=https://ctf.example.com
+FLOATCTF_OIDC_CLIENT_ID=<client_id>
+FLOATCTF_OIDC_CLIENT_SECRET=<client_secret>
+NEXT_PUBLIC_APP_URL=https://learn.example.com
+```
+
+在 Supabase 项目的 Auth → URL Configuration 中把 `https://learn.example.com/auth/callback` 加入 Redirect URLs。
+
+### 4. 创建 provider 并自检
+
+```bash
+pnpm oidc:setup     # 校验 discovery 并幂等创建 custom:floatctf
+pnpm oidc:verify    # 六项上线前检查，必须全绿
+```
+
+`oidc:verify` 未全绿前不要开启入口——失败的分别是 issuer 策略、CSP 两跳、provider 一致性中最常见的误配。
+
+### 5. 验收
+
+```bash
+E2E_FLOATCTF_SSO=1 \
+E2E_FLOATCTF_USERNAME=<IdP 测试账号> \
+E2E_FLOATCTF_PASSWORD=<密码> \
+pnpm test:e2e
+```
+
+逐项确认：首次登录建 student、重复登录同一用户、绑定保留原 ID、停用被拒、退出重登、IdP 账号不被按邮箱合并。
+
+### 6. 回滚
+
+```bash
+# 关闭入口（立即生效，无需回滚代码）
+FLOATCTF_OIDC_ENABLED=false
+
+# 删除 provider
+curl -X DELETE "$SUPABASE_URL/auth/v1/admin/custom-providers/custom:floatctf" \
+  -H "Authorization: Bearer $SERVICE_ROLE_KEY" -H "apikey: $SERVICE_ROLE_KEY"
+```
+
+回滚不影响已有用户：Supabase `auth.users.id` 不变，profiles、报名、笔记、积分全部保留。已绑定过 FloatCTF 的用户改为邮箱密码登录即可继续学习。
+
+### 7. 运维注意
+
+- `client_secret` 只放服务端；`FLOATCTF_OIDC_*` 不得出现在 `NEXT_PUBLIC_*`。
+- FloatCTF 撤回授权后，用户无法再用 SSO 登录，但 LearnOS 会话仍在有效期内；如需强制下线，管理员停用账号。
+- 停用判断以 `profiles.disabled_at` 为准，OIDC 属性不会影响角色。
