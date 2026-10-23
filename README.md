@@ -256,9 +256,17 @@ pnpm courses:sync --publish  # 显式发布（种子/演示用途）
 pnpm lint          # ESLint（Next core-web-vitals + TS）
 pnpm typecheck     # tsc --noEmit
 pnpm test          # Vitest：单元 + 真实 PostgreSQL/RLS/事务测试（需先 pnpm db:start）
+pnpm test:unit     # 仅单元测试，无需数据库（CI 使用）
 pnpm build         # 生产构建
 pnpm security:scan # 扫描 .next/static：服务端密钥/测验解析不得进入客户端
 pnpm test:e2e      # Playwright（需数据库已迁移/种子；自动复用或启动单个 Next.js 应用）
+```
+
+FloatCTF OIDC 相关：
+
+```bash
+pnpm oidc:check    # 配置 custom:floatctf 并执行上线前七项自检
+pnpm test:e2e -g "FloatCTF"   # SSO 验收（需真实 IdP，见 docs/oidc-floatctf.md）
 ```
 
 一键运行：
