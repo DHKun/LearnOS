@@ -578,7 +578,12 @@ tests/e2e/admin-detail.spec.ts          1 test
 - FloatCTF CSP 只允许 Supabase callback origin；Supabase 再跳转 LearnOS origin 被 Chrome `form-action` 拦截。
 - 解除需改 FloatCTF CSP/ID Token，或升级/补丁 Supabase Auth；未绕过安全边界。
 
-### 21.3 测试
+### 21.3 上线前自检
+
+- [x] `pnpm oidc:verify`：issuer 约束、discovery、PKCE、JWKS、CSP 两跳、provider 一致性六项检查，失败即非零退出。
+- [x] `tests/unit/oidc-verify.test.ts`、`tests/unit/oidc-registered-e2e.test.ts` 覆盖 issuer 判定与 SSO 安全不变量。
+
+### 21.4 测试
 
 - `tests/unit/oidc.test.ts`：安全 next、身份识别、显示名。
 - 手工实测记录见 `docs/oidc-floatctf.md`。

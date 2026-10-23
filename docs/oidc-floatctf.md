@@ -70,7 +70,7 @@ Content Security Policy directive:
 
 **该 CSP 由 `txn.redirect_uri` 推导，而 Supabase 传给 FloatCTF（经 GoTrue）的 `redirect_uri` 是 `<Supabase>/auth/v1/callback`。**换句话说，只要 Supabase 在中间再做一跳「callback → LearnOS」，FloatCTF 的 CSP 就无法覆盖最终 origin。修复需要 FloatCTF 把 LearnOS origin 纳入 `form-action`（例如读取并校验客户端登记的 homepage_url，或支持 Supabase 的 `redirect_to`），这是上游改动。
 
-补充：本地无法绕开此点做自测——GoTrue 会拒绝 loopback/私有地址作为 custom provider issuer（`URL cannot resolve to private network addresses`；`URL must use HTTPS`），所以真实 SSO 只能在公网 HTTPS issuer 上验证。
+**决定性约束（已核对 GoTrue 源码）**：`utilities.ValidateOAuthURL` 同时要求 `https`、主机不是 `localhost/127.0.0.1/::1/0.0.0.0`、解析结果不是 loopback/RFC1918/链路本地；并且 `ssrfProtectedTransport.RoundTrip` 会在**每次** discovery/JWKS 请求时重新校验。FloatCTF 则只允许 loopback 使用 http。两者叠加后，**本地不存在任何可同时满足的 issuer**——GoTrue 拒绝 loopback，FloatCTF 拒绝公网 http。因此真实 SSO 只能在公网 HTTPS 环境验证。
 
 ## 解除阻塞所需变更（二选一）
 
@@ -78,6 +78,23 @@ Content Security Policy directive:
 2. **Supabase Auth**：升级/补丁 GoTrue 使其对 custom OIDC 调用 UserInfo；同时仍需解决 FloatCTF CSP 的两跳回调问题，或在 Supabase callback 与 LearnOS 之间改为同源不跳转的方案。
 
 在任一项完成前，不应把 `FLOATCTF_OIDC_ENABLED` 设为 true。
+
+## 上线前自检
+
+```bash
+pnpm oidc:verify
+```
+
+逐项检查（不通过即以非零码退出，并打印修复方向）：
+
+1. issuer 是否满足 Supabase 约束（https 且非 loopback/私有地址）；
+2. discovery 可达且 `issuer` 逐字节一致；
+3. `response_types=code` 与 `code_challenge_methods=S256`；
+4. JWKS 可拉取（避免 `fetching keys context deadline exceeded`）；
+5. CSP `form-action` 是否覆盖「Supabase 回调 → LearnOS」两跳；
+6. Supabase 中 `custom:floatctf` 的 enabled/issuer/client_id 是否与本应用一致。
+
+2026-10-23 在本地的实测输出：`4/7 项通过`，未通过项为 issuer 约束、CSP 两跳、provider 配置不一致——与前文阻塞一致。
 
 ## 配置步骤
 
