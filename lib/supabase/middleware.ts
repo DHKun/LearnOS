@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getVerifiedUserId } from "@/lib/supabase/claims";
-import { supabaseServerUrl } from "@/lib/supabase/config";
+import { authCookieName, supabaseServerUrl } from "@/lib/supabase/config";
 
 const PROTECTED_PREFIXES = ["/courses", "/learn", "/me", "/admin"];
 
@@ -14,6 +14,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: {
+        name: authCookieName(),
         path: "/",
         sameSite: "lax",
         // The browser client (manual identity linking, sign-out) must read this

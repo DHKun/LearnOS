@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { supabaseServerUrl } from "@/lib/supabase/config";
+import { authCookieName, supabaseServerUrl } from "@/lib/supabase/config";
 
 /**
  * Cookie-bound Supabase client. Uses the publishable key and is therefore
@@ -15,6 +15,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: {
+        name: authCookieName(),
         path: "/",
         sameSite: "lax",
         // The browser client (manual identity linking, sign-out) must read this

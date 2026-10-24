@@ -408,7 +408,8 @@
 **决定**：
 
 1. **Supabase 会话 Cookie 改为浏览器可读（`httpOnly: false`）**。`@supabase/ssr` 的浏览器客户端需要读取会话 Cookie 才能执行 `linkIdentity` 等操作；设为 `httpOnly` 会让浏览器退化为匿名请求，GoTrue 返回 `bad_jwt: missing sub claim`。安全性由 CSP、SameSite=Lax 与服务端校验承担。
-2. **FloatCTF 客户端登记为 `client_secret_post`**。FloatCTF 的 Basic 凭据解析会对 Base64 做表单解码，secret 的 Base64 含 `+` 时被替换为空格，导致 `invalid_client`；`client_secret_post` 规避该上游缺陷。
-3. 验收脚本在真实 IdP 下运行 11 个用例（6 类主场景 + 5 个失败路径），全部通过；CSP 修复以 `docs/patches/floatctf-oidc-csp-two-hop.patch` 形式交付，上游库测试 446 passed。
+2. **容器内固定 Auth Cookie 名**。服务端使用 `SUPABASE_INTERNAL_URL`、浏览器使用 `NEXT_PUBLIC_SUPABASE_URL`，`@supabase/ssr` 默认按主机派生 Cookie 名，导致 PKCE verifier 不共享。`authCookieName()` 统一按公开 URL 派生，服务端、中间件、浏览器客户端共用。
+3. **FloatCTF 客户端登记为 `client_secret_post`**。FloatCTF 的 Basic 凭据解析会对 Base64 做表单解码，secret 的 Base64 含 `+` 时被替换为空格，导致 `invalid_client`；`client_secret_post` 规避该上游缺陷。
+4. 验收脚本在真实 IdP 下运行 11 个用例（6 类主场景 + 5 个失败路径），全部通过；CSP 修复以 `docs/patches/floatctf-oidc-csp-two-hop.patch` 形式交付，上游库测试 446 passed。
 
 **影响**：SSO 产品路径已验证可用；生产启用仍依赖 FloatCTF 修复 CSP 两跳。Cookie 可读性变化对所有登录方式生效，需在安全评审中记录。

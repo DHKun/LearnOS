@@ -312,3 +312,17 @@ curl -X DELETE "$SUPABASE_URL/auth/v1/admin/custom-providers/custom:floatctf" \
 - `client_secret` 只放服务端；`FLOATCTF_OIDC_*` 不得出现在 `NEXT_PUBLIC_*`。
 - FloatCTF 撤回授权后，用户无法再用 SSO 登录，但 LearnOS 会话仍在有效期内；如需强制下线，管理员停用账号。
 - 停用判断以 `profiles.disabled_at` 为准，OIDC 属性不会影响角色。
+
+## 容器化部署验证（2026-10-23）
+
+用生产镜像在 `127.0.0.1:3010` 启动容器（`SUPABASE_INTERNAL_URL=http://host.docker.internal:54321`，应用容器内通过宿主网关访问 Supabase），真实 SSO **11/11 通过**，全量 E2E **31/31 通过**。
+
+期间发现并修复一个**仅容器部署暴露**的缺陷：服务端用 `SUPABASE_INTERNAL_URL`、浏览器用 `NEXT_PUBLIC_SUPABASE_URL`，`@supabase/ssr` 按 URL 主机派生 Cookie 名，两端名字不同导致 PKCE verifier 读不到、callback 必然 `oauth_failed`。现在 `lib/supabase/config.ts` 的 `authCookieName()` 固定按公开 URL 派生，服务端/中间件/浏览器客户端共用同一名字。
+
+> 该容器实例使用临时 HTTPS 隧道，只用于验证；正式部署必须使用稳定的 FloatCTF 公网 HTTPS 地址。
+
+## 上游补丁状态
+
+- PR：https://github.com/FloatCTF/floatctf/pull/8
+- 已合并到 `main`：`e24746df7b1bd95536ec16a9dafd7cb412f467b2`
+- CI：Rust unit + security grep、Web checks 均通过
