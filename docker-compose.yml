@@ -26,6 +26,8 @@ services:
       LEARNOS_DB_URL: "postgresql://learnos:${POSTGRES_PASSWORD:-learnos}@postgres:5432/learnos"
       BETTER_AUTH_URL: "${BETTER_AUTH_URL:-http://localhost:3000}"
       BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}"
+      BETTER_AUTH_ALLOW_SIGNUP: "${BETTER_AUTH_ALLOW_SIGNUP:-false}"
+      BETTER_AUTH_RATE_LIMIT: "${BETTER_AUTH_RATE_LIMIT:-true}"
       # Admin scan reads the host working copy; runtime content comes from the
       # image, so undeployed edits never change what students see.
       LEARNOS_SCAN_CONTENT_ROOT: "/workspace/content/courses"

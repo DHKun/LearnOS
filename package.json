@@ -78,7 +78,6 @@
     "tailwindcss": "4.3.3",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "vitest": "3.2.7",
-    "@supabase/supabase-js": "2.118.0"
+    "vitest": "3.2.7"
   }
 }

@@ -78,7 +78,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
     });
     expect(again.id).toBe(enrollmentId);
 
-    const { count } = await db()
+    const { data: count } = await db()
       .from("enrollments")
       .select("id", { count: "exact", head: true })
       .eq("student_id", student.id);
@@ -107,7 +107,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
       .eq("enrollment_id", enrollmentId)
       .eq("lesson_id", firstLesson.id)
       .maybeSingle();
-    expect(lessonState?.status).toBe("in_progress");
+    expect((lessonState as { status: string } | null)?.status).toBe("in_progress");
 
     await sleep(40);
     await rpc("heartbeat", {
@@ -155,7 +155,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
     expect(first.duplicate).toBe(false);
     expect(second.duplicate).toBe(true);
 
-    const { count } = await db()
+    const { data: count } = await db()
       .from("activity_events")
       .select("id", { count: "exact", head: true })
       .eq("id", eventId);
@@ -445,7 +445,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
       });
       expect(joined.status).toBe("active");
 
-      const { count } = await db()
+      const { data: count } = await db()
         .from("enrollments")
         .select("id", { count: "exact", head: true })
         .eq("student_id", student.id)
@@ -475,7 +475,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         expect(rejected).toHaveLength(1);
         expect(String(rejected[0].reason)).toContain("ACTIVE_COURSE_EXISTS");
 
-        const { count } = await db()
+        const { data: count } = await db()
           .from("enrollments")
           .select("id", { count: "exact", head: true })
           .eq("student_id", concurrencyStudent.id)
