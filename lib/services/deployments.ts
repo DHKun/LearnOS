@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
+
 import { ApiError } from "@/lib/api/errors";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { mapPgError, one, rows, textList } from "@/lib/db/query";
 import { compareScan, scanLocalCourses } from "@/lib/deployments/scan";
 import type {
   DeploymentCourseSnapshot,
@@ -97,15 +99,21 @@ function emptyState(): DeploymentState {
 }
 
 export async function getDeploymentState(): Promise<DeploymentState> {
-  const db = createAdminClient();
-  const { data, error } = await db
-    .from("deployment_state")
-    .select(
-      "current_job_id,previous_job_id,current_version,previous_version,current_image_id,previous_image_id,updated_at",
-    )
-    .eq("id", true)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await one<{
+    current_job_id: string | null;
+    previous_job_id: string | null;
+    current_version: string | null;
+    previous_version: string | null;
+    current_image_id: string | null;
+    previous_image_id: string | null;
+    updated_at: string | null;
+  }>(sql`
+    select current_job_id, previous_job_id, current_version, previous_version,
+           current_image_id, previous_image_id, updated_at
+    from public.deployment_state
+    where id = true
+    limit 1
+  `);
   if (!data) return emptyState();
   return {
     currentVersion: data.current_version,
@@ -119,10 +127,7 @@ export async function getDeploymentState(): Promise<DeploymentState> {
 }
 
 async function getJobRow(id: string): Promise<JobRow | null> {
-  const db = createAdminClient();
-  const { data, error } = await db.from("deployment_jobs").select("*").eq("id", id).maybeSingle();
-  if (error) throw error;
-  return (data as JobRow | null) ?? null;
+  return one<JobRow>(sql`select * from public.deployment_jobs where id = ${id}::uuid limit 1`);
 }
 
 export async function getDeploymentJob(id: string): Promise<DeploymentJob> {
@@ -132,33 +137,23 @@ export async function getDeploymentJob(id: string): Promise<DeploymentJob> {
 }
 
 async function latestSucceededJob(): Promise<JobRow | null> {
-  const db = createAdminClient();
-  const { data, error } = await db
-    .from("deployment_jobs")
-    .select("*")
-    .eq("status", "succeeded")
-    .order("finished_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return (data as JobRow | null) ?? null;
+  return one<JobRow>(sql`
+    select * from public.deployment_jobs
+    where status = 'succeeded'
+    order by finished_at desc
+    limit 1
+  `);
 }
 
 async function getEnrollmentCounts(): Promise<Map<string, number>> {
-  const db = createAdminClient();
-  const [{ data: courses, error: courseError }, { data: enrollments, error: enrollmentError }] =
-    await Promise.all([
-      db.from("courses").select("id,slug"),
-      db.from("enrollments").select("course_id"),
-    ]);
-  if (courseError) throw courseError;
-  if (enrollmentError) throw enrollmentError;
-
-  const slugById = new Map((courses ?? []).map((course) => [course.id, course.slug]));
+  const data = await rows<{ course_id: string; slug: string }>(sql`
+    select e.course_id, c.slug
+    from public.enrollments e
+    join public.courses c on c.id = e.course_id
+  `);
   const counts = new Map<string, number>();
-  for (const enrollment of enrollments ?? []) {
-    const slug = slugById.get(enrollment.course_id);
-    if (slug) counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  for (const enrollment of data) {
+    counts.set(enrollment.slug, (counts.get(enrollment.slug) ?? 0) + 1);
   }
   return counts;
 }
@@ -195,16 +190,12 @@ function toSnapshot(item: ScannedCourse): DeploymentCourseSnapshot {
 }
 
 export async function createDeploymentJob(requestedBy: string): Promise<DeploymentJob> {
-  const db = createAdminClient();
   const state = await getDeploymentState();
-
-  const { data: active, error: activeError } = await db
-    .from("deployment_jobs")
-    .select("id")
-    .in("status", ACTIVE_STATUSES)
-    .limit(1)
-    .maybeSingle();
-  if (activeError) throw activeError;
+  const active = await one<{ id: string }>(sql`
+    select id from public.deployment_jobs
+    where status = any(${textList(ACTIVE_STATUSES)})
+    limit 1
+  `);
   if (active) throw new ApiError("DEPLOYMENT_IN_PROGRESS");
 
   const scan = await scanDeploymentCourses();
@@ -215,54 +206,40 @@ export async function createDeploymentJob(requestedBy: string): Promise<Deployme
     );
   }
 
-  const { data: versions, error: versionError } = await db
-    .from("deployment_jobs")
-    .select("deployment_version");
-  if (versionError) throw versionError;
-  const version = nextDeploymentVersion((versions ?? []).map((row) => row.deployment_version));
+  const versions = await rows<{ deployment_version: string }>(sql`
+    select deployment_version from public.deployment_jobs
+  `);
+  const version = nextDeploymentVersion(versions.map((row) => row.deployment_version));
+  const courses = scan.items.filter((item) => item.status !== "removed").map(toSnapshot);
 
-  const courses = scan.items
-    .filter((item) => item.status !== "removed")
-    .map((item) => toSnapshot(item));
-
-  const { data: inserted, error } = await db
-    .from("deployment_jobs")
-    .insert({
-      kind: "deploy",
-      status: "queued",
-      phase: "等待部署",
-      deployment_version: version,
-      previous_version: state.currentVersion,
-      previous_image_id: state.currentImageId,
-      requested_by: requestedBy,
-      courses,
-      result: { scanAt: scan.scannedAt, baselineVersion: scan.baselineVersion },
-    })
-    .select("*")
-    .single();
-
-  if (error) {
-    if (error.code === "23505") throw new ApiError("DEPLOYMENT_IN_PROGRESS");
-    throw error;
+  try {
+    const inserted = await one<JobRow>(sql`
+      insert into public.deployment_jobs
+        (kind, status, phase, deployment_version, previous_version, previous_image_id,
+         requested_by, courses, result)
+      values
+        ('deploy', 'queued', '等待部署', ${version}, ${state.currentVersion},
+         ${state.currentImageId}::uuid, ${requestedBy}, ${JSON.stringify(courses)}::jsonb,
+         ${JSON.stringify({ scanAt: scan.scannedAt, baselineVersion: scan.baselineVersion })}::jsonb)
+      returning *
+    `);
+    if (!inserted) throw new ApiError("INTERNAL_ERROR");
+    return readJob(inserted);
+  } catch (error) {
+    return mapPgError(error);
   }
-
-  return readJob(inserted as JobRow);
 }
 
 export async function createRollbackJob(
   requestedBy: string,
   targetJobId?: string,
 ): Promise<DeploymentJob> {
-  const db = createAdminClient();
   const state = await getDeploymentState();
-
-  const { data: active, error: activeError } = await db
-    .from("deployment_jobs")
-    .select("id")
-    .in("status", ACTIVE_STATUSES)
-    .limit(1)
-    .maybeSingle();
-  if (activeError) throw activeError;
+  const active = await one<{ id: string }>(sql`
+    select id from public.deployment_jobs
+    where status = any(${textList(ACTIVE_STATUSES)})
+    limit 1
+  `);
   if (active) throw new ApiError("DEPLOYMENT_IN_PROGRESS");
 
   const targetId = targetJobId ?? state.previousJobId;
@@ -276,66 +253,55 @@ export async function createRollbackJob(
     throw new ApiError("DEPLOYMENT_NOT_AVAILABLE", "目标版本不是可用的成功部署记录");
   }
 
-  const { data: inserted, error } = await db
-    .from("deployment_jobs")
-    .insert({
-      kind: "rollback",
-      status: "queued",
-      phase: "等待回滚",
-      deployment_version: target.deployment_version,
-      image_tag: target.image_tag,
-      image_id: target.image_id,
-      previous_version: state.currentVersion,
-      previous_image_id: state.currentImageId,
-      rollback_target_job_id: target.id,
-      requested_by: requestedBy,
-      courses: target.courses ?? [],
-      result: { targetVersion: target.deployment_version },
-    })
-    .select("*")
-    .single();
-
-  if (error) {
-    if (error.code === "23505") throw new ApiError("DEPLOYMENT_IN_PROGRESS");
-    throw error;
+  try {
+    const inserted = await one<JobRow>(sql`
+      insert into public.deployment_jobs
+        (kind, status, phase, deployment_version, image_tag, image_id,
+         previous_version, previous_image_id, rollback_target_job_id,
+         requested_by, courses, result)
+      values
+        ('rollback', 'queued', '等待回滚', ${target.deployment_version},
+         ${target.image_tag}, ${target.image_id}::uuid, ${state.currentVersion},
+         ${state.currentImageId}::uuid, ${target.id}::uuid, ${requestedBy},
+         ${JSON.stringify(target.courses ?? [])}::jsonb,
+         ${JSON.stringify({ targetVersion: target.deployment_version })}::jsonb)
+      returning *
+    `);
+    if (!inserted) throw new ApiError("INTERNAL_ERROR");
+    return readJob(inserted);
+  } catch (error) {
+    return mapPgError(error);
   }
-
-  return readJob(inserted as JobRow);
 }
 
 export async function getDeploymentOverview(): Promise<DeploymentOverview> {
-  const db = createAdminClient();
   const state = await getDeploymentState();
 
-  const [current, previous, activeResult, historyResult, scan] = await Promise.all([
+  const [current, previous, activeRow, historyRows, scan] = await Promise.all([
     state.currentJobId ? getJobRow(state.currentJobId) : Promise.resolve(null),
     state.previousJobId ? getJobRow(state.previousJobId) : Promise.resolve(null),
-    db
-      .from("deployment_jobs")
-      .select("*")
-      .in("status", ACTIVE_STATUSES)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    db
-      .from("deployment_jobs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(20),
+    one<JobRow>(sql`
+      select * from public.deployment_jobs
+      where status = any(${textList(ACTIVE_STATUSES)})
+      order by created_at desc
+      limit 1
+    `),
+    rows<JobRow>(sql`
+      select * from public.deployment_jobs
+      order by created_at desc
+      limit 20
+    `),
     scanDeploymentCourses(),
   ]);
 
-  if (activeResult.error) throw activeResult.error;
-  if (historyResult.error) throw historyResult.error;
-
-  const activeJob = activeResult.data ? readJob(activeResult.data as JobRow) : null;
+  const activeJob = activeRow ? readJob(activeRow) : null;
 
   return {
     state,
     current: current ? readJob(current) : null,
     previous: previous ? readJob(previous) : null,
     active: activeJob ? { ...activeJob, logs: activeJob.logs.slice(-500) } : null,
-    history: ((historyResult.data ?? []) as JobRow[]).map((row) => readJob(row, false)),
+    history: historyRows.map((row) => readJob(row, false)),
     scan,
   };
 }

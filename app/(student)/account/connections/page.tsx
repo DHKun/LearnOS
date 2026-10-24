@@ -4,8 +4,12 @@ import { LinkFloatctfButton } from "@/components/auth/link-floatctf-button";
 import { PageHeader } from "@/components/page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireStudent } from "@/lib/auth/session";
-import { FLOATCTF_PROVIDER } from "@/lib/auth/floatctf";
-import { createClient } from "@/lib/supabase/server";
+import { eq } from "drizzle-orm";
+
+import { auth } from "@/lib/auth/better";
+import { db } from "@/lib/db";
+import { account } from "@/lib/db/schema";
+import { headers } from "next/headers";
 
 export const metadata: Metadata = { title: "账号与登录方式" };
 
@@ -16,13 +20,18 @@ export default async function ConnectionsPage({
 }) {
   const student = await requireStudent();
   const params = await searchParams;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const linked = Boolean(
-    user?.identities?.some((identity) => identity.provider === FLOATCTF_PROVIDER),
-  );
+  const session = await auth.api.getSession({ headers: await headers() });
+  const linked = session?.user
+    ? Boolean(
+        (
+          await db
+            .select({ id: account.id })
+            .from(account)
+            .where(eq(account.userId, session.user.id))
+            .limit(20)
+        ).length,
+      )
+    : false;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

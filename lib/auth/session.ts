@@ -1,8 +1,11 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 
-import { getVerifiedUserId } from "@/lib/supabase/claims";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth/better";
+import { db } from "@/lib/db";
+import { profiles } from "@/lib/db/schema";
 
 export type Role = "student" | "admin";
 
@@ -14,39 +17,31 @@ export type SessionProfile = {
   disabledAt: string | null;
 };
 
-function toProfile(row: {
-  user_id: string;
-  email: string | null;
-  display_name: string;
-  role: string;
-  disabled_at: string | null;
-}): SessionProfile {
+function toProfile(row: typeof profiles.$inferSelect): SessionProfile {
   return {
-    id: row.user_id,
+    id: row.userId,
     email: row.email,
-    displayName: row.display_name,
+    displayName: row.displayName,
     role: row.role === "admin" ? "admin" : "student",
-    disabledAt: row.disabled_at,
+    disabledAt: row.disabledAt ? row.disabledAt.toISOString() : null,
   };
 }
 
-/** Request-scoped session lookup. Returns null when unauthenticated. */
+/** Request-scoped Better Auth session + LearnOS profile lookup. */
 export const getSessionProfile = cache(async (): Promise<SessionProfile | null> => {
-  const supabase = await createClient();
-  const userId = await getVerifiedUserId(supabase);
-  if (!userId) return null;
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_id,email,display_name,role,disabled_at")
-    .eq("user_id", userId)
-    .maybeSingle();
+  const [profile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, session.user.id))
+    .limit(1);
 
   if (!profile) return null;
   return toProfile(profile);
 });
 
-/** Page guard for student-only pages. */
 export async function requireStudent(): Promise<SessionProfile> {
   const profile = await getSessionProfile();
   if (!profile) redirect("/login");
@@ -55,7 +50,6 @@ export async function requireStudent(): Promise<SessionProfile> {
   return profile;
 }
 
-/** Page guard for admin-only pages. */
 export async function requireAdmin(): Promise<SessionProfile> {
   const profile = await getSessionProfile();
   if (!profile) redirect("/login");

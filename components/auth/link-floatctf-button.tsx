@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Link2 } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 
 export function LinkFloatctfButton({ linked }: { linked: boolean }) {
@@ -25,15 +25,10 @@ export function LinkFloatctfButton({ linked }: { linked: boolean }) {
       const callback = new URL("/auth/callback", window.location.origin);
       callback.searchParams.set("intent", "link");
       callback.searchParams.set("next", "/account/connections");
-      const supabase = createClient();
-      const { error: linkError } = await supabase.auth.linkIdentity({
-        provider: "keycloak",
-        options: { redirectTo: callback.toString(), scopes: "openid" },
+      await authClient.linkSocial({
+        provider: "floatctf",
+        callbackURL: callback.toString(),
       });
-      if (linkError) {
-        setPending(false);
-        setError("暂时无法发起绑定，请稍后再试或联系管理员。");
-      }
     } catch {
       setPending(false);
       setError("暂时无法发起绑定，请稍后再试或联系管理员。");

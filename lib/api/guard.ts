@@ -1,30 +1,12 @@
-import { getVerifiedUserId } from "@/lib/supabase/claims";
-import { createClient } from "@/lib/supabase/server";
 import { ApiError } from "@/lib/api/errors";
-import type { Role, SessionProfile } from "@/lib/auth/session";
+import { getSessionProfile, type Role, type SessionProfile } from "@/lib/auth/session";
 
-/** Authenticate an API request from the Supabase cookie session. */
+/** Authenticate an API request from the Better Auth cookie session. */
 export async function requireUser(): Promise<SessionProfile> {
-  const supabase = await createClient();
-  const userId = await getVerifiedUserId(supabase);
-  if (!userId) throw new ApiError("UNAUTHENTICATED");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_id,email,display_name,role,disabled_at")
-    .eq("user_id", userId)
-    .maybeSingle();
-
+  const profile = await getSessionProfile();
   if (!profile) throw new ApiError("UNAUTHENTICATED");
-  if (profile.disabled_at) throw new ApiError("ACCOUNT_DISABLED");
-
-  return {
-    id: profile.user_id,
-    email: profile.email,
-    displayName: profile.display_name,
-    role: (profile.role === "admin" ? "admin" : "student") as Role,
-    disabledAt: profile.disabled_at,
-  };
+  if (profile.disabledAt) throw new ApiError("ACCOUNT_DISABLED");
+  return profile;
 }
 
 export async function requireApiStudent(): Promise<SessionProfile> {
@@ -52,9 +34,6 @@ function allowedOrigins(request: Request): Set<string> {
     // ignore malformed request URLs
   }
 
-  // Next may report a bind address (0.0.0.0) in request.url while the browser
-  // used a LAN hostname or localhost. Trust the Host header for same-origin
-  // comparison so both access names keep working.
   const host = request.headers.get("host");
   if (host) {
     const forwarded = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
@@ -65,11 +44,6 @@ function allowedOrigins(request: Request): Set<string> {
   return origins;
 }
 
-/**
- * CSRF / cross-origin protection for cookie-authenticated mutations.
- * Browsers always send Origin on fetch POST/PUT/PATCH; server-to-server
- * callers must set it explicitly.
- */
 export function assertSameOrigin(request: Request): void {
   const origin = request.headers.get("origin");
   if (!origin) throw new ApiError("CSRF_ORIGIN_REJECTED");
@@ -78,10 +52,9 @@ export function assertSameOrigin(request: Request): void {
   }
 }
 
-/** Guard for every mutating Route Handler. */
 export function assertMutationRequest(request: Request): void {
   const method = request.method.toUpperCase();
-  if (method !== "GET" && method !== "HEAD") {
-    assertSameOrigin(request);
-  }
+  if (method !== "GET" && method !== "HEAD") assertSameOrigin(request);
 }
+
+export type { Role };

@@ -18,7 +18,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     // Admin-issued accounts only; public email signup stays closed at the app layer.
-    disableSignUp: true,
+    disableSignUp: process.env.BETTER_AUTH_ALLOW_SIGNUP !== "true",
   },
   advanced: {
     database: { generateId: "uuid" },
@@ -56,6 +56,21 @@ export const auth = betterAuth({
               pkce: true,
               authentication: "post",
               disableImplicitSignUp: false,
+              mapProfileToUser: (profile) => {
+                const subject = String(profile.sub ?? profile.id ?? "");
+                const displayName =
+                  (typeof profile.name === "string" && profile.name.trim()) ||
+                  (typeof profile.preferred_username === "string" && profile.preferred_username) ||
+                  `FloatCTF 用户 ${subject.slice(0, 8)}`;
+                return {
+                  // FloatCTF does not expose a verified email. A deterministic,
+                  // non-deliverable placeholder keeps Better Auth's required
+                  // field unique without enabling email-based account matching.
+                  email: `${subject}@floatctf.invalid`,
+                  emailVerified: false,
+                  name: displayName.slice(0, 120),
+                };
+              },
             },
           ]
         : [],

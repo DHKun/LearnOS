@@ -1,12 +1,15 @@
-import { ApiError, mapDatabaseError } from "@/lib/api/errors";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { sql } from "drizzle-orm";
+
+import { ApiError } from "@/lib/api/errors";
+import { mapPgError, one, rpc } from "@/lib/db/query";
 import { findEnrollmentForLesson, getOwnedEnrollment } from "@/lib/services/enrollments";
 
-async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
-  const db = createAdminClient();
-  const { data, error } = await db.rpc(name, args);
-  if (error) mapDatabaseError(error);
-  return data as T;
+async function call<T>(name: string, args: Record<string, unknown>): Promise<T> {
+  try {
+    return await rpc<T>(name, args);
+  } catch (error) {
+    return mapPgError(error);
+  }
 }
 
 export async function recordHeartbeat(
@@ -21,7 +24,7 @@ export async function recordHeartbeat(
   currentLessonId: string | null;
   status: string;
 }> {
-  return rpc("heartbeat", {
+  return call("heartbeat", {
     p_student: studentId,
     p_enrollment: enrollmentId,
     p_lesson: lessonId,
@@ -41,7 +44,7 @@ export async function recordEvent(
     payload?: Record<string, unknown>;
   },
 ): Promise<{ accepted: boolean; duplicate: boolean }> {
-  return rpc("record_event", {
+  return call("record_event", {
     p_student: studentId,
     p_enrollment: input.enrollmentId,
     p_lesson: input.lessonId,
@@ -59,7 +62,7 @@ export async function saveState(
   state: Record<string, unknown>,
   expectedVersion: number,
 ): Promise<{ version: number; updatedAt: string }> {
-  return rpc("save_state", {
+  return call("save_state", {
     p_student: studentId,
     p_enrollment: enrollmentId,
     p_lesson: lessonId,
@@ -76,21 +79,18 @@ export async function getStateForEnrollment(
   version: number;
   updatedAt: string | null;
 }> {
-  const db = createAdminClient();
-  const { data, error } = await db
-    .from("activity_states")
-    .select("state,version,updated_at")
-    .eq("enrollment_id", enrollmentId)
-    .eq("lesson_id", lessonId)
-    .maybeSingle();
-
-  if (error) throw error;
+  const data = await one<{
+    state: Record<string, unknown>;
+    version: number;
+    updated_at: string;
+  }>(sql`
+    select state, version, updated_at
+    from public.activity_states
+    where enrollment_id = ${enrollmentId}::uuid and lesson_id = ${lessonId}::uuid
+    limit 1
+  `);
   if (!data) return { state: null, version: 0, updatedAt: null };
-  return {
-    state: data.state as Record<string, unknown>,
-    version: data.version,
-    updatedAt: data.updated_at,
-  };
+  return { state: data.state, version: data.version, updatedAt: data.updated_at };
 }
 
 export async function getState(
@@ -102,23 +102,8 @@ export async function getState(
   updatedAt: string | null;
 }> {
   const enrollment = await findEnrollmentForLesson(studentId, lessonId);
-  const db = createAdminClient();
-
-  if (!enrollment) {
-    throw new ApiError("FORBIDDEN");
-  }
-
-  const { data, error } = await db
-    .from("activity_states")
-    .select("state,version,updated_at")
-    .eq("enrollment_id", enrollment.id)
-    .eq("lesson_id", lessonId)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) return { state: null, version: 0, updatedAt: null };
-
-  return { state: data.state as Record<string, unknown>, version: data.version, updatedAt: data.updated_at };
+  if (!enrollment) throw new ApiError("FORBIDDEN");
+  return getStateForEnrollment(enrollment.id, lessonId);
 }
 
 /** Verify the caller owns the enrollment before accepting any lesson write. */
@@ -128,13 +113,9 @@ export async function assertEnrollmentOwnership(
   lessonId: string,
 ): Promise<void> {
   const enrollment = await getOwnedEnrollment(studentId, enrollmentId);
-  const db = createAdminClient();
-  const { data: lesson, error } = await db
-    .from("lessons")
-    .select("id,course_id")
-    .eq("id", lessonId)
-    .maybeSingle();
-  if (error) throw error;
+  const lesson = await one<{ id: string; course_id: string }>(sql`
+    select id, course_id from public.lessons where id = ${lessonId}::uuid limit 1
+  `);
   if (!lesson || lesson.course_id !== enrollment.course_id) {
     throw new ApiError("LESSON_NOT_FOUND");
   }

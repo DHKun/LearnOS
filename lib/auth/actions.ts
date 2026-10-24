@@ -1,8 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
 
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/lib/auth/better";
+import { db } from "@/lib/db";
+import { profiles } from "@/lib/db/schema";
 
 export type LoginState = { error?: string };
 
@@ -15,28 +19,29 @@ export async function signInAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  if (!email || !password) {
-    return { error: "请输入邮箱和密码" };
-  }
-  if (email.length > 320 || password.length > 200) {
+  if (!email || !password) return { error: "请输入邮箱和密码" };
+  if (email.length > 320 || password.length > 200) return { error: GENERIC_ERROR };
+
+  try {
+    await auth.api.signInEmail({
+      body: { email, password },
+      headers: await headers(),
+    });
+  } catch {
     return { error: GENERIC_ERROR };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) return { error: GENERIC_ERROR };
 
-  if (error || !data.user) {
-    return { error: GENERIC_ERROR };
-  }
+  const [profile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, session.user.id))
+    .limit(1);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role,disabled_at")
-    .eq("user_id", data.user.id)
-    .maybeSingle();
-
-  if (!profile || profile.disabled_at) {
-    await supabase.auth.signOut();
+  if (!profile || profile.disabledAt) {
+    await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
     return { error: "账号已被停用，请联系管理员" };
   }
 
@@ -44,7 +49,6 @@ export async function signInAction(
 }
 
 export async function signOutAction(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
   redirect("/login");
 }

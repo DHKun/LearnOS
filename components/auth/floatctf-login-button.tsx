@@ -3,7 +3,7 @@
 import * as React from "react";
 import { LogIn } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 
 export function FloatctfLoginButton({ next }: { next?: string | null }) {
@@ -18,18 +18,10 @@ export function FloatctfLoginButton({ next }: { next?: string | null }) {
       if (next && next.startsWith("/") && !next.startsWith("//")) {
         callback.searchParams.set("next", next);
       }
-      const supabase = createClient();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "keycloak",
-        // Keycloak only issues an access token usable at /userinfo when the
-        // openid scope is present; GoTrue's Keycloak provider defaults to
-        // profile+email and drops openid.
-        options: { redirectTo: callback.toString(), scopes: "openid" },
+      await authClient.signIn.social({
+        provider: "floatctf",
+        callbackURL: callback.toString(),
       });
-      if (oauthError) {
-        setPending(false);
-        setError("FloatCTF 登录暂不可用，请使用邮箱密码登录。");
-      }
     } catch {
       setPending(false);
       setError("FloatCTF 登录暂不可用，请使用邮箱密码登录。");

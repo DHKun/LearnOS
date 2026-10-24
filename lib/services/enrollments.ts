@@ -1,19 +1,22 @@
-import { createAdminClient } from "@/lib/supabase/admin";
-import { ApiError, mapDatabaseError } from "@/lib/api/errors";
+import { sql } from "drizzle-orm";
+
+import { ApiError } from "@/lib/api/errors";
+import { mapPgError, one, rpc } from "@/lib/db/query";
 import type { EnrollmentSummary } from "@/lib/types";
 
-async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
-  const db = createAdminClient();
-  const { data, error } = await db.rpc(name, args);
-  if (error) mapDatabaseError(error);
-  return data as T;
+async function call<T>(name: string, args: Record<string, unknown>): Promise<T> {
+  try {
+    return await rpc<T>(name, args);
+  } catch (error) {
+    return mapPgError(error);
+  }
 }
 
 export async function joinCourse(
   studentId: string,
   courseId: string,
 ): Promise<EnrollmentSummary> {
-  return rpc<EnrollmentSummary>("join_course", {
+  return call<EnrollmentSummary>("join_course", {
     p_student: studentId,
     p_course: courseId,
   });
@@ -23,7 +26,7 @@ export async function abandonCourse(
   studentId: string,
   enrollmentId: string,
 ): Promise<EnrollmentSummary> {
-  return rpc<EnrollmentSummary>("abandon_course", {
+  return call<EnrollmentSummary>("abandon_course", {
     p_student: studentId,
     p_enrollment: enrollmentId,
   });
@@ -41,7 +44,7 @@ export async function completeLesson(
   pointsAwarded: number;
   alreadyCompleted: boolean;
 }> {
-  return rpc("complete_lesson", {
+  return call("complete_lesson", {
     p_student: studentId,
     p_enrollment: enrollmentId,
     p_lesson: lessonId,
@@ -60,16 +63,14 @@ export async function getOwnedEnrollment(
   studentId: string,
   enrollmentId: string,
 ): Promise<OwnedEnrollment> {
-  const db = createAdminClient();
-  const { data, error } = await db
-    .from("enrollments")
-    .select("id,course_id,status,current_lesson_id")
-    .eq("id", enrollmentId)
-    .eq("student_id", studentId)
-    .maybeSingle();
-  if (error) throw error;
+  const data = await one<OwnedEnrollment>(sql`
+    select id, course_id, status, current_lesson_id
+    from public.enrollments
+    where id = ${enrollmentId}::uuid and student_id = ${studentId}::uuid
+    limit 1
+  `);
   if (!data) throw new ApiError("ENROLLMENT_NOT_FOUND");
-  return data as OwnedEnrollment;
+  return data;
 }
 
 /** Prefer the active enrollment; fall back to the latest completed one for review. */
@@ -77,24 +78,17 @@ export async function findEnrollmentForLesson(
   studentId: string,
   lessonId: string,
 ): Promise<OwnedEnrollment | null> {
-  const db = createAdminClient();
-  const { data: lesson, error } = await db
-    .from("lessons")
-    .select("id,course_id")
-    .eq("id", lessonId)
-    .maybeSingle();
-  if (error) throw error;
+  const lesson = await one<{ id: string; course_id: string }>(sql`
+    select id, course_id from public.lessons where id = ${lessonId}::uuid limit 1
+  `);
   if (!lesson) return null;
 
-  const { data, error: enrollmentError } = await db
-    .from("enrollments")
-    .select("id,course_id,status,current_lesson_id")
-    .eq("student_id", studentId)
-    .eq("course_id", lesson.course_id)
-    .order("started_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (enrollmentError) throw enrollmentError;
-  return (data as OwnedEnrollment | null) ?? null;
+  const data = await one<OwnedEnrollment>(sql`
+    select id, course_id, status, current_lesson_id
+    from public.enrollments
+    where student_id = ${studentId}::uuid and course_id = ${lesson.course_id}::uuid
+    order by started_at desc
+    limit 1
+  `);
+  return data ?? null;
 }

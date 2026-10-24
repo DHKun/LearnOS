@@ -1,39 +1,43 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { sql } from "drizzle-orm";
+
+import { mapPgError, rows, rpc } from "@/lib/db/query";
 import type { PointsData } from "@/lib/types";
 
 const DETAIL_LIMIT = 1000;
 
 export async function getPoints(studentId: string): Promise<PointsData> {
-  const db = createAdminClient();
-  const [itemsResult, totalResult] = await Promise.all([
-    db
-      .from("point_events")
-      .select("id,delta,reason,created_at")
-      .eq("student_id", studentId)
-      .order("created_at", { ascending: false })
-      .limit(DETAIL_LIMIT),
-    db.rpc("student_points_total", { p_student: studentId }),
-  ]);
+  try {
+    const [itemsResult, totalResult] = await Promise.all([
+      rows<{ id: string; delta: number; reason: string; created_at: string }>(sql`
+        select id, delta, reason, created_at
+        from public.point_events
+        where student_id = ${studentId}::uuid
+        order by created_at desc
+        limit ${DETAIL_LIMIT}
+      `),
+      rpc<number>("student_points_total", { p_student: studentId }),
+    ]);
 
-  if (itemsResult.error) throw itemsResult.error;
-  if (totalResult.error) throw totalResult.error;
-
-  const items = (itemsResult.data ?? []).map((row) => ({
-    id: row.id,
-    delta: row.delta,
-    reason: row.reason,
-    createdAt: row.created_at,
-  }));
-
-  return {
-    total: Number(totalResult.data ?? 0),
-    items,
-  };
+    return {
+      total: Number(totalResult ?? 0),
+      items: itemsResult.map((row) => ({
+        id: row.id,
+        delta: row.delta,
+        reason: row.reason,
+        createdAt: row.created_at,
+      })),
+    };
+  } catch (error) {
+    mapPgError(error);
+  }
 }
 
 export async function getTotalPoints(studentId: string): Promise<number> {
-  const db = createAdminClient();
-  const { data, error } = await db.rpc("student_points_total", { p_student: studentId });
-  if (error) throw error;
-  return Number(data ?? 0);
+  try {
+    return Number(
+      (await rpc<number>("student_points_total", { p_student: studentId })) ?? 0,
+    );
+  } catch (error) {
+    mapPgError(error);
+  }
 }

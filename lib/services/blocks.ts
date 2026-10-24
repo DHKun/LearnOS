@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 
-import { ApiError, mapDatabaseError } from "@/lib/api/errors";
+import { sql } from "drizzle-orm";
+
+import { ApiError } from "@/lib/api/errors";
+import { mapPgError, one, rows, rpc } from "@/lib/db/query";
 import { getActivityDefinition } from "@/lib/activities/catalog";
 import { chapterBlocks } from "@/lib/content/chapters";
 import { loadCourse, readBlockQuizFile } from "@/lib/content/loader";
@@ -8,7 +11,6 @@ import { gradeQuiz } from "@/lib/content/quiz";
 import { getValidator } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
 import { getOwnedEnrollment } from "@/lib/services/enrollments";
-import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   BlockResultSummary,
   BlockSubmitResult,
@@ -18,21 +20,28 @@ import type {
 } from "@/lib/types";
 
 async function loadChapterLesson(enrollmentId: string, lessonId: string) {
-  const db = createAdminClient();
-  const { data: lesson, error } = await db
-    .from("lessons")
-    .select("id,slug,type,course_id,completion_policy,config,courses(slug)")
-    .eq("id", lessonId)
-    .maybeSingle();
-  if (error) throw error;
+  const lesson = await one<{
+    id: string;
+    slug: string;
+    type: string;
+    course_id: string;
+    completion_policy: string;
+    config: Record<string, unknown> | null;
+    course_slug: string | null;
+  }>(sql`
+    select l.id, l.slug, l.type, l.course_id, l.completion_policy, l.config,
+           c.slug as course_slug
+    from public.lessons l
+    join public.courses c on c.id = l.course_id
+    where l.id = ${lessonId}::uuid
+    limit 1
+  `);
   if (!lesson) throw new ApiError("LESSON_NOT_FOUND");
   if (lesson.type !== "article") throw new ApiError("SUBMISSION_NOT_ALLOWED");
 
-  const nestedCourse = lesson.courses as { slug: string } | { slug: string }[] | null;
-  const course = Array.isArray(nestedCourse) ? nestedCourse[0] : nestedCourse;
-  if (!course) throw new ApiError("COURSE_NOT_FOUND");
+  if (!lesson.course_slug) throw new ApiError("COURSE_NOT_FOUND");
 
-  const loaded = loadCourse(course.slug);
+  const loaded = loadCourse(lesson.course_slug);
   const manifestLesson = loaded.manifest.lessons.find((item) => item.slug === lesson.slug);
   if (!manifestLesson) throw new ApiError("SUBMISSION_NOT_ALLOWED");
 
@@ -43,15 +52,21 @@ export async function getBlockResults(
   enrollmentId: string,
   lessonId: string,
 ): Promise<Record<string, BlockResultSummary>> {
-  const db = createAdminClient();
-  const { data, error } = await db
-    .from("block_results")
-    .select("block_id,block_kind,passed,attempts,last_score,last_feedback,first_passed_at")
-    .eq("enrollment_id", enrollmentId)
-    .eq("lesson_id", lessonId);
-  if (error) throw error;
+  const data = await rows<{
+    block_id: string;
+    block_kind: string;
+    passed: boolean;
+    attempts: number;
+    last_score: number | string | null;
+    last_feedback: Record<string, unknown> | null;
+    first_passed_at: string | null;
+  }>(sql`
+    select block_id, block_kind, passed, attempts, last_score, last_feedback, first_passed_at
+    from public.block_results
+    where enrollment_id = ${enrollmentId}::uuid and lesson_id = ${lessonId}::uuid
+  `);
   const map: Record<string, BlockResultSummary> = {};
-  for (const row of data ?? []) {
+  for (const row of data) {
     map[row.block_id] = {
       blockId: row.block_id,
       kind: row.block_kind as ChapterBlockKind,
@@ -129,22 +144,7 @@ export async function submitBlock(
     )
     .digest("hex");
 
-  const db = createAdminClient();
-  const { data, error } = await db.rpc("save_block_result", {
-    p_student: studentId,
-    p_enrollment: input.enrollmentId,
-    p_lesson: input.lessonId,
-    p_block_id: input.blockId,
-    p_block_kind: block.kind,
-    p_attempt_id: input.attemptId,
-    p_request_hash: requestHash,
-    p_passed: passed,
-    p_score: score,
-    p_feedback: feedback,
-  });
-  if (error) mapDatabaseError(error);
-
-  const result = data as {
+  let result: {
     accepted: boolean;
     duplicate: boolean;
     passed: boolean;
@@ -158,6 +158,22 @@ export async function submitBlock(
     enrollmentStatus: EnrollmentStatus;
     pointsAwarded: number;
   };
+  try {
+    result = await rpc("save_block_result", {
+      p_student: studentId,
+      p_enrollment: input.enrollmentId,
+      p_lesson: input.lessonId,
+      p_block_id: input.blockId,
+      p_block_kind: block.kind,
+      p_attempt_id: input.attemptId,
+      p_request_hash: requestHash,
+      p_passed: passed,
+      p_score: score,
+      p_feedback: feedback,
+    });
+  } catch (error) {
+    return mapPgError(error);
+  }
 
   return {
     accepted: result.accepted,

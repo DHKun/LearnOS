@@ -1,7 +1,12 @@
+import { randomUUID } from "node:crypto";
+
+import { sql } from "drizzle-orm";
+import { hashPassword } from "better-auth/crypto";
+
 import { ApiError, mapDatabaseError } from "@/lib/api/errors";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
+import { mapPgError, one, rows, rpc, uuidList } from "@/lib/db/query";
 import { invalidateCourseCache } from "@/lib/services/courses";
-import { supabaseServerUrl } from "@/lib/supabase/config";
 import { isOnline } from "@/lib/services/shared";
 import type {
   AdminAttention,
@@ -44,7 +49,9 @@ function progressFor(
   lessons: LessonLite[],
   completed: Set<string>,
 ): CourseProgress {
-  const required = lessons.filter((lesson) => lesson.course_id === enrollment.course_id && lesson.required);
+  const required = lessons.filter(
+    (lesson) => lesson.course_id === enrollment.course_id && lesson.required,
+  );
   const done = required.filter((lesson) => completed.has(lesson.id)).length;
   return {
     total: required.length,
@@ -54,10 +61,11 @@ function progressFor(
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
-  const db = createAdminClient();
-  const { data, error } = await db.rpc("admin_overview");
-  if (error) throw error;
-  return data as AdminOverview;
+  try {
+    return await rpc<AdminOverview>("admin_overview");
+  } catch (error) {
+    return mapPgError(error);
+  }
 }
 
 export async function listStudents(options: {
@@ -67,36 +75,21 @@ export async function listStudents(options: {
   page: number;
   pageSize: number;
 }): Promise<{ items: AdminStudentRow[]; total: number; page: number; pageSize: number }> {
-  const db = createAdminClient();
-  const { data, error } = await db.rpc("admin_students_page", {
-    p_q: options.q?.trim() || null,
-    p_online: options.online ?? null,
-    p_course: options.courseId ?? null,
-    p_page: options.page,
-    p_page_size: options.pageSize,
-  });
-  if (error) throw error;
-  return data as {
-    items: AdminStudentRow[];
-    total: number;
-    page: number;
-    pageSize: number;
-  };
+  try {
+    return await rpc("admin_students_page", {
+      p_q: options.q?.trim() || null,
+      p_online: options.online ?? null,
+      p_course: options.courseId ?? null,
+      p_page: options.page,
+      p_page_size: options.pageSize,
+    });
+  } catch (error) {
+    return mapPgError(error);
+  }
 }
 
 export async function getAdminAttention(): Promise<AdminAttention> {
-  const db = createAdminClient();
-  const { data, error } = await db
-    .from("enrollments")
-    .select(
-      "id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at,profiles(display_name,email),courses(title,lessons(id,title)),lesson_progress(lesson_id,status)",
-    )
-    .in("status", ["active", "completed"]);
-  if (error) throw error;
-
-  const now = Date.now();
-  const days = (ms: number) => now - ms;
-  const rows = (data ?? []) as unknown as {
+  const raw = await rows<{
     student_id: string;
     course_id: string;
     status: string;
@@ -104,39 +97,58 @@ export async function getAdminAttention(): Promise<AdminAttention> {
     started_at: string;
     last_interaction_at: string | null;
     completed_at: string | null;
-    profiles: { display_name: string; email: string | null }[] | { display_name: string; email: string | null } | null;
-    courses: {
-      title: string;
-      lessons: { id: string; title: string }[];
-    } | null;
-    lesson_progress: { lesson_id: string; status: string }[];
-  }[];
+    display_name: string;
+    email: string | null;
+    course_title: string;
+    lessons: { id: string; title: string }[] | null;
+    progress: { lesson_id: string; status: string }[] | null;
+  }>(sql`
+    select e.student_id, e.course_id, e.status, e.current_lesson_id,
+           e.started_at::text, e.last_interaction_at::text, e.completed_at::text,
+           p.display_name, p.email, c.title as course_title,
+           coalesce(
+             (select jsonb_agg(jsonb_build_object('id', l.id, 'title', l.title) order by l.position)
+              from public.lessons l where l.course_id = c.id),
+             '[]'::jsonb
+           ) as lessons,
+           coalesce(
+             (select jsonb_agg(jsonb_build_object('lesson_id', lp.lesson_id, 'status', lp.status))
+              from public.lesson_progress lp where lp.enrollment_id = e.id),
+             '[]'::jsonb
+           ) as progress
+    from public.enrollments e
+    join public.profiles p on p.user_id = e.student_id
+    join public.courses c on c.id = e.course_id
+    where e.status in ('active', 'completed')
+  `);
 
-  const build = (row: (typeof rows)[number]): AdminAttentionItem => {
-    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    const lessons = row.courses?.lessons ?? [];
+  const now = Date.now();
+  const days = (ms: number) => now - ms;
+  const build = (row: (typeof raw)[number]): AdminAttentionItem => {
+    const lessons = row.lessons ?? [];
     const completed = new Set(
-      row.lesson_progress.filter((item) => item.status === "completed").map((item) => item.lesson_id),
+      (row.progress ?? [])
+        .filter((item) => item.status === "completed")
+        .map((item) => item.lesson_id),
     );
     const required = lessons.length || 1;
     return {
       studentId: row.student_id,
-      name: profile?.display_name ?? "未命名学生",
+      name: row.display_name ?? "未命名学生",
       courseId: row.course_id,
-      courseTitle: row.courses?.title ?? "未知课程",
-      currentLesson:
-        lessons.find((lesson) => lesson.id === row.current_lesson_id)?.title ?? null,
+      courseTitle: row.course_title ?? "未知课程",
+      currentLesson: lessons.find((lesson) => lesson.id === row.current_lesson_id)?.title ?? null,
       progress: Math.round((completed.size / required) * 100),
       lastInteractionAt: row.last_interaction_at,
       startedAt: row.started_at,
     };
   };
 
-  const active = rows.filter((row) => row.status === "active");
+  const active = raw.filter((row) => row.status === "active");
   const notStarted = active
     .filter(
       (row) =>
-        row.lesson_progress.filter((item) => item.status === "completed").length === 0 &&
+        (row.progress ?? []).filter((item) => item.status === "completed").length === 0 &&
         !row.current_lesson_id &&
         !row.last_interaction_at,
     )
@@ -158,9 +170,13 @@ export async function getAdminAttention(): Promise<AdminAttention> {
       );
     })
     .map(build);
-  const recentlyCompleted = rows
+  const recentlyCompleted = raw
     .filter((row) => row.status === "completed")
-    .filter((row) => row.completed_at && new Date(row.completed_at).getTime() > days(7 * 24 * 60 * 60 * 1000))
+    .filter(
+      (row) =>
+        row.completed_at &&
+        new Date(row.completed_at).getTime() > days(7 * 24 * 60 * 60 * 1000),
+    )
     .map(build);
 
   const limit = (items: AdminAttentionItem[]) => items.slice(0, 6);
@@ -173,70 +189,90 @@ export async function getAdminAttention(): Promise<AdminAttention> {
 }
 
 export async function getStudentDetail(studentId: string): Promise<AdminStudentDetail> {
-  const db = createAdminClient();
-  const { data: profile, error } = await db
-    .from("profiles")
-    .select(
-      "user_id,email,display_name,disabled_at,created_at,role,point_events(id,delta,reason,created_at)",
-    )
-    .eq("user_id", studentId)
-    .eq("role", "student")
-    .maybeSingle();
-
-  if (error) throw error;
+  const profile = await one<{
+    user_id: string;
+    email: string | null;
+    display_name: string;
+    disabled_at: string | null;
+    created_at: string;
+    role: string;
+  }>(sql`
+    select user_id, email, display_name, disabled_at::text, created_at::text, role
+    from public.profiles
+    where user_id = ${studentId}::uuid and role = 'student'
+    limit 1
+  `);
   if (!profile) throw new ApiError("STUDENT_NOT_FOUND");
 
-  const profileEvents =
-    (profile as unknown as {
-      point_events?: { id: string; delta: number; reason: string; created_at: string }[];
-    }).point_events ?? [];
+  const profileEvents = await rows<{
+    id: string;
+    delta: number;
+    reason: string;
+    created_at: string;
+  }>(sql`
+    select id, delta, reason, created_at::text
+    from public.point_events
+    where student_id = ${studentId}::uuid
+    order by created_at desc
+    limit 50
+  `);
 
-  const { data: enrollmentsData, error: enrollmentsError } = await db
-    .from("enrollments")
-    .select("id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at")
-    .eq("student_id", studentId)
-    .order("started_at", { ascending: false });
-
-  if (enrollmentsError) throw enrollmentsError;
-  const enrollments = (enrollmentsData ?? []) as EnrollmentLite[];
+  const enrollments = await rows<EnrollmentLite>(sql`
+    select id, student_id, course_id, status, current_lesson_id,
+           started_at::text, last_seen_at::text, last_interaction_at::text, completed_at::text
+    from public.enrollments
+    where student_id = ${studentId}::uuid
+    order by started_at desc
+  `);
 
   const courseIds = [...new Set(enrollments.map((row) => row.course_id))];
   const enrollmentIds = enrollments.map((row) => row.id);
-  const [coursesResult, progressResult, eventsResult, totalPointsResult] = await Promise.all([
-      courseIds.length
-        ? db
-            .from("courses")
-            .select(
-              "id,title,slug,lessons(id,course_id,title,type,position,required,completion_policy,config)",
-            )
-            .in("id", courseIds)
-        : Promise.resolve({ data: [], error: null }),
-      enrollments.length
-        ? db
-            .from("lesson_progress")
-            .select("enrollment_id,lesson_id,status,completed_at,completion_source")
-            .in("enrollment_id", enrollmentIds)
-        : Promise.resolve({ data: [], error: null }),
-      enrollmentIds.length
-        ? db
-            .from("activity_events")
-            .select("id,event_type,step_id,payload,created_at,lesson_id")
-            .in("enrollment_id", enrollmentIds)
-            .order("created_at", { ascending: false })
-            .limit(50)
-        : Promise.resolve({ data: [], error: null }),
-      db.rpc("student_points_total", { p_student: studentId }),
-    ]);
 
-  for (const result of [coursesResult, progressResult, eventsResult, totalPointsResult]) {
-    if (result.error) throw result.error;
-  }
+  const [courses, lessons, progressRows, events, totalPoints] = await Promise.all([
+    courseIds.length
+      ? rows<{ id: string; title: string; slug: string }>(sql`
+          select id, title, slug from public.courses where id = any(${uuidList(courseIds)})
+        `)
+      : Promise.resolve([]),
+    courseIds.length
+      ? rows<LessonLite>(sql`
+          select id, course_id, title, type, position, required,
+                 completion_policy, config
+          from public.lessons where course_id = any(${uuidList(courseIds)})
+        `)
+      : Promise.resolve([]),
+    enrollmentIds.length
+      ? rows<{
+          enrollment_id: string;
+          lesson_id: string;
+          status: string;
+          completed_at: string | null;
+          completion_source: string | null;
+        }>(sql`
+          select enrollment_id, lesson_id, status, completed_at::text, completion_source
+          from public.lesson_progress
+          where enrollment_id = any(${uuidList(enrollmentIds)})
+        `)
+      : Promise.resolve([]),
+    enrollmentIds.length
+      ? rows<{
+          id: string;
+          event_type: string;
+          step_id: string | null;
+          payload: Record<string, unknown>;
+          created_at: string;
+          lesson_id: string;
+        }>(sql`
+          select id, event_type, step_id, payload, created_at::text, lesson_id
+          from public.activity_events
+          where enrollment_id = any(${uuidList(enrollmentIds)})
+          order by created_at desc
+          limit 50
+        `)
+      : Promise.resolve([]),
+    rpc<number>("student_points_total", { p_student: studentId }),
+  ]);
 
-  const courses = coursesResult.data ?? [];
-  const lessons = courses.flatMap(
-    (course) => (course as unknown as { lessons?: LessonLite[] }).lessons ?? [],
-  ) as LessonLite[];
-  const progressRows = progressResult.data ?? [];
   const courseById = new Map(courses.map((row) => [row.id, row]));
   const lessonById = new Map(lessons.map((row) => [row.id, row]));
 
@@ -249,13 +285,11 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
   }
 
   const current = enrollments.find((row) => row.status === "active") ?? enrollments[0] ?? null;
-
   const currentLessons = current
     ? lessons
         .filter((lesson) => lesson.course_id === current.course_id)
         .sort((a, b) => a.position - b.position)
     : [];
-
   const progressByLesson = new Map(
     progressRows
       .filter((row) => row.enrollment_id === current?.id)
@@ -269,7 +303,7 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
       email: profile.email,
       disabled: Boolean(profile.disabled_at),
       createdAt: profile.created_at,
-      points: Number(totalPointsResult.data ?? 0),
+      points: Number(totalPoints ?? 0),
     },
     current: current
       ? {
@@ -281,7 +315,11 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
           currentLesson: current.current_lesson_id
             ? lessonById.get(current.current_lesson_id)?.title ?? null
             : null,
-          progress: progressFor(current, lessons, completedByEnrollment.get(current.id) ?? new Set()),
+          progress: progressFor(
+            current,
+            lessons,
+            completedByEnrollment.get(current.id) ?? new Set(),
+          ),
           startedAt: current.started_at,
           lastSeenAt: current.last_seen_at,
           lastInteractionAt: current.last_interaction_at,
@@ -294,7 +332,11 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
       courseId: enrollment.course_id,
       courseTitle: courseById.get(enrollment.course_id)?.title ?? "未知课程",
       status: enrollment.status,
-      progress: progressFor(enrollment, lessons, completedByEnrollment.get(enrollment.id) ?? new Set()),
+      progress: progressFor(
+        enrollment,
+        lessons,
+        completedByEnrollment.get(enrollment.id) ?? new Set(),
+      ),
       startedAt: enrollment.started_at,
       completedAt: enrollment.completed_at,
     })),
@@ -308,7 +350,7 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
       completedAt: progressByLesson.get(lesson.id)?.completed_at ?? null,
       completionSource: progressByLesson.get(lesson.id)?.completion_source ?? null,
     })),
-    recentEvents: (eventsResult.data ?? []).map((event) => ({
+    recentEvents: events.map((event) => ({
       id: event.id,
       type: event.event_type,
       stepId: event.step_id,
@@ -316,16 +358,12 @@ export async function getStudentDetail(studentId: string): Promise<AdminStudentD
       createdAt: event.created_at,
       lessonTitle: lessonById.get(event.lesson_id)?.title ?? null,
     })),
-    pointEvents: profileEvents
-      .slice()
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 50)
-      .map((row) => ({
-        id: row.id,
-        delta: row.delta,
-        reason: row.reason,
-        createdAt: row.created_at,
-      })),
+    pointEvents: profileEvents.map((row) => ({
+      id: row.id,
+      delta: row.delta,
+      reason: row.reason,
+      createdAt: row.created_at,
+    })),
   };
 }
 
@@ -334,87 +372,75 @@ export async function createStudent(input: {
   displayName: string;
   initialPassword: string;
 }): Promise<{ id: string }> {
-  const db = createAdminClient();
-  const { data, error } = await db.auth.admin.createUser({
-    email: input.email,
-    password: input.initialPassword,
-    email_confirm: true,
-    user_metadata: { display_name: input.displayName },
-    app_metadata: { role: "student" },
-  });
-
-  if (error) {
-    if (error.message.toLowerCase().includes("already")) {
+  const id = randomUUID();
+  const password = await hashPassword(input.initialPassword);
+  try {
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`
+        insert into public."user" (id, name, email, email_verified, created_at, updated_at)
+        values (${id}::uuid, ${input.displayName}, ${input.email}, true, now(), now())
+      `);
+      await tx.execute(sql`
+        insert into public.account
+          (id, account_id, provider_id, user_id, password, created_at, updated_at)
+        values
+          (${randomUUID()}::uuid, ${id}, 'credential', ${id}::uuid, ${password}, now(), now())
+      `);
+      await tx.execute(sql`
+        insert into public.profiles (user_id, email, display_name, role)
+        values (${id}::uuid, ${input.email}, ${input.displayName}, 'student')
+      `);
+    });
+  } catch (error) {
+    const e = error as { code?: string; message?: string };
+    if (e.code === "23505" || e.message?.toLowerCase().includes("duplicate")) {
       throw new ApiError("EMAIL_EXISTS");
     }
-    throw error;
+    mapDatabaseError({ message: e.message ?? "database error", code: e.code } as never);
   }
-  if (!data.user) throw new ApiError("INTERNAL_ERROR");
-
-  return { id: data.user.id };
+  return { id };
 }
 
 export async function updateStudent(
   studentId: string,
   patch: { disabled?: boolean; displayName?: string },
 ): Promise<void> {
-  const db = createAdminClient();
-  const { data: profile, error } = await db
-    .from("profiles")
-    .select("user_id,role")
-    .eq("user_id", studentId)
-    .maybeSingle();
-
-  if (error) throw error;
+  const profile = await one<{ user_id: string; role: string }>(sql`
+    select user_id, role from public.profiles where user_id = ${studentId}::uuid limit 1
+  `);
   if (!profile || profile.role !== "student") throw new ApiError("STUDENT_NOT_FOUND");
 
-  const update: Record<string, unknown> = {};
-  if (patch.displayName !== undefined) update.display_name = patch.displayName;
-  if (patch.disabled !== undefined) {
-    update.disabled_at = patch.disabled ? new Date().toISOString() : null;
+  try {
+    await db.execute(sql`
+      update public.profiles
+      set
+        display_name = case when ${patch.displayName !== undefined} then ${patch.displayName ?? null} else display_name end,
+        disabled_at = case
+          when ${patch.disabled === undefined} then disabled_at
+          when ${patch.disabled === true} then now()
+          else null
+        end
+      where user_id = ${studentId}::uuid
+    `);
+  } catch (error) {
+    mapPgError(error);
   }
-
-  if (Object.keys(update).length > 0) {
-    const { error: updateError } = await db
-      .from("profiles")
-      .update(update)
-      .eq("user_id", studentId);
-    if (updateError) mapDatabaseError(updateError);
-  }
-
-  // Business authorisation checks profiles.disabled_at on every request, which
-  // keeps a stable ACCOUNT_DISABLED response (a Supabase ban would turn live
-  // sessions into UNAUTHENTICATED instead). Login is blocked separately in the
-  // sign-in action.
 }
 
 export async function requestPasswordReset(studentId: string): Promise<{ sent: true }> {
-  const db = createAdminClient();
-  const { data: profile, error } = await db
-    .from("profiles")
-    .select("email,role")
-    .eq("user_id", studentId)
-    .maybeSingle();
-
-  if (error) throw error;
+  const profile = await one<{ email: string | null; role: string }>(sql`
+    select email, role from public.profiles where user_id = ${studentId}::uuid limit 1
+  `);
   if (!profile || profile.role !== "student" || !profile.email) {
     throw new ApiError("STUDENT_NOT_FOUND");
   }
-
-  const url = supabaseServerUrl();
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  if (!url || !anonKey) throw new ApiError("INTERNAL_ERROR");
-
-  const { createClient } = await import("@supabase/supabase-js");
-  const client = createClient(url, anonKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { error: resetError } = await client.auth.resetPasswordForEmail(profile.email, {
-    redirectTo: `${appUrl}/login`,
-  });
-
-  if (resetError) {
+  const { auth } = await import("@/lib/auth/better");
+  try {
+    await auth.api.requestPasswordReset({
+      body: { email: profile.email, redirectTo: `${appUrl}/login` },
+    });
+  } catch {
     throw new ApiError("INTERNAL_ERROR", "密码重置邮件发送失败");
   }
   return { sent: true };
@@ -424,35 +450,31 @@ export async function updateCourse(
   courseId: string,
   patch: { title?: string; description?: string; status?: "draft" | "published" | "archived" },
 ): Promise<void> {
-  const db = createAdminClient();
-  const { data: course, error } = await db
-    .from("courses")
-    .select("id,status")
-    .eq("id", courseId)
-    .maybeSingle();
-
-  if (error) throw error;
+  const course = await one<{ id: string; status: string }>(sql`
+    select id, status from public.courses where id = ${courseId}::uuid limit 1
+  `);
   if (!course) throw new ApiError("COURSE_NOT_FOUND");
 
   if (patch.status === "published") {
-    const { data: lessons, error: lessonsError } = await db
-      .from("lessons")
-      .select("id,title,type,position,required,completion_policy,config,content_ref")
-      .eq("course_id", courseId)
-      .order("position");
-
-    if (lessonsError) throw lessonsError;
-    const list = lessons ?? [];
-    if (list.length === 0 || !list.some((lesson) => lesson.required)) {
+    const lessons = await rows<{
+      id: string;
+      title: string;
+      required: boolean;
+      content_ref: string | null;
+      config: Record<string, unknown> | null;
+    }>(sql`
+      select id, title, required, content_ref, config
+      from public.lessons where course_id = ${courseId}::uuid order by position
+    `);
+    if (lessons.length === 0 || !lessons.some((lesson) => lesson.required)) {
       throw new ApiError("VALIDATION_ERROR", "课程至少需要 1 个必修章节才能发布");
     }
-
-    for (const lesson of list) {
+    for (const lesson of lessons) {
       if (!lesson.content_ref) {
         throw new ApiError("VALIDATION_ERROR", `章节 ${lesson.title} 缺少内容资源`);
       }
     }
-    const finalExams = list.filter(
+    const finalExams = lessons.filter(
       (lesson) => (lesson.config as Record<string, unknown> | null)?.finalExam === true,
     );
     if (finalExams.length > 1) {
@@ -460,15 +482,26 @@ export async function updateCourse(
     }
   }
 
-  const update: Record<string, unknown> = {};
-  if (patch.title !== undefined) update.title = patch.title;
-  if (patch.description !== undefined) update.description = patch.description;
-  if (patch.status !== undefined) update.status = patch.status;
+  if (
+    patch.title === undefined &&
+    patch.description === undefined &&
+    patch.status === undefined
+  ) {
+    return;
+  }
 
-  if (Object.keys(update).length === 0) return;
-
-  const { error: updateError } = await db.from("courses").update(update).eq("id", courseId);
-  if (updateError) mapDatabaseError(updateError);
+  try {
+    await db.execute(sql`
+      update public.courses
+      set
+        title = case when ${patch.title !== undefined} then ${patch.title ?? null} else title end,
+        description = case when ${patch.description !== undefined} then ${patch.description ?? null} else description end,
+        status = case when ${patch.status !== undefined} then ${patch.status ?? null} else status end
+      where id = ${courseId}::uuid
+    `);
+  } catch (error) {
+    mapPgError(error);
+  }
   invalidateCourseCache();
 }
 
@@ -480,63 +513,57 @@ export async function listCourseStudents(
     pageSize: number;
   },
 ): Promise<{ items: AdminCourseStudentRow[]; total: number; page: number; pageSize: number }> {
-  const db = createAdminClient();
-
-  const { data: course, error: courseError } = await db
-    .from("courses")
-    .select(
-      "id,lessons(id,course_id,title,type,position,required,completion_policy,config)",
-    )
-    .eq("id", courseId)
-    .maybeSingle();
-  if (courseError) throw courseError;
+  const course = await one<{ id: string }>(sql`
+    select id from public.courses where id = ${courseId}::uuid limit 1
+  `);
   if (!course) throw new ApiError("COURSE_NOT_FOUND");
 
+  const lessons = await rows<LessonLite>(sql`
+    select id, course_id, title, type, position, required, completion_policy, config
+    from public.lessons where course_id = ${courseId}::uuid order by position
+  `);
+
   const start = Math.max(0, (options.page - 1) * options.pageSize);
-  let enrollmentQuery = db
-    .from("enrollments")
-    .select(
-      "id,student_id,course_id,status,current_lesson_id,started_at,last_seen_at,last_interaction_at,completed_at,lesson_progress(lesson_id,status),profiles(user_id,email,display_name)",
-      { count: "exact" },
-    )
-    .eq("course_id", courseId);
-  if (options.status) enrollmentQuery = enrollmentQuery.eq("status", options.status);
-  const enrollmentsResult = await enrollmentQuery
-    .order("started_at", { ascending: false })
-    .range(start, start + options.pageSize - 1);
+  const totalRow = await one<{ count: string }>(sql`
+    select count(*)::text as count
+    from public.enrollments
+    where course_id = ${courseId}::uuid
+      and (${options.status ?? null}::text is null or status = ${options.status ?? null})
+  `);
 
-  if (enrollmentsResult.error) throw enrollmentsResult.error;
+  const enrollments = await rows<EnrollmentLite & {
+    display_name: string;
+    email: string | null;
+    completed_lessons: string[] | null;
+  }>(sql`
+    select e.id, e.student_id, e.course_id, e.status, e.current_lesson_id,
+           e.started_at::text, e.last_seen_at::text, e.last_interaction_at::text,
+           e.completed_at::text,
+           p.display_name, p.email,
+           coalesce(
+             (select array_agg(lp.lesson_id)
+              from public.lesson_progress lp
+              where lp.enrollment_id = e.id and lp.status = 'completed'),
+             array[]::uuid[]
+           ) as completed_lessons
+    from public.enrollments e
+    join public.profiles p on p.user_id = e.student_id
+    where e.course_id = ${courseId}::uuid
+      and (${options.status ?? null}::text is null or e.status = ${options.status ?? null})
+    order by e.started_at desc
+    offset ${start} limit ${options.pageSize}
+  `);
 
-  const enrollments = (enrollmentsResult.data ?? []) as unknown as (EnrollmentLite & {
-    profiles: { user_id: string; email: string | null; display_name: string }[] | null;
-    lesson_progress?: { lesson_id: string; status: string }[];
-  })[];
-  const lessons = (((course as unknown as { lessons?: LessonLite[] }).lessons ?? []) as LessonLite[])
-    .slice()
-    .sort((a, b) => a.position - b.position);
-
-  const completedByEnrollment = new Map<string, Set<string>>();
-  for (const enrollment of enrollments) {
-    for (const progress of enrollment.lesson_progress ?? []) {
-      if (progress.status !== "completed") continue;
-      const set = completedByEnrollment.get(enrollment.id) ?? new Set<string>();
-      set.add(progress.lesson_id);
-      completedByEnrollment.set(enrollment.id, set);
-    }
-  }
   const lessonById = new Map(lessons.map((row) => [row.id, row]));
-
   const items = enrollments.map((enrollment) => {
-    const profile = Array.isArray(enrollment.profiles)
-      ? enrollment.profiles[0]
-      : enrollment.profiles;
+    const completed = new Set(enrollment.completed_lessons ?? []);
     return {
       studentId: enrollment.student_id,
-      name: profile?.display_name ?? "未知学生",
-      email: profile?.email ?? null,
+      name: enrollment.display_name ?? "未知学生",
+      email: enrollment.email ?? null,
       enrollmentId: enrollment.id,
       enrollmentStatus: enrollment.status,
-      progress: progressFor(enrollment, lessons, completedByEnrollment.get(enrollment.id) ?? new Set()),
+      progress: progressFor(enrollment, lessons, completed),
       currentLesson: enrollment.current_lesson_id
         ? lessonById.get(enrollment.current_lesson_id)?.title ?? null
         : null,
@@ -548,7 +575,7 @@ export async function listCourseStudents(
 
   return {
     items,
-    total: enrollmentsResult.count ?? items.length,
+    total: Number(totalRow?.count ?? items.length),
     page: options.page,
     pageSize: options.pageSize,
   };

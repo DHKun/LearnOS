@@ -1,24 +1,28 @@
-import type { User } from "@supabase/supabase-js";
+import { eq } from "drizzle-orm";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db";
+import { profiles } from "@/lib/db/schema";
 
-export const FLOATCTF_PROVIDER = "keycloak";
-const LEGACY_FLOATCTF_PROVIDER = "custom:floatctf";
+export const FLOATCTF_PROVIDER = "floatctf";
+
+type UserLike = {
+  id: string;
+  email?: string | null;
+  app_metadata?: { provider?: string };
+  user_metadata?: Record<string, unknown>;
+  identities?: Array<{ provider: string }>;
+};
 
 export class OidcProvisionError extends Error {
   constructor(
     message: string,
-    readonly code:
-      | "SIGNUP_DISABLED"
-      | "PROVIDER_MISMATCH"
-      | "PROFILE_CONFLICT",
+    readonly code: "SIGNUP_DISABLED" | "PROVIDER_MISMATCH" | "PROFILE_CONFLICT",
   ) {
     super(message);
     this.name = "OidcProvisionError";
   }
 }
 
-/** Only same-origin absolute paths are accepted as post-login destinations. */
 export function safeNextPath(value: string | null | undefined): string | null {
   if (!value) return null;
   if (!value.startsWith("/") || value.startsWith("//")) return null;
@@ -27,20 +31,21 @@ export function safeNextPath(value: string | null | undefined): string | null {
 }
 
 export function isFloatctfLoginEnabled(): boolean {
-  return process.env.FLOATCTF_OIDC_ENABLED === "true";
+  return Boolean(process.env.FLOATCTF_OIDC_ISSUER) &&
+    process.env.FLOATCTF_OIDC_ENABLED !== "false";
 }
 
 export function isFloatctfSignupAllowed(): boolean {
-  return process.env.FLOATCTF_ALLOW_SIGNUP === "true";
+  return process.env.FLOATCTF_ALLOW_SIGNUP !== "false";
 }
 
-export function isFloatctfIdentity(user: User): boolean {
-  const provider = user.app_metadata?.provider;
-  const isProvider = (value: string | undefined) =>
-    value === FLOATCTF_PROVIDER || value === LEGACY_FLOATCTF_PROVIDER;
-  return (
-    isProvider(provider) ||
-    (user.identities ?? []).some((identity) => isProvider(identity.provider))
+export function isFloatctfIdentity(user: UserLike): boolean {
+  const providers = new Set([
+    user.app_metadata?.provider,
+    ...(user.identities ?? []).map((identity) => identity.provider),
+  ]);
+  return ["floatctf", "custom:floatctf", "keycloak"].some((provider) =>
+    providers.has(provider),
   );
 }
 
@@ -50,7 +55,7 @@ function cleanDisplayName(value: unknown): string | null {
   return text.length > 0 ? text.slice(0, 120) : null;
 }
 
-export function deriveFloatctfDisplayName(user: User): string {
+export function deriveFloatctfDisplayName(user: UserLike): string {
   const metadata = user.user_metadata ?? {};
   return (
     cleanDisplayName(metadata.display_name) ??
@@ -69,36 +74,23 @@ export type LearnOSProfile = {
   disabledAt: string | null;
 };
 
-/**
- * Get the existing profile for an OIDC user, or create a student profile.
- *
- * This never derives a role from provider metadata. The profiles table trigger
- * also defaults to student; this fallback handles a missing trigger/profile.
- */
-export async function getOrCreateFloatctfProfile(user: User): Promise<LearnOSProfile> {
+export async function getOrCreateFloatctfProfile(user: UserLike): Promise<LearnOSProfile> {
   if (!isFloatctfIdentity(user)) {
     throw new OidcProvisionError("当前登录来源不是 FloatCTF", "PROVIDER_MISMATCH");
   }
 
-  const db = createAdminClient();
-  const load = async () => {
-    const { data, error } = await db
-      .from("profiles")
-      .select("user_id,email,display_name,role,disabled_at")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (error) throw error;
-    return data;
-  };
-
-  const existing = await load();
+  const [existing] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, user.id))
+    .limit(1);
   if (existing) {
     return {
-      id: existing.user_id,
+      id: existing.userId,
       email: existing.email,
-      displayName: existing.display_name,
+      displayName: existing.displayName,
       role: existing.role === "admin" ? "admin" : "student",
-      disabledAt: existing.disabled_at,
+      disabledAt: existing.disabledAt ? existing.disabledAt.toISOString() : null,
     };
   }
 
@@ -106,26 +98,28 @@ export async function getOrCreateFloatctfProfile(user: User): Promise<LearnOSPro
     throw new OidcProvisionError("FloatCTF 新用户准入已关闭", "SIGNUP_DISABLED");
   }
 
-  const { error: insertError } = await db.from("profiles").insert({
-    user_id: user.id,
-    email: null,
-    display_name: deriveFloatctfDisplayName(user),
-    role: "student",
-  });
-  if (insertError) {
-    // A concurrent callback may have won the insert; re-read instead of failing.
-    if (insertError.code !== "23505") throw insertError;
-  }
+  await db
+    .insert(profiles)
+    .values({
+      userId: user.id,
+      email: null,
+      displayName: deriveFloatctfDisplayName(user),
+      role: "student",
+    })
+    .onConflictDoNothing();
 
-  const created = await load();
-  if (!created) {
-    throw new OidcProvisionError("无法创建 LearnOS 学生资料", "PROFILE_CONFLICT");
-  }
+  const [created] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, user.id))
+    .limit(1);
+  if (!created) throw new OidcProvisionError("无法创建 LearnOS 学生资料", "PROFILE_CONFLICT");
+
   return {
-    id: created.user_id,
+    id: created.userId,
     email: created.email,
-    displayName: created.display_name,
+    displayName: created.displayName,
     role: created.role === "admin" ? "admin" : "student",
-    disabledAt: created.disabled_at,
+    disabledAt: created.disabledAt ? created.disabledAt.toISOString() : null,
   };
 }
