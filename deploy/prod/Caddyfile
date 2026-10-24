@@ -1,0 +1,10 @@
+{
+	auto_https off
+}
+
+https://10.66.66.7:8080 {
+	bind 10.66.66.7
+	tls /certs/learnos.crt /certs/learnos.key
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000
+}

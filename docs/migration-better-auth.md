@@ -95,3 +95,11 @@ RLS policies（16 条）与 `profiles.user_id → auth.users` 外键/触发器�
 - `docker compose up -d postgres web` 健康检查 200，管理员登录进入 `/admin`。
 - 挂载内网 CA 后（`-f docker-compose.sso.yml`），FloatCTF SSO 在容器入口 `:3000` 登录成功并进入 `/courses`。
 - 首次构建需 `DOCKER_BUILDKIT=0`（当前主机无法拉取 BuildKit 前端）；镜像内 `pnpm install --ignore-scripts`。
+
+## 生产部署（10.66.66.7:8080，2026-10-24）
+
+- 独立 `learnos-postgres`（127.0.0.1:5434）+ `learnos-web`（127.0.0.1:3000）。
+- `learnos-caddy` 仅监听 10.66.66.7:8080，内部证书；公网 8080 不可达。
+- 课程已导入并发布；管理员密码随机生成，仅保存于 `/tmp/learnos-prod-secrets`（本机）。
+- 管理员登录已验证进入 `/admin`。
+- **阻塞**：生产 FloatCTF API 1.0.0 没有 OIDC provider，SSO 暂不可用；需升级 FloatCTF API 并注册回调。

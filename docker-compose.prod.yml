@@ -1,0 +1,13 @@
+# Production overrides for 10.66.66.7:8080.
+# - Web/Postgres bind loopback only; Caddy terminates TLS on 8080.
+# - Postgres uses 5434 because FloatCTF already owns 5433.
+services:
+  web:
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      BETTER_AUTH_ALLOW_SIGNUP: "${BETTER_AUTH_ALLOW_SIGNUP:-false}"
+      BETTER_AUTH_RATE_LIMIT: "${BETTER_AUTH_RATE_LIMIT:-true}"
+  postgres:
+    ports:
+      - "127.0.0.1:5434:5432"

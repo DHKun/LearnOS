@@ -1,0 +1,110 @@
+name: learnos
+
+# The updater passes LEARNOS_BUILD_CONTEXT=<fixed snapshot> and the version
+# build args when it runs `docker compose build web`.
+x-web-build-args: &web-build-args
+  NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+
+services:
+  web:
+    image: "learnos-web:${LEARNOS_IMAGE_TAG:-current}"
+    container_name: learnos-web
+    build:
+      context: "${LEARNOS_BUILD_CONTEXT:-.}"
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        <<: *web-build-args
+        LEARNOS_BUILD_VERSION: "${LEARNOS_BUILD_VERSION:-dev}"
+        LEARNOS_BUILD_TIME: "${LEARNOS_BUILD_TIME:-unknown}"
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      LEARNOS_DB_URL: "postgresql://learnos:${POSTGRES_PASSWORD:-learnos}@postgres:5432/learnos"
+      BETTER_AUTH_URL: "${BETTER_AUTH_URL:-http://localhost:3000}"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}"
+      BETTER_AUTH_ALLOW_SIGNUP: "${BETTER_AUTH_ALLOW_SIGNUP:-false}"
+      BETTER_AUTH_RATE_LIMIT: "${BETTER_AUTH_RATE_LIMIT:-true}"
+      # Admin scan reads the host working copy; runtime content comes from the
+      # image, so undeployed edits never change what students see.
+      LEARNOS_SCAN_CONTENT_ROOT: "/workspace/content/courses"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      # The updater detects the host project path from its own /workspace
+      # mount and passes LEARNOS_HOST_PROJECT_DIR to Compose. A manual
+      # `docker compose up` from the project root falls back to `.`.
+      - "${LEARNOS_HOST_PROJECT_DIR:-.}/content/courses:/workspace/content/courses:ro"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+
+  postgres:
+    image: postgres:17
+    container_name: learnos-postgres
+    environment:
+      POSTGRES_DB: learnos
+      POSTGRES_USER: learnos
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-learnos}"
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - learnos-postgres-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+      - ./db/migrations/0000_cooing_peter_parker.sql:/docker-entrypoint-initdb.d/002-auth.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnos -d learnos"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+
+  updater:
+    image: "learnos-updater:latest"
+    container_name: learnos-updater
+    build:
+      context: ./deploy/updater
+      dockerfile: Dockerfile
+    env_file:
+      - .env.local
+    environment:
+      LEARNOS_PROJECT_DIR: /workspace
+      LEARNOS_COMPOSE_FILE: /workspace/docker-compose.yml
+      LEARNOS_ENV_FILE: /workspace/.env.local
+      LEARNOS_DEPLOYMENTS_DIR: /workspace/.deployments
+      LEARNOS_SNAPSHOT_DIR: /tmp/learnos-snapshots
+      LEARNOS_IMAGE_NAME: learnos-web
+      LEARNOS_IMAGE_TAG: current
+      LEARNOS_TOOLS_IMAGE: learnos-tools
+      LEARNOS_WEB_SERVICE: web
+      LEARNOS_WEB_CONTAINER: learnos-web
+      LEARNOS_HEALTH_URL: http://web:3000/api/health
+      LEARNOS_POLL_MS: "2500"
+      LEARNOS_HEALTH_TIMEOUT_MS: "180000"
+      LEARNOS_BUILD_TIMEOUT_MS: "1800000"
+      LEARNOS_SYNC_TIMEOUT_MS: "300000"
+    volumes:
+      # Single-host admin tool by design. The updater never accepts a shell
+      # command from the web UI; see deploy/updater/updater.mjs.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    restart: unless-stopped
+    depends_on:
+      - web
+
+volumes:
+  learnos-postgres-data:
