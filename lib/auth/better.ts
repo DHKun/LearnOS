@@ -15,6 +15,9 @@ export const auth = betterAuth({
     process.env.BETTER_AUTH_SECRET ??
     "learnos-local-development-secret-change-before-deploying",
   database: drizzleAdapter(db, { provider: "pg" }),
+  rateLimit: {
+    enabled: process.env.BETTER_AUTH_RATE_LIMIT !== "false",
+  },
   emailAndPassword: {
     enabled: true,
     // Admin-issued accounts only; public email signup stays closed at the app layer.

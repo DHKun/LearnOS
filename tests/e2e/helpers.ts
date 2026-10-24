@@ -47,7 +47,6 @@ let counter = 0;
 
 export async function createTestStudent(label = "e2e"): Promise<TestStudent> {
   counter += 1;
-  const id = randomUUID();
   const email = `${label}-${Date.now()}-${counter}@learnos.local`;
   const password = "Student-E2E-2025!";
   const name = `E2E ${label} ${counter}`;
@@ -58,10 +57,9 @@ export async function createTestStudent(label = "e2e"): Promise<TestStudent> {
     body: JSON.stringify({ email, password, name }),
   });
   if (!response.ok) throw new Error(`createTestStudent failed: ${response.status} ${await response.text()}`);
-  await pool.query(
-    `insert into public.profiles (user_id,email,display_name,role) values ($1,$2,$3,'student')`,
-    [id, email, name],
-  );
+  const created = (await response.json()) as { user: { id: string } };
+  const id = created.user.id;
+  // The Better Auth database hook creates the profile automatically.
   return { id, email, password, name };
 }
 

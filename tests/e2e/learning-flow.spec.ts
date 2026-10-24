@@ -62,7 +62,7 @@ test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
 
       await page.getByLabel("请求实验 请求路径").fill("/api/books/2");
       await page.getByRole("button", { name: "提交实验结论" }).click();
-      await expect(page.getByText("服务端验证通过")).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText("服务端验证通过").first()).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText(/本章已完成/).first()).toBeVisible({ timeout: 20_000 });
 
       const enrollment = (await getEnrollments(student.id))[0];
