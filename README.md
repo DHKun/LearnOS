@@ -33,7 +33,7 @@ LearnOS 是一个可运行的多人互动学习平台。管理员统一发放账
 | --- | --- |
 | 应用 | Next.js 15 App Router + TypeScript，Route Handlers 提供 REST API |
 | UI | Tailwind CSS 4 + shadcn/ui 风格组件（Radix 原语），light/dark |
-| 数据 | Supabase Auth + PostgreSQL + RLS；`@supabase/ssr` Cookie 会话 |
+| 数据 | Better Auth + Drizzle ORM + 独立 PostgreSQL；HttpOnly Session Cookie |
 | 校验 | Zod（入参、课程 manifest、题库） |
 | 内容 | 仓库内 `course.json` + MDX + 服务端题库/验证器，`courses:validate` / `courses:sync` |
 | 互动 | 主应用内原生 React 活动组件 + 同源认证 Learning SDK |
@@ -67,7 +67,7 @@ pnpm install
 ### 2. 启动本地 Supabase
 
 ```bash
-pnpm db:start        # npx supabase start
+pnpm db:start        # docker compose up -d postgres
 ```
 
 首次会拉取镜像。默认端口：
@@ -83,7 +83,7 @@ pnpm db:start        # npx supabase start
 
 ```bash
 cp .env.example .env.local
-npx supabase status -o env
+pnpm db:status
 ```
 
 把输出填入 `.env.local`：
@@ -102,7 +102,7 @@ npx supabase status -o env
 ### 4. 建库并导入种子数据
 
 ```bash
-pnpm db:reset            # 应用 supabase/migrations 全部迁移
+pnpm db:migrate          # 应用 Drizzle 迁移；首次空库先执行 db/schema.sql
 pnpm seed:admin          # 创建管理员 admin@learnos.local
 pnpm seed:demo           # 创建 2 名学生，并同步/发布全部本地课程（含 HTTP 混合章节示范）
 ```
@@ -302,9 +302,9 @@ lib/
   learning/             # 同源 Learning SDK、Chapter/Block State、状态保存 Hook
   activities/           # 互动模拟纯函数与 activityId 目录
   services/             # 报名/进度/互动/测验/笔记/积分/报表/部署
-  supabase/             # browser/server/admin 客户端与中间件
+  lib/db/               # Drizzle 客户端与 Better Auth schema
 content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器；含 http-fundamentals 课程
-supabase/migrations/    # schema、RLS、事务函数、Block 结果/尝试表、部署任务表
+db/                     # 独立 PostgreSQL schema、Drizzle 迁移
 tests/                  # unit、integration（RLS/事务）、e2e（Playwright）
 scripts/                # 课程同步/校验/快照、种子、性能脚本、安全扫描
 deploy/updater/         # 最小更新执行器（Docker CLI + Node）
@@ -327,7 +327,7 @@ docs/                   # 规格、架构、API、课程制作、混合章节、
 
 ## 部署要点
 
-1. 使用托管 Supabase 或自建 Postgres/Auth，执行 `supabase db push` / 迁移。
+1. 启动独立 PostgreSQL，执行 `db/schema.sql` 与 `pnpm db:migrate`，再运行 `pnpm seed:admin`。
 2. 单机生产使用 `docker compose --env-file .env.local up -d --build`；日常课程更新走管理员 `/admin/deployments`。
 3. 用 `ADMIN_EMAIL` / `ADMIN_PASSWORD` 运行 `pnpm seed:admin`（或等价受控脚本）创建管理员；生产环境立即改密。
 4. 配置 SMTP 以启用密码重置邮件（本地用 Mailpit 查看）。
@@ -338,7 +338,7 @@ docs/                   # 规格、架构、API、课程制作、混合章节、
 
 ## 故障排查
 
-- **`pnpm db:start` 端口冲突**：修改 `supabase/config.toml` 的 API/DB/Studio/Inbucket 端口，并同步 `.env.local`。
+- **`pnpm db:start` 端口冲突**：修改 `docker-compose.yml` 的 Postgres 端口或 `LEARNOS_DB_URL`。
 - **登录 401 / 无 Cookie**：确认 `NEXT_PUBLIC_SUPABASE_URL` 与浏览器访问的主机一致；清空站点 Cookie 后重试。
 - **课程不显示**：确认已执行 `pnpm courses:sync` 且在 `/admin/courses` 发布；学生只看到 `published`。
 - **互动组件未显示**：确认课程已执行 `pnpm courses:sync`，且 `activityId` 已在 `components/activities/registry.tsx` 注册；`pnpm courses:validate` 会拒绝未注册的 activityId。

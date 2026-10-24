@@ -30,8 +30,8 @@ for (const file of staticFiles) {
 
 const forbidden: { label: string; needle: string }[] = [];
 
-const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (secret) forbidden.push({ label: "Supabase service role key", needle: secret });
+const secret = process.env.BETTER_AUTH_SECRET;
+if (secret) forbidden.push({ label: "Better Auth secret", needle: secret });
 forbidden.push({ label: "secret key prefix", needle: "sb_secret_" });
 
 // Server-only quiz answer explanations must never reach the browser bundle.
