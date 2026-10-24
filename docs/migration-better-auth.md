@@ -89,3 +89,9 @@ RLS policies（16 条）与 `profiles.user_id → auth.users` 外键/触发器�
 - `docker-compose.yml` 新增 `postgres:17`，挂载 `db/schema.sql` + Drizzle auth 迁移初始化。
 - 本地 `docker compose up -d postgres` 验证：19 张表初始化成功。
 - `@supabase/supabase-js` 仅保留为 devDependency，供尚未迁移的旧集成测试使用。
+
+## Docker SSO 验证（2026-10-24）
+
+- `docker compose up -d postgres web` 健康检查 200，管理员登录进入 `/admin`。
+- 挂载内网 CA 后（`-f docker-compose.sso.yml`），FloatCTF SSO 在容器入口 `:3000` 登录成功并进入 `/courses`。
+- 首次构建需 `DOCKER_BUILDKIT=0`（当前主机无法拉取 BuildKit 前端）；镜像内 `pnpm install --ignore-scripts`。

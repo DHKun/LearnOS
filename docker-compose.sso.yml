@@ -1,0 +1,9 @@
+# Local/internal SSO override: mount the internal CA so the Web container can
+# verify the FloatCTF HTTPS issuer. Usage:
+#   LEARNOS_CA_FILE=/path/to/ca.crt docker compose -f docker-compose.yml -f docker-compose.sso.yml up -d web
+services:
+  web:
+    environment:
+      NODE_EXTRA_CA_CERTS: /certs/ca.crt
+    volumes:
+      - "${LEARNOS_CA_FILE:?set LEARNOS_CA_FILE}:/certs/ca.crt:ro"
