@@ -326,3 +326,9 @@ curl -X DELETE "$SUPABASE_URL/auth/v1/admin/custom-providers/custom:floatctf" \
 - PR：https://github.com/FloatCTF/floatctf/pull/8
 - 已合并到 `main`：`e24746df7b1bd95536ec16a9dafd7cb412f467b2`
 - CI：Rust unit + security grep、Web checks 均通过
+
+## 已部署状态（2026-10-24）
+
+- 生产镜像 `learnos-web:current` 已重建并部署到 compose `web` 服务（`http://10.66.66.2:3000`），健康检查与登录页正常。
+- 回滚镜像保留为 `learnos-web:rollback-pre-oidc`。
+- **OIDC 入口仍关闭**：当前 FloatCTF 只有临时隧道地址，不能作为生产 issuer。待提供稳定公网 HTTPS 地址后，按「上线清单」设置 `FLOATCTF_OIDC_ENABLED=true` 并执行 `pnpm oidc:check`。
