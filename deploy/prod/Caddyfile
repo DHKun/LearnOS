@@ -8,3 +8,12 @@ https://10.66.66.7:8080 {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:3000
 }
+
+# FloatCTF OIDC issuer: only the protocol endpoints are proxied. The existing
+# FloatCTF HTTP site on 80/443 remains untouched.
+https://10.66.66.7:8443 {
+	bind 10.66.66.7
+	tls /certs/learnos.crt /certs/learnos.key
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:9091
+}

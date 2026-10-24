@@ -5,7 +5,10 @@ services:
   web:
     ports:
       - "127.0.0.1:3000:3000"
+    volumes:
+      - "/home/floatctfadmin/learnos/certs/ca.crt:/certs/ca.crt:ro"
     environment:
+      NODE_EXTRA_CA_CERTS: "/certs/ca.crt"
       BETTER_AUTH_ALLOW_SIGNUP: "${BETTER_AUTH_ALLOW_SIGNUP:-false}"
       BETTER_AUTH_RATE_LIMIT: "${BETTER_AUTH_RATE_LIMIT:-true}"
   postgres:

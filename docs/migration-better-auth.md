@@ -103,3 +103,12 @@ RLS policies（16 条）与 `profiles.user_id → auth.users` 外键/触发器�
 - 课程已导入并发布；管理员密码随机生成，仅保存于 `/tmp/learnos-prod-secrets`（本机）。
 - 管理员登录已验证进入 `/admin`。
 - **阻塞**：生产 FloatCTF API 1.0.0 没有 OIDC provider，SSO 暂不可用；需升级 FloatCTF API 并注册回调。
+
+## 生产 FloatCTF SSO（2026-10-24）
+
+- 生产 FloatCTF API 原本无 OIDC；已用 OIDC 分支 release 二进制叠加到 `floatctf/api:1.0.0`。
+- 应用迁移 `20261023162115-oidc-provider.sql`；issuer `https://10.66.66.7:8443`。
+- LearnOS client `learnos`，回调 `https://10.66.66.7:8080/api/auth/callback/floatctf`。
+- 登录页已显示「使用 FloatCTF 登录」，真实 SSO 到 `/courses` 已通过。
+- 旧 API 容器保留为 `floatctf-api-1.0.0-backup`；OIDC API 为 `floatctf-api`，restart unless-stopped。
+- 风险：该容器是手工切换，未写回 FloatCTF 的 root-owned compose；后续升级需先固化。
