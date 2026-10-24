@@ -50,17 +50,6 @@ export function LoginForm({
 
   return (
     <div className="mt-8 space-y-5">
-      {showFloatctf && (
-        <>
-          <FloatctfLoginButton next={next} />
-          <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            或使用邮箱密码
-            <span className="h-px flex-1 bg-border" />
-          </div>
-        </>
-      )}
-
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <div className="space-y-2">
           <Label htmlFor="email">邮箱</Label>
@@ -82,6 +71,18 @@ export function LoginForm({
         </Button>
         <p className="text-center text-xs text-muted-foreground">忘记密码？请联系管理员重置。</p>
       </form>
+
+      {showFloatctf && (
+        <>
+          <div className="flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            或使用 FloatCTF 账号
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <FloatctfLoginButton next={next} />
+        </>
+      )}
+
     </div>
   );
 }
