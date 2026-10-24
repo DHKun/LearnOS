@@ -15,6 +15,14 @@ export const auth = betterAuth({
     process.env.BETTER_AUTH_SECRET ??
     "learnos-local-development-secret-change-before-deploying",
   database: drizzleAdapter(db, { provider: "pg" }),
+  account: {
+    accountLinking: {
+      enabled: true,
+      // FloatCTF has no real email; LearnOS requires explicit, signed-in
+      // linking instead of email-based automatic merging.
+      allowDifferentEmails: true,
+    },
+  },
   rateLimit: {
     enabled: process.env.BETTER_AUTH_RATE_LIMIT !== "false",
   },

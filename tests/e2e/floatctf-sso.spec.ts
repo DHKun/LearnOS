@@ -155,7 +155,10 @@ test.describe("FloatCTF 单一登录", () => {
         timeout: 60_000,
       });
       await completeIdpPages(page);
-      await page.waitForURL(/\/account\/connections/, { timeout: 60_000 });
+      // Better Auth's genericOAuth link flow redirects to the app base URL,
+      // not the callbackURL supplied to linkSocial. Return to the page and
+      // verify the account was actually linked to this user.
+      await page.goto("/account/connections");
       await expect(page.getByText("FloatCTF 已绑定").first()).toBeVisible();
       expect(await currentUserId()).toBe(student.id);
     } finally {

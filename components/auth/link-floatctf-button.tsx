@@ -28,6 +28,7 @@ export function LinkFloatctfButton({ linked }: { linked: boolean }) {
       await authClient.linkSocial({
         provider: "floatctf",
         callbackURL: callback.toString(),
+        errorCallbackURL: "/account/connections?error=link_failed",
       });
     } catch {
       setPending(false);
