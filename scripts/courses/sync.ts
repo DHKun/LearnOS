@@ -11,7 +11,7 @@ import { buildChapterStructure, chapterConfig, resolveChapterCompletion } from "
 import type { ArticleLessonManifest } from "@/lib/content/manifest";
 import { getValidatorFingerprint } from "@/lib/content/validators.server";
 import { canonicalJson } from "@/lib/crypto/canonical-json";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { one, query } from "../db";
 
 export type SyncSummary = {
   slug: string;
@@ -107,39 +107,34 @@ export async function syncCourses(
     adoptStructure?: boolean;
   } = {},
 ): Promise<SyncSummary[]> {
-  const db = createAdminClient();
   const courses = await loadAllCourses();
   const summaries: SyncSummary[] = [];
 
   for (const loaded of courses) {
     const { manifest } = loaded;
 
-    const { data: existingCourse, error: courseError } = await db
-      .from("courses")
-      .select("id,status")
-      .eq("slug", manifest.slug)
-      .maybeSingle();
-    if (courseError) throw courseError;
+    const existingCourse = await one<{ id: string; status: string }>(
+      "select id,status from public.courses where slug=$1 limit 1",
+      [manifest.slug],
+    );
 
-    let courseId = existingCourse?.id as string | undefined;
+    let courseId = existingCourse?.id;
     let created = false;
     let enrollments = 0;
     let existingLessons: DbLesson[] = [];
 
     if (courseId) {
-      const { count, error: countError } = await db
-        .from("enrollments")
-        .select("id", { count: "exact", head: true })
-        .eq("course_id", courseId);
-      if (countError) throw countError;
-      enrollments = count ?? 0;
+      const countRow = await one<{ count: string }>(
+        "select count(*)::text as count from public.enrollments where course_id=$1",
+        [courseId],
+      );
+      enrollments = Number(countRow?.count ?? 0);
 
-      const { data: lessons, error: lessonsError } = await db
-        .from("lessons")
-        .select("id,slug,position,required,type,completion_policy,config")
-        .eq("course_id", courseId);
-      if (lessonsError) throw lessonsError;
-      existingLessons = (lessons ?? []) as DbLesson[];
+      existingLessons = await query<DbLesson>(
+        `select id,slug,position,required,type,completion_policy,config
+           from public.lessons where course_id=$1`,
+        [courseId],
+      );
 
       if (
         enrollments > 0 &&
@@ -153,22 +148,29 @@ export async function syncCourses(
 
       const update = buildCourseUpdate(manifest, options);
 
-      const { error: updateError } = await db.from("courses").update(update).eq("id", courseId);
-      if (updateError) throw updateError;
+      const keys = Object.keys(update);
+      const values = Object.values(update);
+      if (keys.length > 0) {
+        await query(
+          `update public.courses set ${keys.map((key, index) => `"${key}"=$${index + 1}`).join(",")}
+             where id=$${keys.length + 1}`,
+          [...values, courseId],
+        );
+      }
     } else {
-      const { data: inserted, error: insertError } = await db
-        .from("courses")
-        .insert({
-          slug: manifest.slug,
-          title: manifest.title,
-          description: manifest.description,
-          status: initialCourseStatus(options),
-          content_version: manifest.version,
-        })
-        .select("id")
-        .single();
-      if (insertError) throw insertError;
-      courseId = inserted.id as string;
+      const inserted = await one<{ id: string }>(
+        `insert into public.courses (slug,title,description,status,content_version)
+         values ($1,$2,$3,$4,$5) returning id`,
+        [
+          manifest.slug,
+          manifest.title,
+          manifest.description,
+          initialCourseStatus(options),
+          manifest.version,
+        ],
+      );
+      if (!inserted) throw new Error("course insert returned no id");
+      courseId = inserted.id;
       created = true;
     }
 
@@ -177,8 +179,7 @@ export async function syncCourses(
     // Without enrollments the lesson set can be replaced atomically enough for
     // content-as-code workflows; with enrollments the structure is frozen above.
     if (!created && enrollments === 0 && existingLessons.length > 0) {
-      const { error: deleteError } = await db.from("lessons").delete().eq("course_id", courseId);
-      if (deleteError) throw deleteError;
+      await query("delete from public.lessons where course_id=$1", [courseId]);
     }
 
     for (const [index, lesson] of manifest.lessons.entries()) {
@@ -195,21 +196,25 @@ export async function syncCourses(
         };
       }
 
-      const { error: lessonError } = await db.from("lessons").upsert(
-        {
-          course_id: courseId,
-          slug: lesson.slug,
-          title: lesson.title,
-          position: index,
-          type: "article",
-          required: lesson.required,
-          content_ref: lesson.source,
-          completion_policy: completionPolicy(lesson),
+      await query(
+        `insert into public.lessons
+           (course_id,slug,title,position,type,required,content_ref,completion_policy,config)
+         values ($1,$2,$3,$4,'article',$5,$6,$7,$8)
+         on conflict (course_id,slug) do update set
+           title=excluded.title, position=excluded.position, type=excluded.type,
+           required=excluded.required, content_ref=excluded.content_ref,
+           completion_policy=excluded.completion_policy, config=excluded.config`,
+        [
+          courseId,
+          lesson.slug,
+          lesson.title,
+          index,
+          lesson.required,
+          lesson.source,
+          completionPolicy(lesson),
           config,
-        },
-        { onConflict: "course_id,slug" },
+        ],
       );
-      if (lessonError) throw lessonError;
     }
 
     summaries.push({

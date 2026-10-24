@@ -81,3 +81,11 @@ RLS policies（16 条）与 `profiles.user_id → auth.users` 外键/触发器�
 - 合并全量：31/31（第二次运行；首次绑定用例曾受测试顺序影响，已复跑通过）
 - 手动绑定修复：`account.accountLinking.trustedProviders = ["floatctf"]`，且 `allowDifferentEmails = true`；仅用于已登录用户的显式绑定。
 - 首次登录仍创建独立 student；不使用邮箱自动合并。
+
+## Phase 5 清理（2026-10-24）
+
+- 删除 `lib/supabase/`、`scripts/oidc/`、Supabase 专用 perf 脚本。
+- 运行时代码、课程同步/预检、seed 脚本不再引用 Supabase。
+- `docker-compose.yml` 新增 `postgres:17`，挂载 `db/schema.sql` + Drizzle auth 迁移初始化。
+- 本地 `docker compose up -d postgres` 验证：19 张表初始化成功。
+- `@supabase/supabase-js` 仅保留为 devDependency，供尚未迁移的旧集成测试使用。

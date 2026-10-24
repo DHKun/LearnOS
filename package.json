@@ -20,13 +20,13 @@
     "courses:sync": "pnpm courses:prepare && tsx scripts/courses/sync-cli.ts",
     "courses:preflight": "pnpm courses:prepare && tsx scripts/courses/preflight-cli.ts",
     "courses:snapshot": "tsx scripts/courses/snapshot-cli.ts",
-    "db:reset": "npx supabase db reset",
-    "db:status": "npx supabase status",
-    "seed:admin": "tsx scripts/seed-admin.ts",
+    "db:migrate": "drizzle-kit migrate",
+    "db:status": "psql \"$LEARNOS_DB_URL\" -c \"select 1\"",
+    "seed:admin": "tsx scripts/auth/seed-admin.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm security:scan",
-    "db:start": "npx supabase start",
-    "db:stop": "npx supabase stop",
+    "db:start": "docker compose up -d postgres",
+    "db:stop": "docker compose stop postgres",
     "security:scan": "tsx scripts/security-scan.ts",
     "preview": "pnpm build && node scripts/run-next.mjs start",
     "courses:prepare": "tsx scripts/courses/generate.ts",
@@ -34,9 +34,6 @@
     "prebuild": "pnpm courses:prepare",
     "pretypecheck": "pnpm courses:prepare",
     "courses:scan": "tsx scripts/courses/scan.ts",
-    "oidc:setup": "tsx scripts/oidc/configure-floatctf.ts",
-    "oidc:verify": "tsx scripts/oidc/verify.ts",
-    "oidc:check": "pnpm oidc:setup && pnpm oidc:verify",
     "test:unit": "vitest run tests/unit"
   },
   "dependencies": {
@@ -44,8 +41,6 @@
     "@radix-ui/react-label": "2.1.8",
     "@radix-ui/react-slot": "1.2.3",
     "@radix-ui/react-tabs": "1.1.13",
-    "@supabase/ssr": "0.12.7",
-    "@supabase/supabase-js": "2.118.0",
     "better-auth": "^1.7.12",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -83,6 +78,7 @@
     "tailwindcss": "4.3.3",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "vitest": "3.2.7"
+    "vitest": "3.2.7",
+    "@supabase/supabase-js": "2.118.0"
   }
 }

@@ -235,7 +235,7 @@ export function DeploymentsConsole({ initial }: { initial: DeploymentOverview })
           <RotateCcw className="size-4" /> 回滚到上一个版本
         </Button>
         <span className="text-xs text-muted-foreground">
-          页面每 2.5 秒刷新；任务与日志保存在 Supabase，刷新不丢状态。
+          页面每 2.5 秒刷新；任务与日志保存在 PostgreSQL，刷新不丢状态。
         </span>
       </div>
 
