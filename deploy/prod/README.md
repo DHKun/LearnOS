@@ -63,13 +63,16 @@ Review/update the upstream FloatCTF deployment so this image survives future
 Production SSO was verified with a temporary FloatCTF user:
 login → consent → `https://120.95.81.151:8080/courses`; test user deleted.
 
-## Dev SSO (10.66.66.7)
+## Dual production entrypoints (10 and 120)
 
-- Separate dev FloatCTF OIDC API: `floatctf-api-dev` on 127.0.0.1:9092.
-- Separate dev PostgreSQL database `floatctf_dev` (schema only; no production users).
-- Dev issuer: `https://10.66.66.7:8443` (Caddy site in combined config).
-- Dev OIDC client: `learnos-dev`, redirect `https://10.66.66.7:8080/api/auth/callback/floatctf`.
-- Dev LearnOS env: `FLOATCTF_OIDC_ISSUER=https://10.66.66.7:8443`, client `learnos-dev`.
-- Test user (dev only): `learnos-dev-test` / `LearnOS-SSO-Test-2026`.
-- Production LearnOS DB is currently shared by the dev instance; the dev test profile
-  `LearnOS Dev Test` will appear in production admin views until removed.
+Both entrypoints are production and share `floatctf_db` and the `learnos` database:
+
+- `https://120.95.81.151` → prod API 127.0.0.1:9091, issuer `https://120.95.81.151`
+- `https://10.66.66.7` → second OIDC API 127.0.0.1:9092, issuer `https://10.66.66.7:8443`
+- The 10.66 API uses the same production database; its scheduler is disabled with
+  `FLOATCTF_DISABLE_SCHEDULER=1` so only the primary API runs scheduled jobs.
+- Both LearnOS instances share the same database; OIDC `sub` is the FloatCTF user UUID,
+  so the same user maps to the same account row.
+- `learnos` OIDC client accepts both callbacks:
+  `https://120.95.81.151:8080/...` and `https://10.66.66.7:8080/...`.
+- Local development is the only environment that should use a separate database.
