@@ -11,7 +11,7 @@ import {
   getLessons,
   getPointsTotal,
   login,
-  serviceClient,
+  queryOne,
 } from "./helpers";
 
 const QUIZ_FILE = path.join(
@@ -182,12 +182,11 @@ test.describe("服务端权威与越权防护", () => {
       expect(event1.body?.data?.duplicate).toBe(false);
       expect(event2.body?.data?.duplicate).toBe(true);
 
-      const db = serviceClient();
-      const { count } = await db
-        .from("activity_events")
-        .select("id", { count: "exact", head: true })
-        .eq("id", eventId);
-      expect(count).toBe(1);
+      const event = await queryOne<{ id: string }>(
+        "select id from public.activity_events where id=$1",
+        [eventId],
+      );
+      expect(event?.id).toBe(eventId);
 
       // 6. 笔记仅自己可见
       const wroteNote = await api(page, `/api/notes/${article.id}`, "PUT", {

@@ -11,7 +11,7 @@ import {
   getLessons,
   getPointsTotal,
   login,
-  serviceClient,
+  rpc,
 } from "./helpers";
 
 test.describe("课程占用：并发、幂等与恢复", () => {
@@ -158,12 +158,11 @@ test.describe("课程占用：并发、幂等与恢复", () => {
     const courseB = await createTestCourse("pair-b");
 
     try {
-      const db = serviceClient();
-      const joinA = await db.rpc("join_course", {
+      const joinA = await rpc("join_course", {
         p_student: studentA.id,
         p_course: courseA.id,
       });
-      const joinB = await db.rpc("join_course", {
+      const joinB = await rpc("join_course", {
         p_student: studentB.id,
         p_course: courseB.id,
       });

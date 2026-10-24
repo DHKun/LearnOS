@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { api, createTestStudent, deleteTestStudent, login, serviceClient } from "./helpers";
+import { api, createTestStudent, deleteTestStudent, login, queryOne } from "./helpers";
 
 test.describe("账号与权限边界", () => {
   test("管理员创建学生；学生无法访问管理端；停用立即生效", async ({ browser }) => {
@@ -23,15 +23,12 @@ test.describe("账号与权限边界", () => {
     await expect(createDialog.getByText("学生账号已创建")).toBeVisible({ timeout: 20_000 });
     await createDialog.getByRole("button", { name: "完成" }).click();
 
-    const db = serviceClient();
-    const { data: profile, error } = await db
-      .from("profiles")
-      .select("user_id,role")
-      .eq("email", email)
-      .single();
-    expect(error).toBeNull();
+    const profile = await queryOne<{ user_id: string; role: string }>(
+      "select user_id,role from public.profiles where email=$1",
+      [email],
+    );
     expect(profile?.role).toBe("student");
-    const studentId = profile!.user_id as string;
+    const studentId = profile!.user_id;
 
     try {
       const studentContext = await browser.newContext();

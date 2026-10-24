@@ -12,7 +12,7 @@ import {
   getLessons,
   getPointsTotal,
   login,
-  serviceClient,
+  query,
 } from "./helpers";
 
 const FINAL_QUIZ_FILE = path.join(
@@ -91,15 +91,14 @@ test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
       });
 
       // 15 × 10 + 结业测验 50 = 200
-      const db = serviceClient();
       const enrollments = await getEnrollments(student.id);
       expect(enrollments).toHaveLength(1);
       expect(enrollments[0].status).toBe("completed");
-      const { data: progress } = await db
-        .from("lesson_progress")
-        .select("lesson_id,status")
-        .eq("enrollment_id", enrollment.id);
-      expect(progress?.filter((item) => item.status === "completed")).toHaveLength(
+      const progress = await query<{ lesson_id: string; status: string }>(
+        "select lesson_id,status from public.lesson_progress where enrollment_id=$1",
+        [enrollment.id],
+      );
+      expect(progress.filter((item) => item.status === "completed")).toHaveLength(
         lessons.length,
       );
       expect(await getPointsTotal(student.id)).toBe(200);

@@ -7,7 +7,8 @@ import {
   deleteTestStudent,
   login,
   logout,
-  serviceClient,
+  query,
+  queryOne,
 } from "./helpers";
 
 /**
@@ -94,41 +95,24 @@ async function signInWithFloatctf(page: Page) {
 }
 
 async function deleteAllFloatctfUsers(): Promise<void> {
-  const db = serviceClient();
-  for (let page = 1; page <= 20; page += 1) {
-    const { data } = await db.auth.admin.listUsers({ page, perPage: 100 });
-    const users = data?.users ?? [];
-    for (const candidate of users) {
-      const isFloatctf =
-        candidate.app_metadata?.provider === "custom:floatctf" ||
-        candidate.app_metadata?.provider === "keycloak" ||
-        candidate.identities?.some(
-          (identity) =>
-            identity.provider === "custom:floatctf" || identity.provider === "keycloak",
-        );
-      if (isFloatctf) {
-        await db.auth.admin.deleteUser(candidate.id);
-      }
-    }
-    if (users.length < 100) break;
-  }
+  await query("delete from public.profiles where user_id in (select user_id from public.account where provider_id='floatctf')");
+  await query("delete from public.account where provider_id='floatctf'");
+  await query('delete from public."user" where id not in (select user_id from public.profiles)');
 }
 
-async function currentUserId(page: Page): Promise<string> {
-  await page.goto("/account/connections");
-  const text = await page.locator("dd.font-mono").first().innerText();
-  return text.trim();
-}
-
-async function findFloatctfUserId(): Promise<string | null> {
-  const db = serviceClient();
-  const { data } = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
-  const user = data?.users.find(
-    (candidate) =>
-      candidate.app_metadata?.provider === "custom:floatctf" ||
-      candidate.identities?.some((identity) => identity.provider === "custom:floatctf"),
+async function currentFloatctfUserId(): Promise<string | null> {
+  const row = await queryOne<{ user_id: string }>(
+    "select user_id from public.account where provider_id='floatctf' order by created_at desc limit 1",
   );
-  return user?.id ?? null;
+  return row?.user_id ?? null;
+}
+
+async function currentUserId(): Promise<string> {
+  const row = await queryOne<{ user_id: string }>(
+    "select user_id from public.account where provider_id='floatctf' order by created_at desc limit 1",
+  );
+  if (!row) throw new Error("no FloatCTF user");
+  return row.user_id;
 }
 
 test.describe("FloatCTF 单一登录", () => {
@@ -138,13 +122,11 @@ test.describe("FloatCTF 单一登录", () => {
     await signInWithFloatctf(page);
     await expect(page).toHaveURL(/\/courses/);
 
-    const userId = await currentUserId(page);
-    const db = serviceClient();
-    const { data: profile } = await db
-      .from("profiles")
-      .select("role, display_name, disabled_at")
-      .eq("user_id", userId)
-      .single();
+    const userId = await currentUserId();
+    const profile = await queryOne<{ role: string; display_name: string; disabled_at: string | null }>(
+      "select role,display_name,disabled_at from public.profiles where user_id=$1",
+      [userId],
+    );
     expect(profile?.role).toBe("student");
     expect(profile?.disabled_at).toBeNull();
     expect(profile?.display_name).toBeTruthy();
@@ -152,13 +134,12 @@ test.describe("FloatCTF 单一登录", () => {
 
   test("重复登录复用同一 Supabase 用户与学习记录", async ({ page }) => {
     await signInWithFloatctf(page);
-    const first = await currentUserId(page);
+    const first = await currentUserId();
     await logout(page);
     await signInWithFloatctf(page);
-    expect(await currentUserId(page)).toBe(first);
+    expect(await currentUserId()).toBe(first);
 
-    const db = serviceClient();
-    const { data: profiles } = await db.from("profiles").select("user_id").eq("user_id", first);
+    const profiles = await query("select user_id from public.profiles where user_id=$1", [first]);
     expect(profiles).toHaveLength(1);
   });
 
@@ -177,7 +158,7 @@ test.describe("FloatCTF 单一登录", () => {
       await completeIdpPages(page);
       await page.waitForURL(/\/account\/connections/, { timeout: 60_000 });
       await expect(page.getByText("FloatCTF 已绑定").first()).toBeVisible();
-      expect(await currentUserId(page)).toBe(student.id);
+      expect(await currentUserId()).toBe(student.id);
     } finally {
       await deleteTestStudent(student.id);
     }
@@ -187,11 +168,7 @@ test.describe("FloatCTF 单一登录", () => {
     const student = await createTestStudent("sso-disabled");
     try {
       await login(page, student.email, student.password);
-      const db = serviceClient();
-      await db
-        .from("profiles")
-        .update({ disabled_at: new Date().toISOString() })
-        .eq("user_id", student.id);
+      await query("update public.profiles set disabled_at=now() where user_id=$1", [student.id]);
       await page.goto("/courses");
       await expect(page).toHaveURL(/\/login/);
     } finally {
@@ -201,11 +178,11 @@ test.describe("FloatCTF 单一登录", () => {
 
   test("退出后重新登录进入同一账号", async ({ page }) => {
     await signInWithFloatctf(page);
-    const before = await currentUserId(page);
+    const before = await currentUserId();
     await logout(page);
     await expect(page).toHaveURL(/\/login/);
     await signInWithFloatctf(page);
-    expect(await currentUserId(page)).toBe(before);
+    expect(await currentUserId()).toBe(before);
   });
 
   test("未授权用户不会被自动合并到已有邮箱账号", async ({ page }) => {
@@ -213,10 +190,10 @@ test.describe("FloatCTF 单一登录", () => {
     const student = await createTestStudent(marker);
     try {
       await signInWithFloatctf(page);
-      const idpUserId = await currentUserId(page);
+      const idpUserId = await currentUserId();
       // The IdP account must never land on the password account by email.
       expect(idpUserId).not.toBe(student.id);
-      const mergeCandidate = await findFloatctfUserId();
+      const mergeCandidate = await currentUserId();
       expect(mergeCandidate).not.toBe(student.id);
     } finally {
       await deleteTestStudent(student.id);

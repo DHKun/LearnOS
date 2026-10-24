@@ -8,7 +8,7 @@ import {
   getEnrollments,
   getLessons,
   login,
-  serviceClient,
+  query,
 } from "./helpers";
 
 test.describe("在线状态与课程占用相互独立", () => {
@@ -51,13 +51,11 @@ test.describe("在线状态与课程占用相互独立", () => {
       expect(onlineBefore.body?.data?.items).toHaveLength(1);
 
       // Simulate 3 minutes passing without touching the enrollment status.
-      const db = serviceClient();
       const threeMinutesAgo = new Date(Date.now() - 180_000).toISOString();
-      const { error } = await db
-        .from("enrollments")
-        .update({ last_seen_at: threeMinutesAgo })
-        .eq("id", enrollmentId);
-      expect(error).toBeNull();
+      await query("update public.enrollments set last_seen_at=$1 where id=$2", [
+        threeMinutesAgo,
+        enrollmentId,
+      ]);
 
       const onlineAfter = await api<{ items: unknown[] }>(
         adminPage,

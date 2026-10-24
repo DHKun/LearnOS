@@ -1,17 +1,39 @@
 import { randomUUID } from "node:crypto";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { expect, type Page } from "@playwright/test";
+import { Pool } from "pg";
 
-export function serviceClient(): SupabaseClient {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error("E2E 需要 NEXT_PUBLIC_SUPABASE_URL 与 SUPABASE_SERVICE_ROLE_KEY");
-  }
-  return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+const pool = new Pool({
+  connectionString:
+    process.env.LEARNOS_DB_URL ??
+    process.env.DATABASE_URL ??
+    "postgresql://postgres:postgres@127.0.0.1:5432/postgres",
+  max: 5,
+});
+
+export async function query<T = Record<string, unknown>>(
+  text: string,
+  values: unknown[] = [],
+): Promise<T[]> {
+  const result = await pool.query(text, values);
+  return result.rows as T[];
+}
+
+export async function queryOne<T = Record<string, unknown>>(
+  text: string,
+  values: unknown[] = [],
+): Promise<T | null> {
+  return (await query<T>(text, values))[0] ?? null;
+}
+
+export async function rpc<T = Record<string, unknown>>(
+  name: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  const keys = Object.keys(args);
+  const params = keys.map((key, index) => `${key} => $${index + 1}`).join(", ");
+  const rows = await query<{ data: T }>(`select public.${name}(${params}) as data`, keys.map((k) => args[k]));
+  return rows[0].data;
 }
 
 export type TestStudent = {
@@ -24,39 +46,30 @@ export type TestStudent = {
 let counter = 0;
 
 export async function createTestStudent(label = "e2e"): Promise<TestStudent> {
-  const db = serviceClient();
   counter += 1;
+  const id = randomUUID();
   const email = `${label}-${Date.now()}-${counter}@learnos.local`;
   const password = "Student-E2E-2025!";
   const name = `E2E ${label} ${counter}`;
-
-  const { data, error } = await db.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { display_name: name },
-    app_metadata: { role: "student" },
+  const base = process.env.E2E_BASE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000";
+  const response = await fetch(`${base}/api/auth/sign-up/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: base },
+    body: JSON.stringify({ email, password, name }),
   });
-  if (error || !data.user) throw error ?? new Error("创建测试学生失败");
-
-  const { error: profileError } = await db.from("profiles").upsert(
-    {
-      user_id: data.user.id,
-      email,
-      display_name: name,
-      role: "student",
-      disabled_at: null,
-    },
-    { onConflict: "user_id" },
+  if (!response.ok) throw new Error(`createTestStudent failed: ${response.status} ${await response.text()}`);
+  await pool.query(
+    `insert into public.profiles (user_id,email,display_name,role) values ($1,$2,$3,'student')`,
+    [id, email, name],
   );
-  if (profileError) throw profileError;
-
-  return { id: data.user.id, email, password, name };
+  return { id, email, password, name };
 }
 
 export async function deleteTestStudent(studentId: string): Promise<void> {
-  const db = serviceClient();
-  await db.auth.admin.deleteUser(studentId);
+  await pool.query("delete from public.profiles where user_id = $1", [studentId]);
+  await pool.query("delete from public.account where user_id = $1", [studentId]);
+  await pool.query("delete from public.session where user_id = $1", [studentId]);
+  await pool.query("delete from public.\"user\" where id = $1", [studentId]);
 }
 
 export async function login(page: Page, email: string, password: string): Promise<void> {
@@ -74,7 +87,6 @@ export async function logout(page: Page): Promise<void> {
 
 export type ApiResult<T = any> = { status: number; body: { data?: T; error?: any } | null };
 
-/** Same-origin browser fetch so cookies, Origin and CSP behave like real UI calls. */
 export async function api<T = any>(
   page: Page,
   path: string,
@@ -102,21 +114,16 @@ export async function api<T = any>(
 }
 
 export async function getCourseBySlug(slug: string) {
-  const db = serviceClient();
-  const { data, error } = await db.from("courses").select("id,slug,status").eq("slug", slug).single();
-  if (error) throw error;
-  return data as { id: string; slug: string; status: string };
+  const row = await queryOne<{ id: string; slug: string; status: string }>(
+    "select id,slug,status from public.courses where slug = $1 limit 1",
+    [slug],
+  );
+  if (!row) throw new Error(`course not found: ${slug}`);
+  return row;
 }
 
 export async function getLessons(courseId: string) {
-  const db = serviceClient();
-  const { data, error } = await db
-    .from("lessons")
-    .select("id,slug,title,type,position,required,completion_policy,config")
-    .eq("course_id", courseId)
-    .order("position");
-  if (error) throw error;
-  return data as {
+  return query<{
     id: string;
     slug: string;
     title: string;
@@ -125,63 +132,49 @@ export async function getLessons(courseId: string) {
     required: boolean;
     completion_policy: string;
     config: Record<string, unknown>;
-  }[];
+  }>(
+    `select id,slug,title,type,position,required,completion_policy,config
+       from public.lessons where course_id = $1 order by position`,
+    [courseId],
+  );
 }
 
 export async function getEnrollments(studentId: string) {
-  const db = serviceClient();
-  const { data, error } = await db
-    .from("enrollments")
-    .select("id,course_id,status,current_lesson_id,last_seen_at,last_interaction_at")
-    .eq("student_id", studentId)
-    .order("started_at");
-  if (error) throw error;
-  return data as {
+  return query<{
     id: string;
     course_id: string;
     status: "active" | "completed" | "abandoned";
     current_lesson_id: string | null;
     last_seen_at: string | null;
     last_interaction_at: string | null;
-  }[];
+  }>(
+    `select id,course_id,status,current_lesson_id,last_seen_at,last_interaction_at
+       from public.enrollments where student_id = $1 order by started_at`,
+    [studentId],
+  );
 }
 
-/** Published course row for concurrency tests; no content directory required. */
 export async function createTestCourse(label: string) {
-  const db = serviceClient();
   const slug = `e2e-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  const { data, error } = await db
-    .from("courses")
-    .insert({
-      slug,
-      title: `E2E ${label}`,
-      description: "",
-      status: "published",
-      content_version: "1.0.0",
-    })
-    .select("id,slug")
-    .single();
-  if (error) throw error;
-  return data as { id: string; slug: string };
+  const row = await queryOne<{ id: string; slug: string }>(
+    `insert into public.courses (slug,title,description,status,content_version)
+     values ($1,$2,'','published','1.0.0') returning id,slug`,
+    [slug, `E2E ${label}`],
+  );
+  if (!row) throw new Error("failed to create test course");
+  return row;
 }
 
 export async function deleteTestCourse(courseId: string) {
-  const db = serviceClient();
-  await db.from("enrollments").delete().eq("course_id", courseId);
-  await db.from("courses").delete().eq("id", courseId);
+  await pool.query("delete from public.enrollments where course_id = $1", [courseId]);
+  await pool.query("delete from public.courses where id = $1", [courseId]);
 }
 
-/**
- * Complete every required chapter except the final exam through the same
- * transaction functions the UI uses. This keeps long E2E flows focused on the
- * interaction being tested without bypassing server-side completion rules.
- */
 export async function completeRequiredChapters(
   studentId: string,
   courseId: string,
   enrollmentId: string,
 ) {
-  const db = serviceClient();
   const lessons = await getLessons(courseId);
   for (const lesson of lessons) {
     const config = lesson.config as {
@@ -191,20 +184,19 @@ export async function completeRequiredChapters(
     };
     if (config.finalExam) continue;
     if (lesson.completion_policy === "manual") {
-      const { error } = await db.rpc("complete_lesson", {
+      await rpc("complete_lesson", {
         p_student: studentId,
         p_enrollment: enrollmentId,
         p_lesson: lesson.id,
         p_source: "manual",
       });
-      if (error) throw error;
       continue;
     }
     const blocks = new Map((config.blocks ?? []).map((block) => [block.id, block]));
     for (const blockId of config.completion?.requiredBlocks ?? []) {
       const block = blocks.get(blockId);
       if (!block) throw new Error(`missing block ${lesson.slug}/${blockId}`);
-      const { error } = await db.rpc("save_block_result", {
+      await rpc("save_block_result", {
         p_student: studentId,
         p_enrollment: enrollmentId,
         p_lesson: lesson.id,
@@ -216,30 +208,28 @@ export async function completeRequiredChapters(
         p_score: 100,
         p_feedback: {},
       });
-      if (error) throw error;
     }
   }
 }
 
 export async function getEvents(enrollmentId: string) {
-  const db = serviceClient();
-  const { data, error } = await db
-    .from("activity_events")
-    .select("event_type,payload,step_id,created_at")
-    .eq("enrollment_id", enrollmentId)
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return data as {
+  return query<{
     event_type: string;
     payload: Record<string, unknown>;
     step_id: string | null;
     created_at: string;
-  }[];
+  }>(
+    `select event_type,payload,step_id,created_at from public.activity_events
+      where enrollment_id=$1 order by created_at`,
+    [enrollmentId],
+  );
 }
 
 export async function getPointsTotal(studentId: string): Promise<number> {
-  const db = serviceClient();
-  const { data, error } = await db.rpc("student_points_total", { p_student: studentId });
-  if (error) throw error;
-  return Number(data ?? 0);
+  const value = await rpc<number>("student_points_total", { p_student: studentId });
+  return Number(value ?? 0);
+}
+
+export async function closePool() {
+  await pool.end();
 }
