@@ -46,8 +46,10 @@
     "@radix-ui/react-tabs": "1.1.13",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.118.0",
+    "better-auth": "^1.7.12",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "drizzle-orm": "^0.45.4",
     "github-slugger": "2.0.0",
     "lucide-react": "0.545.0",
     "markdown-it": "14.1.0",
@@ -64,6 +66,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@better-auth/cli": "^1.4.21",
     "@eslint/eslintrc": "3.3.3",
     "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "4.3.3",
@@ -73,6 +76,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "dotenv": "17.2.3",
+    "drizzle-kit": "^0.31.11",
     "eslint": "9.39.1",
     "eslint-config-next": "15.5.28",
     "pg": "8.16.3",
