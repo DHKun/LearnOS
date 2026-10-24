@@ -47,3 +47,18 @@ Note: the running API container was switched manually because the installed
 FloatCTF compose file is root-owned and not editable by `floatctfadmin`.
 Review/update the upstream FloatCTF deployment so this image survives future
 `docker compose up` / upgrades.
+
+## 2026-10-24 HTTPS + dual host
+
+- FloatCTF main: `https://120.95.81.151/` and `https://10.66.66.7/`
+- OIDC issuer: `https://120.95.81.151` (same origin as production main)
+- LearnOS production: `https://120.95.81.151:8080`
+- LearnOS dev: `https://10.66.66.7:8080` (admin/password only; no SSO)
+- HTTP 80 on both IPs redirects to HTTPS.
+- Dual-SAN cert: `/home/floatctfadmin/learnos/certs/floatctf.crt`.
+- Combined Caddy runs on host network; config: `deploy/prod/floatctf-Caddyfile`.
+- `floatctf-caddy` container was replaced manually because the installed Caddyfile is root-owned. Old Caddy config remains under `/var/lib/floatctf/config/caddy`.
+- Dev SSO is intentionally hidden because the single OIDC issuer is 120 and the dev VPN cannot reach 120.
+
+Production SSO was verified with a temporary FloatCTF user:
+login → consent → `https://120.95.81.151:8080/courses`; test user deleted.
