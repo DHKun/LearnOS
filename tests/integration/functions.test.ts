@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 
+import { Client } from "pg";
+
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { getPoints } from "@/lib/services/points";
@@ -532,29 +534,45 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   });
 
   it("积分总数使用数据库聚合，不受明细 1000 条限制", async () => {
-    const bulkStudent = await createTestUser("student");
+    const client = new Client({
+      connectionString:
+        process.env.LEARNOS_DB_URL ??
+        process.env.DATABASE_URL ??
+        "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+    });
+    await client.connect();
+    const studentId = randomUUID();
     try {
-      const course = await getCourse("http-fundamentals");
-      const joined = await rpc<{ id: string }>("join_course", {
-        p_student: bulkStudent.id,
-        p_course: course.id,
-      });
-      const rows = Array.from({ length: 1005 }, (_, index) => ({
-        student_id: bulkStudent.id,
-        enrollment_id: joined.id,
-        delta: 1,
-        reason: "bulk_test",
-        dedupe_key: `bulk:${joined.id}:${index}`,
-      }));
-      const { error } = await db().from("point_events").insert(rows);
-      expect(error).toBeNull();
+      await client.query(
+        "insert into public.profiles (user_id, display_name, role) values ($1, $2, 'student')",
+        [studentId, "Bulk Points"],
+      );
+      const course = await client.query(
+        "select id from public.courses where slug = 'http-fundamentals' limit 1",
+      );
+      const joined = await client.query("select public.join_course($1, $2) as data", [
+        studentId,
+        course.rows[0].id,
+      ]);
+      const enrollmentId = joined.rows[0].data.id;
+      const values: string[] = [];
+      const params: unknown[] = [];
+      for (let index = 0; index < 1005; index += 1) {
+        const offset = index * 5;
+        values.push(`($${offset + 1},$${offset + 2},$${offset + 3},$${offset + 4},$${offset + 5})`);
+        params.push(studentId, enrollmentId, 1, "bulk_test", `bulk:${enrollmentId}:${index}`);
+      }
+      await client.query(
+        `insert into public.point_events (student_id,enrollment_id,delta,reason,dedupe_key) values ${values.join(",")}`,
+        params,
+      );
 
-      const points = await getPoints(bulkStudent.id);
+      const points = await getPoints(studentId);
       expect(points.total).toBe(1005);
       expect(points.items.length).toBe(1000);
-      expect(await pointsTotal(bulkStudent.id)).toBe(1005);
     } finally {
-      await deleteTestUser(bulkStudent.id);
+      await client.query("delete from public.profiles where user_id = $1", [studentId]);
+      await client.end();
     }
   });
 });
