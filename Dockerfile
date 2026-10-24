@@ -11,7 +11,7 @@ WORKDIR /app
 
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 FROM base AS tools
 COPY --from=deps /app/node_modules ./node_modules
@@ -24,7 +24,7 @@ FROM tools AS builder
 ARG NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ARG LEARNOS_BUILD_VERSION="dev"
 ARG LEARNOS_BUILD_TIME="unknown"
-    NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
+ENV NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
     LEARNOS_BUILD_VERSION="${LEARNOS_BUILD_VERSION}" \
     LEARNOS_BUILD_TIME="${LEARNOS_BUILD_TIME}"
 RUN pnpm build
