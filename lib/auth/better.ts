@@ -21,6 +21,9 @@ export const auth = betterAuth({
       // FloatCTF has no real email; LearnOS requires explicit, signed-in
       // linking instead of email-based automatic merging.
       allowDifferentEmails: true,
+      // FloatCTF is trusted only for the explicit, signed-in link flow; its
+      // placeholder emails are unique and never used for implicit matching.
+      trustedProviders: ["floatctf"],
     },
   },
   rateLimit: {
