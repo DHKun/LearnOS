@@ -27,8 +27,8 @@ export function LinkFloatctfButton({ linked }: { linked: boolean }) {
       callback.searchParams.set("next", "/account/connections");
       const supabase = createClient();
       const { error: linkError } = await supabase.auth.linkIdentity({
-        provider: "custom:floatctf",
-        options: { redirectTo: callback.toString() },
+        provider: "keycloak",
+        options: { redirectTo: callback.toString(), scopes: "openid" },
       });
       if (linkError) {
         setPending(false);

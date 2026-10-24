@@ -560,7 +560,8 @@ tests/e2e/admin-detail.spec.ts          1 test
 - 删除旧课程会删除其学习记录；本次已先备份数据库，旧课程无法通过内容目录恢复。
 - 部署扫描会把“已部署但本地删除”的旧课程列为 `removed` 阻塞项；本次属于显式课程替换，部署时需以新课程快照重建基线，不能走普通 `createDeploymentJob` 扫描。
 
-## 21. FloatCTF OIDC 接入（进行中，外部兼容性阻塞）
+## 21. FloatCTF SSO（Keycloak 内网 Broker）
+
 
 ### 21.1 已实现
 
@@ -574,6 +575,7 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 真实 Supabase + 真实 FloatCTF 上跑通完整 SSO（11/11 用例），修复 Cookie 可读性与 client_secret_post 两项运行时问题。
 - [x] FloatCTF CSP 两跳修复已通过 PR #8 合并到上游（`e24746d`），`cargo test --lib` 446 passed。
 - [x] 生产镜像容器化部署验证：真实 SSO 11/11、全量 E2E 31/31；修复容器内 Auth Cookie 名不一致。
+- [x] 本地 Keycloak broker 方案：Supabase `keycloak` provider + Keycloak 26 + FloatCTF，SSO 11/11。
 
 ### 21.2 阻塞（生产启用前）
 

@@ -413,3 +413,18 @@
 4. 验收脚本在真实 IdP 下运行 11 个用例（6 类主场景 + 5 个失败路径），全部通过；CSP 修复以 `docs/patches/floatctf-oidc-csp-two-hop.patch` 形式交付，上游库测试 446 passed。
 
 **影响**：SSO 产品路径已验证可用；生产启用仍依赖 FloatCTF 修复 CSP 两跳。Cookie 可读性变化对所有登录方式生效，需在安全评审中记录。
+
+## D48 — 用 Keycloak Broker 替代 custom:floatctf 以支持纯内网
+
+**背景**：生产只有内网 IP，不暴露公网。GoTrue custom OIDC 强制 HTTPS 且拒绝私有地址，
+导致 FloatCTF 无法直接作为 Supabase custom provider。
+
+**决定**：保留 Supabase Auth/RLS，改用 GoTrue 内置 `keycloak` provider；Keycloak 在内网
+以 identity broker 方式对接 FloatCTF。LearnOS 登录/绑定 provider 改为 `keycloak`，并传
+`scopes=openid`；准入 Hook 放行 `keycloak`，保留旧 `custom:floatctf` 兼容。
+
+**理由**：Keycloak provider 不做公网 issuer 校验、走 UserInfo，能在内网工作；不改 RLS、
+`auth.users` 与学习数据模型。
+
+**影响**：新增 Keycloak + 独立数据库与内部 CA 运维；生产需 HTTPS 内网入口。已用 Keycloak
+26 + 真实 Supabase + 真实 FloatCTF 跑通 11/11 SSO 场景。

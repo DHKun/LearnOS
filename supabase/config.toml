@@ -337,6 +337,17 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
+# Local intranet SSO broker: Keycloak federates FloatCTF and exposes a normal
+# OIDC provider to Supabase. Unlike custom providers, GoTrue's Keycloak provider
+# does not apply the public-HTTPS issuer guard, so it can live on the LAN.
+[auth.external.keycloak]
+enabled = true
+client_id = "learnos-supabase"
+secret = "env(SUPABASE_AUTH_EXTERNAL_KEYCLOAK_SECRET)"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+url = "https://10.66.66.2:8443/realms/learnos"
+email_optional = true
+
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.
 [auth.web3.solana]

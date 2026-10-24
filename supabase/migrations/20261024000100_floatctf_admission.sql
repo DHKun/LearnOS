@@ -14,7 +14,7 @@ as $$
 declare
   provider text := input #>> '{user,app_metadata,provider}';
 begin
-  if provider = 'custom:floatctf' then
+  if provider in ('custom:floatctf', 'keycloak') then
     return '{}'::jsonb;
   end if;
 

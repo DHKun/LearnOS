@@ -20,8 +20,11 @@ export function FloatctfLoginButton({ next }: { next?: string | null }) {
       }
       const supabase = createClient();
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "custom:floatctf",
-        options: { redirectTo: callback.toString() },
+        provider: "keycloak",
+        // Keycloak only issues an access token usable at /userinfo when the
+        // openid scope is present; GoTrue's Keycloak provider defaults to
+        // profile+email and drops openid.
+        options: { redirectTo: callback.toString(), scopes: "openid" },
       });
       if (oauthError) {
         setPending(false);

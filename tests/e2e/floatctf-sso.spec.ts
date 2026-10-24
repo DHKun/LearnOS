@@ -34,6 +34,9 @@ test.describe.configure({ mode: "serial" });
 // this header is only set when the live-IdP suite is explicitly enabled.
 test.use({
   extraHTTPHeaders: enabled ? { "X-Pinggy-No-Screen": "1" } : {},
+  // Local Keycloak/FloatCTF use the internal test CA; production must use a
+  // CA trusted by the browser instead.
+  ignoreHTTPSErrors: enabled,
 });
 
 const skipReason =
@@ -41,8 +44,17 @@ const skipReason =
 
 /** Complete the IdP login/consent pages if the IdP renders them itself. */
 async function completeIdpPages(page: Page) {
-  for (let step = 0; step < 3; step += 1) {
+  for (let step = 0; step < 5; step += 1) {
     const url = page.url();
+    if (url.includes("/realms/") && url.includes("/protocol/openid-connect/auth")) {
+      // Keycloak is the Supabase provider; it brokers to FloatCTF.
+      const floatctf = page.getByText("FloatCTF", { exact: true }).first();
+      if (await floatctf.count()) {
+        await floatctf.click();
+        await page.waitForTimeout(1_500);
+      }
+      continue;
+    }
     if (url.includes("/oauth/login")) {
       await page.locator('input[name="username"]').fill(process.env.E2E_FLOATCTF_USERNAME!);
       await page.locator('input[name="password"]').fill(process.env.E2E_FLOATCTF_PASSWORD!);
@@ -61,6 +73,11 @@ async function completeIdpPages(page: Page) {
         .catch(() => undefined);
       continue;
     }
+    if (url.includes("/login-actions/")) {
+      // Keycloak first-broker-login/required-action interstitial.
+      await page.waitForTimeout(1_500);
+      continue;
+    }
     return;
   }
 }
@@ -74,6 +91,27 @@ async function signInWithFloatctf(page: Page) {
   );
   await completeIdpPages(page);
   await page.waitForURL(/\/(courses|learn|admin)|reason=/, { timeout: 60_000 });
+}
+
+async function deleteAllFloatctfUsers(): Promise<void> {
+  const db = serviceClient();
+  for (let page = 1; page <= 20; page += 1) {
+    const { data } = await db.auth.admin.listUsers({ page, perPage: 100 });
+    const users = data?.users ?? [];
+    for (const candidate of users) {
+      const isFloatctf =
+        candidate.app_metadata?.provider === "custom:floatctf" ||
+        candidate.app_metadata?.provider === "keycloak" ||
+        candidate.identities?.some(
+          (identity) =>
+            identity.provider === "custom:floatctf" || identity.provider === "keycloak",
+        );
+      if (isFloatctf) {
+        await db.auth.admin.deleteUser(candidate.id);
+      }
+    }
+    if (users.length < 100) break;
+  }
 }
 
 async function currentUserId(page: Page): Promise<string> {
@@ -127,19 +165,7 @@ test.describe("FloatCTF 单一登录", () => {
   test("已有账号手动绑定后保留原用户 ID", async ({ page }) => {
     const student = await createTestStudent("sso-link");
     try {
-      // One IdP test account can only be linked to one Supabase user. Clear any
-      // earlier SSO user from the preceding scenarios so this test exercises the
-      // link path rather than the "already linked" rejection.
-      const db = serviceClient();
-      const { data: users } = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
-      for (const candidate of users?.users ?? []) {
-        const isFloatctf =
-          candidate.app_metadata?.provider === "custom:floatctf" ||
-          candidate.identities?.some((identity) => identity.provider === "custom:floatctf");
-        if (isFloatctf && candidate.id !== student.id) {
-          await db.auth.admin.deleteUser(candidate.id);
-        }
-      }
+      await deleteAllFloatctfUsers();
       await login(page, student.email, student.password);
       await page.goto("/account/connections");
       await page.getByRole("button", { name: "绑定 FloatCTF 账号" }).click();

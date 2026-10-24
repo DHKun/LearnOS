@@ -2,7 +2,8 @@ import type { User } from "@supabase/supabase-js";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const FLOATCTF_PROVIDER = "custom:floatctf";
+export const FLOATCTF_PROVIDER = "keycloak";
+const LEGACY_FLOATCTF_PROVIDER = "custom:floatctf";
 
 export class OidcProvisionError extends Error {
   constructor(
@@ -35,9 +36,11 @@ export function isFloatctfSignupAllowed(): boolean {
 
 export function isFloatctfIdentity(user: User): boolean {
   const provider = user.app_metadata?.provider;
+  const isProvider = (value: string | undefined) =>
+    value === FLOATCTF_PROVIDER || value === LEGACY_FLOATCTF_PROVIDER;
   return (
-    provider === FLOATCTF_PROVIDER ||
-    (user.identities ?? []).some((identity) => identity.provider === FLOATCTF_PROVIDER)
+    isProvider(provider) ||
+    (user.identities ?? []).some((identity) => isProvider(identity.provider))
   );
 }
 
