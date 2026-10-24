@@ -62,3 +62,14 @@ Review/update the upstream FloatCTF deployment so this image survives future
 
 Production SSO was verified with a temporary FloatCTF user:
 login → consent → `https://120.95.81.151:8080/courses`; test user deleted.
+
+## Dev SSO (10.66.66.7)
+
+- Separate dev FloatCTF OIDC API: `floatctf-api-dev` on 127.0.0.1:9092.
+- Separate dev PostgreSQL database `floatctf_dev` (schema only; no production users).
+- Dev issuer: `https://10.66.66.7:8443` (Caddy site in combined config).
+- Dev OIDC client: `learnos-dev`, redirect `https://10.66.66.7:8080/api/auth/callback/floatctf`.
+- Dev LearnOS env: `FLOATCTF_OIDC_ISSUER=https://10.66.66.7:8443`, client `learnos-dev`.
+- Test user (dev only): `learnos-dev-test` / `LearnOS-SSO-Test-2026`.
+- Production LearnOS DB is currently shared by the dev instance; the dev test profile
+  `LearnOS Dev Test` will appear in production admin views until removed.

@@ -127,3 +127,9 @@ https://10.66.66.7:8080 {
     tls /certs/floatctf.crt /certs/floatctf.key
     reverse_proxy 127.0.0.1:3000
 }
+
+https://10.66.66.7:8443 {
+    bind 10.66.66.7
+    tls /certs/floatctf.crt /certs/floatctf.key
+    reverse_proxy 127.0.0.1:9092
+}
