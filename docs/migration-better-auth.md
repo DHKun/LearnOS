@@ -32,14 +32,14 @@ RLS policies（16 条）与 `profiles.user_id → auth.users` 外键/触发器�
 - `lib/auth/better.ts`：Better Auth + Drizzle adapter + genericOAuth `floatctf` + student profile hook；
 - `app/api/auth/[...all]/route.ts`、`lib/auth/client.ts`。
 
-尚未切换：现有登录仍走 Supabase，避免半迁移状态破坏业务。服务层将按以下顺序迁移：
+已切换：登录、会话、API guard、middleware、全部 service 已使用 Better Auth + Drizzle。
 
-1. profiles/admin
-2. courses/lessons
-3. enrollments/progress
-4. learning/blocks/notes
-5. deployments
-6. 删除 Supabase Auth/JS/PostgREST/RLS
+1. profiles/admin — 完成
+2. courses/lessons — 完成
+3. enrollments/progress — 完成
+4. learning/blocks/notes — 完成
+5. deployments — 完成
+6. 删除 Supabase Auth/JS/PostgREST/RLS — 运行时已无引用，测试/依赖清理待完成
 
 ## 关键决策
 
@@ -56,3 +56,20 @@ RLS policies（16 条）与 `profiles.user_id → auth.users` 外键/触发器�
 - FloatCTF 回调需要 HTTPS（非 loopback）；生产需内网 CA，本地测试用 `127.0.0.1` 或
   `ignoreHTTPSErrors`。
 - 旧 Supabase E2E/RLS 测试需改写为 Better Auth + 服务层授权测试。
+
+## 已验证（本地，2026-10-24）
+
+- Better Auth 邮箱密码登录：`/login` → `/admin`
+- FloatCTF SSO：`/login` → FloatCTF → Better Auth callback → `/courses`
+- 首次 SSO 登录自动创建 student profile（显示名来自 FloatCTF）
+- 报名：`/courses/http-fundamentals` → 参加课程 → `/learn/<id>`
+- `pnpm test`：25 文件 / 145 通过
+- `pnpm typecheck`、`pnpm build`：通过
+- `pnpm lint`：0 error，1 个既有 warning
+
+## 待完成
+
+- E2E 测试辅助仍使用 Supabase Admin 创建用户；需改为 Better Auth/pg 后重跑。
+- 删除 `lib/supabase/`、`@supabase/*` 依赖、Supabase 迁移/部署配置与文档。
+- 管理员建号/重置密码/禁用账号的 Better Auth E2E 验证。
+- 独立 PostgreSQL 生产 compose、备份、连接池调优。
