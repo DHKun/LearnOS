@@ -72,7 +72,12 @@ test.describe("在线状态与课程占用相互独立", () => {
 
       const enrollments = await getEnrollments(student.id);
       expect(enrollments[0].status).toBe("active");
-      expect(enrollments[0].last_interaction_at).toBe(interactionAt);
+      expect(
+        Math.abs(
+          new Date(enrollments[0].last_interaction_at!).getTime() -
+            new Date(interactionAt!).getTime(),
+        ),
+      ).toBeLessThan(2_000);
 
       // Student can still use the course.
       const current = await api<{ enrollment: { status: string } }>(

@@ -86,10 +86,9 @@ async function completeIdpPages(page: Page) {
 async function signInWithFloatctf(page: Page) {
   await page.goto("/login");
   await page.getByRole("button", { name: "使用 FloatCTF 登录" }).click();
-  await page.waitForURL(
-    (url) => url.pathname.startsWith("/auth/callback") || !url.hostname.includes("localhost"),
-    { timeout: 60_000 },
-  );
+  await page.waitForURL((url) => !url.pathname.startsWith("/login"), {
+    timeout: 60_000,
+  });
   await completeIdpPages(page);
   await page.waitForURL(/\/(courses|learn|admin)|reason=/, { timeout: 60_000 });
 }

@@ -119,10 +119,19 @@ const KNOWN_CODES = new Set(Object.keys(STATUS_BY_CODE));
 export function fromDatabaseError(error: unknown): ApiError {
   if (error instanceof ApiError) return error;
 
-  const message =
-    typeof error === "object" && error !== null && "message" in error
-      ? String((error as { message: unknown }).message)
-      : "";
+  const record =
+    typeof error === "object" && error !== null
+      ? (error as { message?: unknown; code?: unknown })
+      : {};
+  const message = record.message === undefined ? "" : String(record.message);
+  const pgCode = record.code === undefined ? "" : String(record.code);
+
+  if (pgCode === "23505" && message.includes("one_active_enrollment_per_student")) {
+    return new ApiError("ACTIVE_COURSE_EXISTS");
+  }
+  if (pgCode === "23505") {
+    return new ApiError("CONFLICT");
+  }
 
   if (KNOWN_CODES.has(message)) {
     return new ApiError(message as ApiErrorCode);

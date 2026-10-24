@@ -3,12 +3,15 @@ import { sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { mapDatabaseError } from "@/lib/api/errors";
 
-type PgLikeError = { message: string; code?: string; detail?: string; hint?: string };
-
 export function mapPgError(error: unknown): never {
-  const e = error as PgLikeError;
-  mapDatabaseError({ message: e?.message ?? "database error", code: e?.code } as never);
-  throw error;
+  let current: unknown = error;
+  for (let depth = 0; depth < 5; depth += 1) {
+    if (typeof current !== "object" || current === null) break;
+    const cause = (current as { cause?: unknown }).cause;
+    if (!cause) break;
+    current = cause;
+  }
+  mapDatabaseError(current);
 }
 
 /** Run a raw parameterized query through Drizzle and return typed rows. */

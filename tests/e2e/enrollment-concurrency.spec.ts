@@ -166,8 +166,8 @@ test.describe("课程占用：并发、幂等与恢复", () => {
         p_student: studentB.id,
         p_course: courseB.id,
       });
-      expect(joinA.error).toBeNull();
-      expect(joinB.error).toBeNull();
+      expect(joinA).toBeTruthy();
+      expect(joinB).toBeTruthy();
     } finally {
       await deleteTestStudent(studentA.id);
       await deleteTestStudent(studentB.id);

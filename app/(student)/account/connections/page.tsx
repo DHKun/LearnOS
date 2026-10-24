@@ -4,7 +4,7 @@ import { LinkFloatctfButton } from "@/components/auth/link-floatctf-button";
 import { PageHeader } from "@/components/page";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireStudent } from "@/lib/auth/session";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { auth } from "@/lib/auth/better";
 import { db } from "@/lib/db";
@@ -27,7 +27,7 @@ export default async function ConnectionsPage({
           await db
             .select({ id: account.id })
             .from(account)
-            .where(eq(account.userId, session.user.id))
+            .where(and(eq(account.userId, session.user.id), eq(account.providerId, "floatctf")))
             .limit(20)
         ).length,
       )
