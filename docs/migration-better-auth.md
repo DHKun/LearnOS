@@ -73,3 +73,11 @@ RLS policies（16 条）与 `profiles.user_id → auth.users` 外键/触发器�
 - 删除 `lib/supabase/`、`@supabase/*` 依赖、Supabase 迁移/部署配置与文档。
 - 管理员建号/重置密码/禁用账号的 Better Auth E2E 验证。
 - 独立 PostgreSQL 生产 compose、备份、连接池调优。
+
+## 2026-10-24 全量 E2E
+
+- 非 SSO：20/20
+- FloatCTF SSO：11/11
+- 合并全量：31/31（第二次运行；首次绑定用例曾受测试顺序影响，已复跑通过）
+- 手动绑定修复：`account.accountLinking.trustedProviders = ["floatctf"]`，且 `allowDifferentEmails = true`；仅用于已登录用户的显式绑定。
+- 首次登录仍创建独立 student；不使用邮箱自动合并。
