@@ -4,6 +4,7 @@ import * as React from "react";
 import { Link2 } from "lucide-react";
 
 import { authClient } from "@/lib/auth/client";
+import { floatctfLinkRequest } from "@/lib/auth/floatctf-request";
 import { Button } from "@/components/ui/button";
 
 export function LinkFloatctfButton({ linked }: { linked: boolean }) {
@@ -21,18 +22,16 @@ export function LinkFloatctfButton({ linked }: { linked: boolean }) {
   const onClick = async () => {
     setError(null);
     setPending(true);
-    try {
-      const callback = new URL("/auth/callback", window.location.origin);
-      callback.searchParams.set("intent", "link");
-      callback.searchParams.set("next", "/account/connections");
-      await authClient.linkSocial({
-        provider: "floatctf",
-        callbackURL: callback.toString(),
-        errorCallbackURL: "/account/connections?error=link_failed",
-      });
-    } catch {
+    const unavailable = () => {
       setPending(false);
       setError("暂时无法发起绑定，请稍后再试或联系管理员。");
+    };
+    try {
+      // 绑定同样要求在 FloatCTF 确认账号，避免浏览器里残留的其他 FloatCTF 登录被静默绑定。
+      const result = await authClient.linkSocial(floatctfLinkRequest(window.location.origin));
+      if (result?.error) unavailable();
+    } catch {
+      unavailable();
     }
   };
 

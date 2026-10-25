@@ -6,10 +6,9 @@ import { auth } from "@/lib/auth/better";
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 import { safeNextPath } from "@/lib/auth/floatctf";
+import { callbackFailurePath } from "@/lib/auth/floatctf-request";
 
 const LOGIN_ERROR = "/login?reason=oauth_failed";
-const LINK_ERROR = "/login?reason=link_failed";
-const LINK_ERROR_WHILE_SIGNED_IN = "/account/connections?error=link_failed";
 const LINK_OK = "/account/connections?linked=1";
 
 function redirect(request: Request, path: string): NextResponse {
@@ -30,11 +29,13 @@ export async function GET(request: Request) {
   // Better Auth has already completed the OIDC code exchange before sending the
   // browser here; this route only maps the resulting session to a profile.
   const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
+  // A failed or cancelled attempt never creates or replaces a session; an
+  // existing LearnOS session (link flow) is left exactly as it was.
   if (error || !session?.user) {
-    if (intent === "link") {
-      return redirect(request, session ? LINK_ERROR_WHILE_SIGNED_IN : LINK_ERROR);
-    }
-    return redirect(request, LOGIN_ERROR);
+    return redirect(
+      request,
+      callbackFailurePath({ error, intent, signedIn: Boolean(session?.user) }),
+    );
   }
 
   if (intent === "link") return redirect(request, LINK_OK);

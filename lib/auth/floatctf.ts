@@ -23,12 +23,8 @@ export class OidcProvisionError extends Error {
   }
 }
 
-export function safeNextPath(value: string | null | undefined): string | null {
-  if (!value) return null;
-  if (!value.startsWith("/") || value.startsWith("//")) return null;
-  if (value.includes("\\") || /[\u0000-\u001f\u007f]/.test(value)) return null;
-  return value;
-}
+// Client-safe; re-exported so server code keeps importing it from here.
+export { safeNextPath } from "@/lib/auth/floatctf-request";
 
 export function isFloatctfLoginEnabled(): boolean {
   return Boolean(process.env.FLOATCTF_OIDC_ISSUER) &&

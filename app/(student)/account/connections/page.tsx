@@ -46,11 +46,15 @@ export default async function ConnectionsPage({
           FloatCTF 已绑定。你的 LearnOS 用户 ID、课程进度、笔记和积分保持不变。
         </p>
       )}
-      {params.error && (
+      {params.error === "link_cancelled" ? (
+        <p className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          你已在 FloatCTF 取消绑定，账号未发生变化。
+        </p>
+      ) : params.error ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           绑定未完成，请重试或联系管理员。
         </p>
-      )}
+      ) : null}
 
       <Card>
         <CardHeader>

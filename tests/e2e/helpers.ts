@@ -79,7 +79,7 @@ export async function login(page: Page, email: string, password: string): Promis
 }
 
 export async function logout(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "退出" }).click();
+  await page.getByRole("button", { name: "退出 LearnOS" }).click();
   await expect(page).toHaveURL(/\/login/);
 }
 
