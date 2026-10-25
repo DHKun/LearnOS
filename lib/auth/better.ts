@@ -6,6 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 import { profiles } from "@/lib/db/schema";
 
 import { db } from "@/lib/db";
+import { recordFloatctfSession, rememberFloatctfLogin } from "@/lib/auth/floatctf-logout";
 
 const issuer = (process.env.FLOATCTF_OIDC_ISSUER ?? "").replace(/\/$/, "");
 
@@ -38,6 +39,14 @@ export const auth = betterAuth({
     database: { generateId: "uuid" },
   },
   databaseHooks: {
+    session: {
+      create: {
+        // 经 FloatCTF 登录时把会话与 FloatCTF 身份会话 (iss, sid) 关联（Back-Channel Logout 用）。
+        after: async (created) => {
+          await recordFloatctfSession(created.id);
+        },
+      },
+    },
     user: {
       create: {
         after: async (user) => {
@@ -70,6 +79,17 @@ export const auth = betterAuth({
               pkce: true,
               authentication: "post",
               disableImplicitSignUp: false,
+              // ID Token 必须按 Discovery JWKS 验签（Back-Channel Logout 依赖其中的 sid）。
+              requireIdTokenVerification: true,
+              // 普通「退出 LearnOS」只结束 LearnOS 会话：FloatCTF 一旦在 Discovery 宣告 end_session_endpoint，
+              // Better Auth 的 signOut 默认会构造 RP-Initiated Logout；这里显式关闭，
+              // 只有用户明确选择「退出 FloatCTF 及所有应用」时才由 LearnOS 自己发起（见 lib/auth/actions.ts）。
+              disableProviderLogout: true,
+              getUserInfo: async (tokens) => {
+                // 走到这里时 Better Auth 已验证过 ID Token（JWKS + nonce）。
+                rememberFloatctfLogin(tokens.idToken);
+                return fetchFloatctfUserInfo(tokens.accessToken);
+              },
               mapProfileToUser: (profile) => {
                 const subject = String(profile.sub ?? profile.id ?? "");
                 const displayName =
@@ -94,3 +114,23 @@ export const auth = betterAuth({
 });
 
 export type BetterSession = typeof auth.$Infer.Session;
+
+/** FloatCTF UserInfo（与 Better Auth 默认的 userinfo 读取逻辑一致：sub → id，picture → image）。 */
+async function fetchFloatctfUserInfo(accessToken: string | undefined) {
+  if (!accessToken || !issuer) return null;
+  const response = await fetch(`${issuer}/oauth/userinfo`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  const data = (await response.json()) as Record<string, unknown>;
+  if (typeof data.sub !== "string") return null;
+  return {
+    ...data,
+    id: data.sub,
+    email: typeof data.email === "string" ? data.email : undefined,
+    emailVerified: data.email_verified === true,
+    image: typeof data.picture === "string" ? data.picture : undefined,
+    name: typeof data.name === "string" ? data.name : undefined,
+  };
+}

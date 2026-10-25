@@ -32,6 +32,7 @@ export default async function LoginPage({
             ? "你已在 FloatCTF 取消登录，LearnOS 未登录任何账号。"
             : null;
   const signedOut = params.reason === "signed_out";
+  const globalSignedOut = params.reason === "global_signed_out";
   const showFloatctf = isFloatctfLoginEnabled();
 
   return (
@@ -122,6 +123,15 @@ export default async function LoginPage({
             >
               <ClearPrivateLocalData />
               已退出 LearnOS。这不会退出 FloatCTF：再次使用 FloatCTF 登录时，可以选择继续当前账号或使用其他账号。
+            </div>
+          )}
+          {globalSignedOut && (
+            <div
+              role="status"
+              className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+            >
+              <ClearPrivateLocalData />
+              已退出 LearnOS，并已在 FloatCTF 完成退出确认。FloatCTF 会通知其他已接入的应用；不支持即时通知的应用需在应用内手动退出。
             </div>
           )}
           {reasonMessage && (

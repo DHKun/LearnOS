@@ -1,4 +1,5 @@
 export * from "./auth-schema";
+export * from "./floatctf-schema";
 
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
