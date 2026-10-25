@@ -53,5 +53,19 @@ export default defineConfig({
       timeout: 120_000,
     },
   ],
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Optional, for real-IdP runs: use an installed browser (e.g. "chrome")
+        // and an isolated HOME whose NSS store trusts the private test CA, so
+        // HTTPS is verified rather than ignored.
+        ...(process.env.E2E_BROWSER_CHANNEL ? { channel: process.env.E2E_BROWSER_CHANNEL } : {}),
+        ...(process.env.E2E_BROWSER_HOME
+          ? { launchOptions: { env: { ...process.env, HOME: process.env.E2E_BROWSER_HOME } } }
+          : {}),
+      },
+    },
+  ],
 });

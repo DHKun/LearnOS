@@ -67,6 +67,14 @@ async function completeIdpPages(page: Page) {
         .catch(() => undefined);
       continue;
     }
+    if (url.includes("/oauth/select-account")) {
+      // LearnOS sends prompt=select_account: FloatCTF asks which account to use.
+      await page.getByRole("button", { name: "继续使用此账号" }).click();
+      await page
+        .waitForURL((url) => !url.pathname.includes("/oauth/select-account"), { timeout: 30_000 })
+        .catch(() => undefined);
+      continue;
+    }
     if (url.includes("/oauth/consent")) {
       await page.getByRole("button", { name: "允许" }).click();
       await page
@@ -208,10 +216,18 @@ test.describe("FloatCTF 单一登录", () => {
  * callback error path would silently strand users on an OAuth error page.
  */
 test.describe("FloatCTF 登录失败回跳", () => {
-  test("IdP 拒绝授权时回到登录页并给出提示", async ({ page }) => {
+  test("用户在 IdP 取消时回到登录页并说明已取消", async ({ page }) => {
     await page.goto("/auth/callback?error=access_denied&intent=login");
+    await expect(page).toHaveURL(/\/login\?reason=oauth_denied/);
+    await expect(page.getByText("你已在 FloatCTF 取消登录，LearnOS 未登录任何账号。")).toBeVisible();
+    await page.goto("/courses");
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("IdP 返回其他错误时回到登录页并给出失败提示", async ({ page }) => {
+    await page.goto("/auth/callback?error=server_error&intent=login");
     await expect(page).toHaveURL(/\/login\?reason=oauth_failed/);
-    await expect(page.getByRole("alert").first()).toBeVisible();
+    await expect(page.getByText("FloatCTF 登录未完成")).toBeVisible();
   });
 
   test("缺少授权码时不建立会话", async ({ page }) => {
@@ -228,12 +244,16 @@ test.describe("FloatCTF 登录失败回跳", () => {
     await expect(page.getByText("FloatCTF 绑定未完成")).toBeVisible();
   });
 
-  test("已登录时绑定失败回到连接页", async ({ page }) => {
+  test("已登录时绑定取消/失败回到连接页且保持登录", async ({ page }) => {
     const student = await createTestStudent("sso-link-fail");
     try {
       await login(page, student.email, student.password);
       await page.goto("/auth/callback?error=access_denied&intent=link");
+      await expect(page).toHaveURL(/\/account\/connections\?error=link_cancelled/);
+      await expect(page.getByText("你已在 FloatCTF 取消绑定，账号未发生变化。")).toBeVisible();
+      await page.goto("/auth/callback?error=account_already_linked_to_different_user&intent=link");
       await expect(page).toHaveURL(/\/account\/connections\?error=link_failed/);
+      await expect(page.getByText("绑定未完成，请重试或联系管理员。")).toBeVisible();
     } finally {
       await deleteTestStudent(student.id);
     }

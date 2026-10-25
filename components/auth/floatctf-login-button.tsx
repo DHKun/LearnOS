@@ -14,9 +14,9 @@ export function FloatctfLoginButton({ next }: { next?: string | null }) {
   const onClick = async () => {
     setError(null);
     setPending(true);
-    const unavailable = () => {
+    const fail = (message = "FloatCTF 登录暂不可用，请使用邮箱密码登录。") => {
       setPending(false);
-      setError("FloatCTF 登录暂不可用，请使用邮箱密码登录。");
+      setError(message);
     };
     try {
       // prompt=select_account：浏览器里已有 FloatCTF 登录时，由 FloatCTF 显示账号选择页，
@@ -24,9 +24,11 @@ export function FloatctfLoginButton({ next }: { next?: string | null }) {
       const result = await authClient.signIn.social(
         floatctfSignInRequest(window.location.origin, next),
       );
-      if (result?.error) unavailable();
+      if (result?.error) {
+        fail(result.error.status === 429 ? "操作过于频繁，请稍等几秒后再试。" : undefined);
+      }
     } catch {
-      unavailable();
+      fail();
     }
   };
 
