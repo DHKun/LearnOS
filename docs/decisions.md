@@ -428,3 +428,27 @@
 
 **影响**：新增 Keycloak + 独立数据库与内部 CA 运维；生产需 HTTPS 内网入口。已用 Keycloak
 26 + 真实 Supabase + 真实 FloatCTF 跑通 11/11 SSO 场景。
+
+## D49 — 主动登录请 FloatCTF 显示账号选择页；退出只结束 LearnOS 会话
+
+**背景**（2026-10-25）：用户只在 LearnOS 通过 FloatCTF 登录过一次。退出 LearnOS 后再点「使用 FloatCTF 登录」，
+会被直接带回原账号，没有确认或更换账号的机会。原因是 FloatCTF OIDC 的 SSO Cookie 与 LearnOS 的 Better Auth
+会话互相独立：LearnOS 退出无法（也不应）清除 FloatCTF 的 Cookie，而授权请求不带 `prompt` 时静默 SSO 是标准行为。
+
+**决定**：
+
+1. 用户主动点击的登录与显式绑定，经 Better Auth `additionalParams` 发送 `prompt=select_account`（`lib/auth/floatctf-request.ts`）。
+   `state`、PKCE、`nonce`、`redirect_uri`、`scope` 仍由 Better Auth 生成；1.7.12 对 `additionalParams` 中的这些保留参数直接拒绝。
+   账号选择 UI 完全由 FloatCTF（issuer origin）提供，LearnOS 不保存、不展示 FloatCTF 账号列表。
+2. 退出改为「确认会话已失效才算成功」（`lib/auth/sign-out.ts`）：Better Auth 删除会话失败时会记日志并照常返回 success，
+   因此退出后用原 Cookie 再读一次会话；仍能读到即报告失败。按钮文案改为「退出 LearnOS」，并在登录页说明不会退出 FloatCTF。
+3. OIDC 失败回跳改走 `/auth/callback`（`errorCallbackURL`），区分「在 FloatCTF 取消」（`oauth_denied` / `link_cancelled`）与其他失败；
+   失败或取消从不创建或替换会话。
+4. 不实现统一退出，不调用 FloatCTF 的 `/oauth/logout`（跨域、且它只是 FloatCTF 本地注销）。
+
+**理由**：账号选择属于 OP 职责；`prompt=select_account` 是 OIDC Core 标准参数，不需要私有接口。
+保持限流开启（Better Auth 对 `/sign-in/*` 默认 10 秒 3 次），被限流时提示「操作过于频繁」而不是误报不可用。
+
+**影响**：真实双应用 E2E `tests/e2e/floatctf-account-chooser.spec.ts`（12 个场景）覆盖选择、继续、取消、换号与数据隔离、
+双击、多标签、跨站伪造、非法回调、旧 RP 兼容与会话失效。依赖 FloatCTF 侧对应改造先上线。
+
