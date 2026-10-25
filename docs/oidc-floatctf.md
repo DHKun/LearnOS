@@ -1,5 +1,45 @@
 # FloatCTF OIDC 接入（Supabase custom:floatctf）
 
+> **当前架构是 Better Auth + PostgreSQL**（见 [better-auth-deployment.md](better-auth-deployment.md) 与 D49）。
+> 下文「状态」之后的 Supabase / Keycloak 章节是历史记录；最新的账号选择行为与 E2E 见紧接着的一节。
+
+## 账号选择 E2E（2026-10-25，Better Auth × FloatCTF）
+
+**行为**：「使用 FloatCTF 登录」「绑定 FloatCTF 账号」带 `prompt=select_account`。浏览器已有 FloatCTF 登录时，
+FloatCTF 显示自己的账号选择页：继续当前账号（免密码，已授权时不再同意）、使用其他账号（必须输入密码，新账号单独授权）、
+取消（`access_denied` → `/login?reason=oauth_denied`）。「退出 LearnOS」只结束 LearnOS 会话，不退出 FloatCTF。
+
+**用例**（`tests/e2e/floatctf-account-chooser.spec.ts`，真实 Chrome + 真实 FloatCTF OP + 真实 LearnOS + 两个隔离 PostgreSQL）：
+首次登录；退出后选择页必现且不点击不返回；继续 A 免密码免同意；取消；使用其他账号 B（密码 + 独立同意）并验证
+A/B 报名与笔记隔离；选择页只展示当前账号；双击继续只发一次码；另一标签切换账号后要求重新确认；跨站伪造表单被拒；
+未登记 `redirect_uri` 停在 FloatCTF 错误页；不传 prompt 的旧 RP 保持静默 SSO 与 `prompt=none`；FloatCTF 会话失效后只能输密码；
+窄屏暗色截图。
+
+**运行条件**（全部是测试环境，不要指向生产）：
+
+- FloatCTF OP（含账号选择改造）以 **HTTPS** 提供，证书由测试 CA 签发；LearnOS 服务端用 `NODE_EXTRA_CA_CERTS=<ca.crt>` 信任它，
+  浏览器用独立 HOME 的 NSS 证书库信任它（`certutil -A -t "C,," -d sql:$HOME/.pki/nssdb`）。**不使用 `ignoreHTTPSErrors`**。
+- FloatCTF 中登记 LearnOS 应用（`client_secret_post`，回调 `https://<learnos>/api/auth/callback/floatctf`），
+  另登记一个 public 应用（回调 `https://legacy-rp.test/callback`）作为「不传 prompt 的旧 RP」；两个测试账号 A/B。
+
+```bash
+E2E_BASE_URL=https://localhost:3443 \
+E2E_FLOATCTF_CHOOSER=1 \
+FLOATCTF_OIDC_ISSUER=https://127.0.0.1:8443 FLOATCTF_OIDC_CLIENT_ID=<learnos client_id> \
+FLOATCTF_E2E_DB_URL=postgres://…/<隔离的 FloatCTF 测试库> LEARNOS_DB_URL=postgres://…/<隔离的 LearnOS 测试库> \
+E2E_FLOATCTF_USER_A=… E2E_FLOATCTF_USER_B=… E2E_FLOATCTF_PASSWORD=… \
+E2E_FLOATCTF_LEGACY_CLIENT_ID=<public client_id> \
+E2E_BROWSER_CHANNEL=chrome E2E_BROWSER_HOME=<含 nssdb 的目录> NODE_EXTRA_CA_CERTS=<ca.crt> \
+pnpm exec playwright test tests/e2e/floatctf-account-chooser.spec.ts
+```
+
+该 spec 在 `beforeAll` 中会撤销 A/B 在 **测试 OP 库**里的 SSO 会话与授权记录、删除他们在 LearnOS 测试库中的绑定，
+以保证可重复运行——这正是它必须连接隔离库的原因。LearnOS 保持 Better Auth 限流开启，spec 遇到 429 按 `X-Retry-After` 等待。
+
+**结果（2026-10-25）**：12/12 通过（限流开启，连续两次）。同一环境下完整 `pnpm test:e2e`：38 passed / 6 skipped / 0 failed
+（6 个 skipped 是下文历史章节的 Keycloak/Supabase 实测用例，需要 `E2E_FLOATCTF_SSO=1` 与其专用环境；
+完整套件按其既有前提以 `BETTER_AUTH_RATE_LIMIT=false` 与 `BETTER_AUTH_ALLOW_SIGNUP=true` 运行，用于批量创建测试学生）。
+
 ## 状态
 
 **代码与真实 SSO 已验证（7/7 自检、11/11 SSO 用例）；生产入口默认关闭（`FLOATCTF_OIDC_ENABLED=false`），启用前需把本仓库提供的 FloatCTF CSP 补丁合并到上游并完成正式部署。**

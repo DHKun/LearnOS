@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 
 import { auth } from "@/lib/auth/better";
+import { signOutLearnOS } from "@/lib/auth/sign-out";
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 
@@ -48,7 +49,16 @@ export async function signInAction(
   redirect(profile.role === "admin" ? "/admin" : "/courses");
 }
 
-export async function signOutAction(): Promise<void> {
-  await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
-  redirect("/login");
+export type SignOutState = { error?: string };
+
+/** 退出 LearnOS。只在 LearnOS 会话确实失效后才跳转；失败时如实告知，不伪装成已退出。 */
+export async function signOutAction(
+  _previous: SignOutState,
+  _formData: FormData,
+): Promise<SignOutState> {
+  const result = await signOutLearnOS(await headers());
+  if (!result.ok) {
+    return { error: "退出失败，你仍处于登录状态，请重试。" };
+  }
+  redirect("/login?reason=signed_out");
 }

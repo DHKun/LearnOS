@@ -39,6 +39,16 @@ http(s)://<learnos-host>:3000/api/auth/callback/floatctf
 
 禁止关闭 TLS 校验。浏览器访问的 issuer、Web 容器访问的 issuer 必须一致；内网 DNS/证书需同时可用。
 
+### 退出与账号选择
+
+- 「退出 LearnOS」只结束 LearnOS（Better Auth）会话，**不会**退出 FloatCTF；退出成功前会重新读取会话确认已失效，
+  失败时提示「退出失败，你仍处于登录状态」，不会伪装成已退出。本机笔记缓存只在退出成功后清理。
+- 登录页「使用 FloatCTF 登录」与「绑定 FloatCTF 账号」都会带 `prompt=select_account`：浏览器里已有 FloatCTF 登录时，
+  FloatCTF 显示账号选择页（继续当前账号免密码；使用其他账号需输入密码；取消回到 `/login?reason=oauth_denied`）。
+- 需要 FloatCTF OP 支持独立账号选择页（FloatCTF `feat/oidc-account-chooser` 及之后）。**先升级 FloatCTF，再升级 LearnOS**；
+  旧版 OP 收到 `select_account` 只会多显示一次同意页，不会越权。
+- 回滚 LearnOS 这一项：回退提交 `feat(auth): ask FloatCTF to show its account chooser…` 即恢复不带 prompt 的静默 SSO。
+
 ## 验证
 
 ```bash

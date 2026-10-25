@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { getSessionProfile } from "@/lib/auth/session";
 import { isFloatctfLoginEnabled } from "@/lib/auth/floatctf";
+import { ClearPrivateLocalData } from "@/components/auth/clear-private-local-data";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "登录" };
@@ -28,8 +29,9 @@ export default async function LoginPage({
         : params.reason === "link_failed"
           ? "FloatCTF 绑定未完成：请先登录 LearnOS 账号，再在「账号与登录方式」中重试。"
           : params.reason === "oauth_denied"
-            ? "你已取消 FloatCTF 授权。"
+            ? "你已在 FloatCTF 取消登录，LearnOS 未登录任何账号。"
             : null;
+  const signedOut = params.reason === "signed_out";
   const showFloatctf = isFloatctfLoginEnabled();
 
   return (
@@ -111,6 +113,15 @@ export default async function LoginPage({
           {disabled && (
             <div className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               账号已被停用，请联系管理员。
+            </div>
+          )}
+          {signedOut && (
+            <div
+              role="status"
+              className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+            >
+              <ClearPrivateLocalData />
+              已退出 LearnOS。这不会退出 FloatCTF：再次使用 FloatCTF 登录时，可以选择继续当前账号或使用其他账号。
             </div>
           )}
           {reasonMessage && (
