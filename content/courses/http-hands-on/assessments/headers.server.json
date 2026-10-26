@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "h1",
+      "prompt": "客户端想告诉服务器「我希望收到 JSON」，应该用哪个请求头？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "Content-Type: application/json"
+        },
+        {
+          "id": "b",
+          "label": "Accept: application/json"
+        },
+        {
+          "id": "c",
+          "label": "Host: application/json"
+        },
+        {
+          "id": "d",
+          "label": "Location: application/json"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Accept 表达希望收到的格式；Content-Type 描述消息自带正文的格式。"
+    },
+    {
+      "id": "h2",
+      "prompt": "POST 一段合法 JSON，但 Content-Type 写成 text/plain，服务器返回 415。正确的修法是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把正文改成纯文本"
+        },
+        {
+          "id": "b",
+          "label": "把 Content-Type 改成 application/json"
+        },
+        {
+          "id": "c",
+          "label": "添加 Accept: text/plain"
+        },
+        {
+          "id": "d",
+          "label": "改用 GET"
+        }
+      ],
+      "answer": "b",
+      "explanation": "415 表示正文格式（由 Content-Type 声明）不被接受。正文本身是 JSON，标签要如实写。"
+    },
+    {
+      "id": "h3",
+      "prompt": "下面哪段是合法的 JSON？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "{title: \"好书\"}"
+        },
+        {
+          "id": "b",
+          "label": "{'title': '好书'}"
+        },
+        {
+          "id": "c",
+          "label": "{\"title\": \"好书\",}"
+        },
+        {
+          "id": "d",
+          "label": "{\"title\": \"好书\", \"pages\": 320}"
+        }
+      ],
+      "answer": "d",
+      "explanation": "JSON 的键和字符串必须用双引号，不能有末尾逗号，数字不加引号。"
+    },
+    {
+      "id": "h4",
+      "prompt": "Header 名称不区分大小写，content-type 和 Content-Type 是同一个头。",
+      "type": "boolean",
+      "answer": true,
+      "explanation": "HTTP 头部的名称不区分大小写。"
+    }
+  ]
+}

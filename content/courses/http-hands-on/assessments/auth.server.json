@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "a1",
+      "prompt": "没登录的用户访问「我的借阅」，最合适的状态码是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "401"
+        },
+        {
+          "id": "b",
+          "label": "403"
+        },
+        {
+          "id": "c",
+          "label": "404"
+        },
+        {
+          "id": "d",
+          "label": "500"
+        }
+      ],
+      "answer": "a",
+      "explanation": "服务器不知道请求者是谁，属于认证问题，用 401。"
+    },
+    {
+      "id": "a2",
+      "prompt": "已登录的普通读者访问馆员报表，最合适的状态码是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "401"
+        },
+        {
+          "id": "b",
+          "label": "403"
+        },
+        {
+          "id": "c",
+          "label": "405"
+        },
+        {
+          "id": "d",
+          "label": "409"
+        }
+      ],
+      "answer": "b",
+      "explanation": "身份已确认，但权限不足，用 403。"
+    },
+    {
+      "id": "a3",
+      "prompt": "前端调用 /api/loans 一直 401，但用户确实刚登录过。最先该检查什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "服务器 CPU"
+        },
+        {
+          "id": "b",
+          "label": "请求头里到底有没有带上会话 Cookie"
+        },
+        {
+          "id": "c",
+          "label": "响应的 Content-Length"
+        },
+        {
+          "id": "d",
+          "label": "URL 里的片段"
+        }
+      ],
+      "answer": "b",
+      "explanation": "401 最常见的原因是凭据没随请求发出去，例如 Cookie 的 Path 或 SameSite 不匹配。"
+    },
+    {
+      "id": "a4",
+      "prompt": "使用 Authorization: Bearer 令牌的 API，浏览器会像 Cookie 一样自动在每个请求里附上令牌。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "Authorization 头需要前端代码自己添加；只有 Cookie 会被浏览器按规则自动附上。"
+    }
+  ]
+}

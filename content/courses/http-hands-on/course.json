@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 3,
+  "slug": "http-hands-on",
+  "title": "HTTP 实战：看懂并修好每一次请求",
+  "description": "零基础的 HTTP 动手课。整门课围绕同一个模拟网站 library.test：你会读懂真实格式的请求与响应，修复失效的链接、留言、Cookie 和缓存配置，用模拟的 DevTools Network 面板排查故障，最后直接调用 API 帮读者借到一本书。所有实验都在浏览器内模拟，不访问外部网络。",
+  "version": "2.0.0",
+  "plugins": {
+    "concepts": [
+      { "id": "journey", "component": "concepts/http-concepts.tsx", "export": "JourneyConcept", "title": "按下回车之后", "analogy": "去图书馆：先找地址，再进门，最后在借阅台办事" },
+      { "id": "url", "component": "concepts/http-concepts.tsx", "export": "UrlConcept", "title": "URL 的哪些部分会到达服务器", "analogy": "借阅单与夹在自己本子里的书签" },
+      { "id": "message", "component": "concepts/http-concepts.tsx", "export": "MessageConcept", "title": "请求与响应逐行拆开", "analogy": "借阅单与回执" },
+      { "id": "redirect", "component": "concepts/http-concepts.tsx", "export": "RedirectConcept", "title": "301 重定向", "analogy": "窗口搬家了，拿着纸条再跑一趟" },
+      { "id": "retry", "component": "concepts/http-concepts.tsx", "export": "RetryConcept", "title": "重试与幂等", "analogy": "「再借一本」说两遍就是两本" },
+      { "id": "negotiation", "component": "concepts/http-concepts.tsx", "export": "NegotiationConcept", "title": "Accept 与 Content-Type", "analogy": "「我要电子版」与袋子上的标签" },
+      { "id": "cookie", "component": "concepts/http-concepts.tsx", "export": "CookieConcept", "title": "Cookie 与会话", "analogy": "借书证上只有一个编号" },
+      { "id": "auth", "component": "concepts/http-concepts.tsx", "export": "AuthConcept", "title": "认证与授权的两道门", "analogy": "刷证进门，再看能不能进办公室" },
+      { "id": "tls", "component": "concepts/http-concepts.tsx", "export": "TlsConcept", "title": "HTTPS 与网络旁观者", "analogy": "明信片与带防伪印章的保险袋" },
+      { "id": "cache", "component": "concepts/http-concepts.tsx", "export": "CacheConcept", "title": "缓存的新鲜期与再验证", "analogy": "到期前直接看，过期了带着版本号去问" }
+    ],
+    "activities": [
+      { "id": "url-lab", "component": "activities/labs.tsx", "export": "UrlLab", "title": "修好两条分享链接", "validator": { "path": "validators.ts", "export": "validateUrlLab" } },
+      { "id": "request-lab", "component": "activities/labs.tsx", "export": "RequestLab", "title": "找不到的图书详情", "validator": { "path": "validators.ts", "export": "validateRequestLab" } },
+      { "id": "response-lab", "component": "activities/labs.tsx", "export": "ResponseLab", "title": "读懂五份响应", "validator": { "path": "validators.ts", "export": "validateResponseLab" } },
+      { "id": "method-lab", "component": "activities/labs.tsx", "export": "MethodLab", "title": "修正一个书名", "validator": { "path": "validators.ts", "export": "validateMethodLab" } },
+      { "id": "json-lab", "component": "activities/labs.tsx", "export": "JsonLab", "title": "发不出去的留言", "validator": { "path": "validators.ts", "export": "validateJsonLab" } },
+      { "id": "cookie-lab", "component": "activities/labs.tsx", "export": "CookieLab", "title": "会话 Cookie 的五个场景", "validator": { "path": "validators.ts", "export": "validateCookieLab" } },
+      { "id": "cache-lab", "component": "activities/labs.tsx", "export": "CacheLab", "title": "两天的缓存回放", "validator": { "path": "validators.ts", "export": "validateCacheLab" } },
+      { "id": "diagnosis-lab", "component": "activities/labs.tsx", "export": "DiagnosisLab", "title": "Network 面板排错", "validator": { "path": "validators.ts", "export": "validateDiagnosisLab" } },
+      { "id": "final-mission", "component": "activities/labs.tsx", "export": "FinalMission", "title": "用 API 帮小林借书", "validator": { "path": "validators.ts", "export": "validateFinalMission" } }
+    ]
+  },
+  "lessons": [
+    { "slug": "first-request", "title": "按下回车之后发生了什么", "source": "lessons/01-first-request.mdx", "required": true, "unit": "基础" },
+    {
+      "slug": "url",
+      "title": "URL：哪些部分会到达服务器",
+      "source": "lessons/02-url.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [{ "id": "url-lab", "kind": "simulation", "activityId": "http-hands-on/url-lab", "title": "修好两条分享链接" }],
+      "completion": { "mode": "all", "requiredBlocks": ["url-lab"] }
+    },
+    {
+      "slug": "request",
+      "title": "请求：把要什么说清楚",
+      "source": "lessons/03-request.mdx",
+      "required": true,
+      "unit": "报文",
+      "blocks": [{ "id": "request-lab", "kind": "simulation", "activityId": "http-hands-on/request-lab", "title": "找不到的图书详情" }],
+      "completion": { "mode": "all", "requiredBlocks": ["request-lab"] }
+    },
+    {
+      "slug": "response",
+      "title": "响应：读懂状态码和头部",
+      "source": "lessons/04-response.mdx",
+      "required": true,
+      "unit": "报文",
+      "blocks": [
+        { "id": "response-lab", "kind": "simulation", "activityId": "http-hands-on/response-lab", "title": "读懂五份响应" },
+        { "id": "response-check", "kind": "question", "source": "assessments/response.server.json", "title": "状态码检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["response-lab", "response-check"] }
+    },
+    {
+      "slug": "methods",
+      "title": "方法：读、建、改、删与重试",
+      "source": "lessons/05-methods.mdx",
+      "required": true,
+      "unit": "报文",
+      "blocks": [
+        { "id": "method-lab", "kind": "simulation", "activityId": "http-hands-on/method-lab", "title": "修正一个书名" },
+        { "id": "method-check", "kind": "question", "source": "assessments/methods.server.json", "title": "安全与幂等检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["method-lab", "method-check"] }
+    },
+    {
+      "slug": "headers-body",
+      "title": "Header 与 JSON 正文",
+      "source": "lessons/06-headers-body.mdx",
+      "required": true,
+      "unit": "数据",
+      "blocks": [
+        { "id": "json-lab", "kind": "simulation", "activityId": "http-hands-on/json-lab", "title": "发不出去的留言" },
+        { "id": "headers-check", "kind": "question", "source": "assessments/headers.server.json", "title": "Header 检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["json-lab", "headers-check"] }
+    },
+    {
+      "slug": "cookie",
+      "title": "Cookie：让无状态的 HTTP 记住你",
+      "source": "lessons/07-cookie.mdx",
+      "required": true,
+      "unit": "状态与安全",
+      "blocks": [{ "id": "cookie-lab", "kind": "simulation", "activityId": "http-hands-on/cookie-lab", "title": "会话 Cookie 的五个场景" }],
+      "completion": { "mode": "all", "requiredBlocks": ["cookie-lab"] }
+    },
+    {
+      "slug": "auth",
+      "title": "401 还是 403：认证与授权",
+      "source": "lessons/08-auth.mdx",
+      "required": true,
+      "unit": "状态与安全",
+      "blocks": [{ "id": "auth-check", "kind": "question", "source": "assessments/auth.server.json", "title": "认证与授权检查", "passScore": 75 }],
+      "completion": { "mode": "all", "requiredBlocks": ["auth-check"] }
+    },
+    {
+      "slug": "https",
+      "title": "HTTPS：路上的人能看到什么",
+      "source": "lessons/09-https.mdx",
+      "required": true,
+      "unit": "状态与安全",
+      "blocks": [{ "id": "https-check", "kind": "question", "source": "assessments/https.server.json", "title": "HTTPS 检查", "passScore": 75 }],
+      "completion": { "mode": "all", "requiredBlocks": ["https-check"] }
+    },
+    {
+      "slug": "cache",
+      "title": "缓存：快，但别给旧内容",
+      "source": "lessons/10-cache.mdx",
+      "required": true,
+      "unit": "进阶",
+      "blocks": [{ "id": "cache-lab", "kind": "simulation", "activityId": "http-hands-on/cache-lab", "title": "两天的缓存回放" }],
+      "completion": { "mode": "all", "requiredBlocks": ["cache-lab"] }
+    },
+    {
+      "slug": "debugging",
+      "title": "用 Network 面板排错",
+      "source": "lessons/11-debugging.mdx",
+      "required": true,
+      "unit": "实战",
+      "blocks": [{ "id": "diagnosis-lab", "kind": "simulation", "activityId": "http-hands-on/diagnosis-lab", "title": "Network 面板排错" }],
+      "completion": { "mode": "all", "requiredBlocks": ["diagnosis-lab"] }
+    },
+    {
+      "slug": "practice",
+      "title": "综合任务：只用 API 借一本书",
+      "source": "lessons/12-practice.mdx",
+      "required": true,
+      "unit": "实战",
+      "blocks": [{ "id": "final-lab", "kind": "simulation", "activityId": "http-hands-on/final-mission", "title": "用 API 帮小林借书" }],
+      "completion": { "mode": "all", "requiredBlocks": ["final-lab"] }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/13-final.mdx",
+      "required": true,
+      "unit": "结业",
+      "blocks": [{ "id": "final-check", "kind": "question", "source": "assessments/final.server.json", "title": "HTTP 结业测验", "passScore": 80 }],
+      "completion": { "mode": "all", "requiredBlocks": ["final-check"] },
+      "finalExam": true
+    }
+  ]
+}

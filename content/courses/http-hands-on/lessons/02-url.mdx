@@ -1,0 +1,47 @@
+## 一个分享链接引发的问题
+
+读者小林把「图书列表第 2 页」分享给朋友，朋友打开却总是第 1 页。链接是：
+
+```text
+https://library.test/api/books#page=2
+```
+
+明明写了 `page=2`，服务器为什么不理？原因是：**URL 里并不是每一部分都会发给服务器。**
+
+<ConceptPlayer conceptId="http-hands-on/url" blockId="url-anatomy" />
+
+## 各部分的去向
+
+| 部分 | 例子 | 去了哪里 |
+| --- | --- | --- |
+| 方案 scheme | `https` | 决定用 HTTPS，以及默认端口（HTTPS 是 443，HTTP 是 80） |
+| 主机 host | `library.test` | 用来做 DNS 查询，也会写进 `Host` 请求头 |
+| 端口 port | `:443` | 连接服务器的哪个端口；用默认值时一般不写 |
+| 路径 path | `/api/books` | 写进请求行 |
+| 查询 query | `?q=实战&page=2` | 写进请求行，由服务器解释 |
+| 片段 fragment | `#page=2` | **不发送**，只供浏览器自己定位页面位置 |
+
+所以，浏览器为上面那条链接发出的请求行是 `GET /api/books HTTP/1.1`，`page=2` 一直留在浏览器里。
+
+## 中文和空格会被编码
+
+URL 里只能直接出现有限的字符。中文、空格等会被**百分号编码**：「实战」会变成 `%E5%AE%9E%E6%88%98`（它的 UTF-8 字节）。服务器收到后再解码回来。你在下面实验的请求行里能亲眼看到。
+
+## 动手：修好两条链接
+
+修改地址栏里的 URL，点「打开」，观察浏览器实际发出了什么、服务器回了什么。两条都修好之后提交，由服务器重新验证。
+
+<SimulationBlock blockId="url-lab" />
+
+<MiniCheck
+  id="third-page"
+  question="下面哪个 URL 能让服务器收到「第 3 页」的请求？"
+  options={["https://library.test/api/books#page=3", "https://library.test/api/books?page=3", "https://library.test:3/api/books"]}
+  answer={1}
+  explanation="查询参数（? 后面）会写进请求行；片段（# 后面）不会发送；:3 是端口号，与页码无关。"
+/>
+
+## 小结
+
+- 请求行里只有**路径 + 查询**；主机进 `Host` 头；片段从不离开浏览器。
+- 写错主机或端口时，请求连服务器都到不了，也就没有状态码。

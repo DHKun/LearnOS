@@ -1,0 +1,38 @@
+## HTTP 不记得你
+
+每个 HTTP 请求都是独立的。服务器收到第二个请求时，并不知道它和上一个请求来自同一个人。那么「登录」是怎么做到的？
+
+<ConceptPlayer conceptId="http-hands-on/cookie" blockId="cookie-flow" />
+
+## 决定 Cookie 去向的属性
+
+服务器在 `Set-Cookie` 里用属性告诉浏览器：这个 Cookie 什么时候能带、谁能读。
+
+| 属性 | 作用 |
+| --- | --- |
+| `Path=/account` | 只有路径以 `/account` 开头的请求才带上它 |
+| `Secure` | 只通过 HTTPS 发送，明文 HTTP 请求不带 |
+| `HttpOnly` | 页面里的 JavaScript（`document.cookie`）读不到它，但请求照样会带 |
+| `SameSite=Strict` | 由别的网站发起的请求一律不带 |
+| `SameSite=Lax` | 别的网站上的**链接跳转**（顶层 GET）可以带；表单 POST、脚本请求等不带 |
+| `SameSite=None` | 跨站也带，但必须同时设置 `Secure`，否则浏览器直接拒收 |
+| `Max-Age` / `Expires` | 多久后过期；都不写就是「关闭浏览器即失效」的会话 Cookie |
+
+「跨站」指的是请求由另一个网站的页面发起，比如你在 `mail.example` 上点了指向 `library.test` 的链接。部分浏览器（如 Chrome）会把没写 `SameSite` 的 Cookie 当作 `Lax` 处理。
+
+## 动手：五个场景
+
+安全团队给会话 Cookie 列了五个必须满足的场景。调整 `Set-Cookie` 的属性，让它们全部变绿。先想一想每个场景归哪个属性管，再动手验证。
+
+<SimulationBlock blockId="cookie-lab" />
+
+## Cookie 只是一个编号
+
+会话 Cookie 里通常只有一个随机编号。服务器收到后要去会话表里查是谁，再判断这个人能不能做这件事。所以：
+
+- 偷到会话 Cookie 就等于偷到了登录状态，这正是 `HttpOnly`、`Secure`、`SameSite` 要防的；
+- 服务器绝不能因为「请求里有 Cookie」就放行，权限永远要在服务端检查（下一章）。
+
+<Callout type="warning" title="真实的 Cookie 是密码级的秘密">
+实验里的 `sid=abc123` 是假值。不要把自己浏览器里真实的 Cookie 贴到聊天、笔记或代码仓库里。
+</Callout>

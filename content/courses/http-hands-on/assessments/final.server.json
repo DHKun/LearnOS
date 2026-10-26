@@ -1,0 +1,477 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "浏览器显示 net::ERR_NAME_NOT_RESOLVED，最可能的原因是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "服务器返回了 404"
+        },
+        {
+          "id": "b",
+          "label": "域名写错或 DNS 查不到"
+        },
+        {
+          "id": "c",
+          "label": "Cookie 过期"
+        },
+        {
+          "id": "d",
+          "label": "JSON 格式错误"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这是 DNS 阶段的失败，请求还没发出，没有 HTTP 状态码。"
+    },
+    {
+      "id": "f2",
+      "prompt": "访问 https://library.test/books#reviews 时，#reviews 会出现在发给服务器的请求行里。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "片段只在浏览器内部使用，不会发送。"
+    },
+    {
+      "id": "f3",
+      "prompt": "要请求「搜索书名包含 HTTP 的第 2 页」，正确的 URL 是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "/api/books#q=HTTP&page=2"
+        },
+        {
+          "id": "b",
+          "label": "/api/books?q=HTTP&page=2"
+        },
+        {
+          "id": "c",
+          "label": "/api/books/HTTP/2#"
+        },
+        {
+          "id": "d",
+          "label": "/api/books?q=HTTP#page=2"
+        }
+      ],
+      "answer": "b",
+      "explanation": "筛选和分页参数要放进查询字符串；放进片段的部分服务器收不到。"
+    },
+    {
+      "id": "f4",
+      "prompt": "请求行 GET /api/books/2 HTTP/1.1 中，/api/books/2 是什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "方法"
+        },
+        {
+          "id": "b",
+          "label": "请求目标"
+        },
+        {
+          "id": "c",
+          "label": "协议版本"
+        },
+        {
+          "id": "d",
+          "label": "Host"
+        }
+      ],
+      "answer": "b",
+      "explanation": "请求行依次是方法、请求目标、协议版本。"
+    },
+    {
+      "id": "f5",
+      "prompt": "HTTP 报文中，用什么分隔头部和正文？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "一个空行"
+        },
+        {
+          "id": "b",
+          "label": "一个分号"
+        },
+        {
+          "id": "c",
+          "label": "Content-Length 头"
+        },
+        {
+          "id": "d",
+          "label": "大括号"
+        }
+      ],
+      "answer": "a",
+      "explanation": "头部结束后有一个空行，空行之后才是正文。"
+    },
+    {
+      "id": "f6",
+      "prompt": "服务器返回 304 Not Modified，正确的理解是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "服务器出错了"
+        },
+        {
+          "id": "b",
+          "label": "缓存的副本仍然有效，继续用"
+        },
+        {
+          "id": "c",
+          "label": "资源被删除"
+        },
+        {
+          "id": "d",
+          "label": "需要重新登录"
+        }
+      ],
+      "answer": "b",
+      "explanation": "304 是条件请求的正常结果，表示副本没过时，不重传正文。"
+    },
+    {
+      "id": "f7",
+      "prompt": "订单接口在网络超时后被客户端自动重试，结果生成了两笔订单。最可能用的是什么方法？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "GET"
+        },
+        {
+          "id": "b",
+          "label": "PUT"
+        },
+        {
+          "id": "c",
+          "label": "POST"
+        },
+        {
+          "id": "d",
+          "label": "DELETE"
+        }
+      ],
+      "answer": "c",
+      "explanation": "POST 不幂等，重复提交会重复创建。"
+    },
+    {
+      "id": "f8",
+      "prompt": "用 PUT /api/books/7 只发送了 {\"title\": \"新书名\"}，之后这本书的作者字段会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "保持不变"
+        },
+        {
+          "id": "b",
+          "label": "被清空（PUT 是整体替换）"
+        },
+        {
+          "id": "c",
+          "label": "自动变成书名"
+        },
+        {
+          "id": "d",
+          "label": "服务器一定返回 405"
+        }
+      ],
+      "answer": "b",
+      "explanation": "PUT 用请求正文整体替换资源；局部修改应该用 PATCH。"
+    },
+    {
+      "id": "f9",
+      "prompt": "按标准语义，哪些方法是幂等的？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "GET"
+        },
+        {
+          "id": "b",
+          "label": "POST"
+        },
+        {
+          "id": "c",
+          "label": "PUT"
+        },
+        {
+          "id": "d",
+          "label": "DELETE"
+        }
+      ],
+      "answer": [
+        "a",
+        "c",
+        "d"
+      ],
+      "explanation": "GET、PUT、DELETE 幂等；POST 一般不幂等。"
+    },
+    {
+      "id": "f10",
+      "prompt": "请求带 Accept: text/html 调用只提供 JSON 的 API，最可能得到？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "406 Not Acceptable"
+        },
+        {
+          "id": "b",
+          "label": "415 Unsupported Media Type"
+        },
+        {
+          "id": "c",
+          "label": "201 Created"
+        },
+        {
+          "id": "d",
+          "label": "301 Moved Permanently"
+        }
+      ],
+      "answer": "a",
+      "explanation": "406 表示服务器给不出客户端想要的格式；415 是请求正文格式不被接受。"
+    },
+    {
+      "id": "f11",
+      "prompt": "提交 JSON 时服务器返回 400 invalid_json，正文是 {title: '好书'}。问题出在？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "方法不对"
+        },
+        {
+          "id": "b",
+          "label": "键名和字符串没有用双引号"
+        },
+        {
+          "id": "c",
+          "label": "缺少 Host"
+        },
+        {
+          "id": "d",
+          "label": "需要 HTTPS"
+        }
+      ],
+      "answer": "b",
+      "explanation": "JSON 要求键和字符串都用双引号。"
+    },
+    {
+      "id": "f12",
+      "prompt": "会话 Cookie 设置了 Path=/account。请求 /api/loans 时会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "自动带上"
+        },
+        {
+          "id": "b",
+          "label": "不会带上，因为路径不在 /account 下"
+        },
+        {
+          "id": "c",
+          "label": "浏览器报错"
+        },
+        {
+          "id": "d",
+          "label": "服务器拒收所有请求"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Cookie 只会随路径在 Path 范围内的请求发送。"
+    },
+    {
+      "id": "f13",
+      "prompt": "设置 HttpOnly 能防止的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "页面脚本通过 document.cookie 读到 Cookie"
+        },
+        {
+          "id": "b",
+          "label": "Cookie 在明文 HTTP 中发送"
+        },
+        {
+          "id": "c",
+          "label": "跨站请求带上 Cookie"
+        },
+        {
+          "id": "d",
+          "label": "Cookie 过期"
+        }
+      ],
+      "answer": "a",
+      "explanation": "HttpOnly 只挡脚本读取；明文传输靠 Secure，跨站发送靠 SameSite。"
+    },
+    {
+      "id": "f14",
+      "prompt": "既想让用户从邮件链接点进来仍保持登录，又要防止恶意网站跨站 POST 带上会话，SameSite 应设为？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "Strict"
+        },
+        {
+          "id": "b",
+          "label": "Lax"
+        },
+        {
+          "id": "c",
+          "label": "None"
+        },
+        {
+          "id": "d",
+          "label": "不设置也一样"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Lax 允许跨站的顶层链接跳转，但不允许跨站 POST 等请求携带 Cookie。"
+    },
+    {
+      "id": "f15",
+      "prompt": "SameSite=None 的 Cookie 如果没有同时设置 Secure，现代浏览器会拒收。",
+      "type": "boolean",
+      "answer": true,
+      "explanation": "SameSite=None 必须配合 Secure。"
+    },
+    {
+      "id": "f16",
+      "prompt": "读者已登录，但访问馆员报表被拒绝。重新登录后再试，结果通常是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "变成 200"
+        },
+        {
+          "id": "b",
+          "label": "仍然是 403"
+        },
+        {
+          "id": "c",
+          "label": "变成 401"
+        },
+        {
+          "id": "d",
+          "label": "变成 304"
+        }
+      ],
+      "answer": "b",
+      "explanation": "403 是权限问题，重新登录不会改变权限。"
+    },
+    {
+      "id": "f17",
+      "prompt": "HTTPS 能提供哪些保护？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "传输内容加密"
+        },
+        {
+          "id": "b",
+          "label": "篡改可被发现"
+        },
+        {
+          "id": "c",
+          "label": "验证服务器身份"
+        },
+        {
+          "id": "d",
+          "label": "保证服务器没有漏洞"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": "TLS 提供机密性、完整性和服务器身份认证，不能保证应用本身安全。"
+    },
+    {
+      "id": "f18",
+      "prompt": "文件名带内容哈希的 JS 文件（如 app.3f9a.js），通常最适合的缓存策略是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "no-store"
+        },
+        {
+          "id": "b",
+          "label": "no-cache"
+        },
+        {
+          "id": "c",
+          "label": "max-age=31536000, immutable"
+        },
+        {
+          "id": "d",
+          "label": "不设置"
+        }
+      ],
+      "answer": "c",
+      "explanation": "内容一变文件名就变，所以旧文件名的内容永远不会变，可以长期缓存。"
+    },
+    {
+      "id": "f19",
+      "prompt": "Cache-Control: no-cache 的含义是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "禁止存储任何副本"
+        },
+        {
+          "id": "b",
+          "label": "可以存副本，但每次使用前要先向服务器验证"
+        },
+        {
+          "id": "c",
+          "label": "缓存一年"
+        },
+        {
+          "id": "d",
+          "label": "只允许 CDN 缓存"
+        }
+      ],
+      "answer": "b",
+      "explanation": "no-cache 是「先验证再用」；真正不存储的是 no-store。"
+    },
+    {
+      "id": "f20",
+      "prompt": "页面能打开，但借阅列表为空。Network 里 /api/loans 返回 401，请求头里没有 Cookie。下一步最该查什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "服务器硬盘空间"
+        },
+        {
+          "id": "b",
+          "label": "会话 Cookie 的 Path / SameSite 等属性为什么没让它随这个请求发送"
+        },
+        {
+          "id": "c",
+          "label": "图片是否加载"
+        },
+        {
+          "id": "d",
+          "label": "favicon 是否 404"
+        }
+      ],
+      "answer": "b",
+      "explanation": "凭据没带上是 401 的直接原因，要回到 Set-Cookie 的属性找答案。"
+    }
+  ]
+}

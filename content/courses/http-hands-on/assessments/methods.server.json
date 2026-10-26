@@ -1,0 +1,91 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "m1",
+      "prompt": "GET 被称为「安全方法」，意思是它能防止黑客攻击。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "「安全」指客户端不打算改变服务器数据，是语义约定，与防攻击无关。"
+    },
+    {
+      "id": "m2",
+      "prompt": "网络超时后，哪些请求可以按标准语义放心地自动重试？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "GET /api/books/2"
+        },
+        {
+          "id": "b",
+          "label": "POST /api/orders"
+        },
+        {
+          "id": "c",
+          "label": "PUT /api/books/2（完整内容）"
+        },
+        {
+          "id": "d",
+          "label": "DELETE /api/loans/12"
+        }
+      ],
+      "answer": [
+        "a",
+        "c",
+        "d"
+      ],
+      "explanation": "GET、PUT、DELETE 是幂等的；POST 重试可能重复创建，需要业务层的幂等键。"
+    },
+    {
+      "id": "m3",
+      "prompt": "只想把 7 号书的书名改掉，其他字段不动，最合适的请求是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "PUT /api/books/7，正文只有 title"
+        },
+        {
+          "id": "b",
+          "label": "PATCH /api/books/7，正文只有 title"
+        },
+        {
+          "id": "c",
+          "label": "POST /api/books/7"
+        },
+        {
+          "id": "d",
+          "label": "DELETE 后再新建"
+        }
+      ],
+      "answer": "b",
+      "explanation": "PATCH 做局部修改；只带 title 的 PUT 会把没写的字段清掉。"
+    },
+    {
+      "id": "m4",
+      "prompt": "对 /api/books/2 发 POST，收到 405 和 Allow: GET, PUT, PATCH, DELETE。说明什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "这本书不存在"
+        },
+        {
+          "id": "b",
+          "label": "需要登录"
+        },
+        {
+          "id": "c",
+          "label": "这个资源不支持 POST"
+        },
+        {
+          "id": "d",
+          "label": "服务器内部出错"
+        }
+      ],
+      "answer": "c",
+      "explanation": "405 表示资源存在但不支持这个方法，Allow 列出了支持的方法。"
+    }
+  ]
+}
