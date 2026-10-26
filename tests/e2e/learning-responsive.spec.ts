@@ -91,7 +91,7 @@ test.describe("学习页响应式宽度", () => {
   test("390–1920px 宽度分配、按需三栏与抽屉", async ({ page }) => {
     test.setTimeout(180_000);
     const student = await createTestStudent("responsive");
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
     const lessons = await getLessons(course.id);
     const conceptLesson = lessons.find((lesson) => lesson.slug === "request");
     const methodsLesson = lessons.find((lesson) => lesson.slug === "methods");
@@ -235,7 +235,7 @@ test.describe("学习页响应式宽度", () => {
 
       for (const width of [1024, 1920]) {
         await setViewport(page, width);
-        await openLesson(page, course.id, conceptLesson!.id, "请求报文：告诉服务器你要什么");
+        await openLesson(page, course.id, conceptLesson!.id, "请求：把要什么说清楚");
         await expect(page.locator("[data-block-kind='simulation']")).toBeVisible();
         await expect(page.locator("[data-concept-id]").first()).toBeVisible();
         const conceptOverflow = await page.evaluate(() => {
@@ -255,7 +255,7 @@ test.describe("学习页响应式宽度", () => {
         expect(conceptOverflow.page, `concept page overflow at ${width}`).toBe(false);
         expect(conceptOverflow.offenders, `concept blocks at ${width}`).toEqual([]);
 
-        await openLesson(page, course.id, methodsLesson!.id, "HTTP 方法与操作语义");
+        await openLesson(page, course.id, methodsLesson!.id, "方法：读、建、改、删与重试");
         await expect(page.locator("[data-block-kind='simulation']")).toBeVisible();
         const tableCheck = await page.evaluate(() => {
           const root = document.documentElement;

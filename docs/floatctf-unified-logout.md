@@ -77,7 +77,7 @@ FloatCTF（API + Default Frontend）和本仓库的 LearnOS，都经 HTTPS 提�
 ### 5.1 环境（本机做法，2026-10-26 验证）
 
 1. 一次性容器：FloatCTF PostgreSQL 17（`127.0.0.1:55432/floatctf_db`）、Redis（`:56379`）、RustFS（`:59000`）、
-   LearnOS PostgreSQL 17（`:55433/learnos`，`db/schema.sql` + `pnpm db:migrate` + `pnpm courses:sync`，把 `http-fundamentals` 设为 published，
+   LearnOS PostgreSQL 17（`:55433/learnos`，`db/schema.sql` + `pnpm db:migrate` + `pnpm courses:sync`，把 `http-hands-on` 设为 published，
    `ADMIN_EMAIL=admin@learnos.local ADMIN_PASSWORD='LearnOS-Admin-2025!' pnpm seed:admin`）。
 2. 测试 CA + `ctf.localhost` / `learn.localhost` 服务器证书；Chrome 用独立 `HOME` 的 NSS 库信任 CA
    （`certutil -A -t "C,," -i ca.crt`）；Node 用 `NODE_EXTRA_CA_CERTS`。

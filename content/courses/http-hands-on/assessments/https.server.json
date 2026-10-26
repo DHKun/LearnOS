@@ -1,0 +1,90 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "s1",
+      "prompt": "使用 HTTPS 时，同一 Wi-Fi 下的旁观者通常仍然能知道哪些信息？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "你连接的服务器 IP"
+        },
+        {
+          "id": "b",
+          "label": "你访问的域名"
+        },
+        {
+          "id": "c",
+          "label": "请求的 URL 路径和查询参数"
+        },
+        {
+          "id": "d",
+          "label": "会话 Cookie 的值"
+        }
+      ],
+      "answer": [
+        "a",
+        "b"
+      ],
+      "explanation": "IP 和（通常以明文传输的）域名仍可见；路径、查询、Cookie、正文都被加密。"
+    },
+    {
+      "id": "s2",
+      "prompt": "网站启用了 HTTPS，就不会再有越权和 XSS 漏洞。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "HTTPS 只保护传输过程，应用本身的漏洞要靠服务器自己防范。"
+    },
+    {
+      "id": "s3",
+      "prompt": "证书校验在 HTTPS 中的作用是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "压缩数据"
+        },
+        {
+          "id": "b",
+          "label": "证明你连上的确实是这个域名的服务器"
+        },
+        {
+          "id": "c",
+          "label": "给网站评安全等级"
+        },
+        {
+          "id": "d",
+          "label": "替服务器检查用户权限"
+        }
+      ],
+      "answer": "b",
+      "explanation": "证书和主机名校验用来认证服务器身份，防止被冒充。"
+    },
+    {
+      "id": "s4",
+      "prompt": "想让浏览器以后访问本站时直接用 HTTPS，连第一次明文请求都不发，应该设置？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "Cache-Control"
+        },
+        {
+          "id": "b",
+          "label": "Strict-Transport-Security（HSTS）"
+        },
+        {
+          "id": "c",
+          "label": "Content-Type"
+        },
+        {
+          "id": "d",
+          "label": "Retry-After"
+        }
+      ],
+      "answer": "b",
+      "explanation": "HSTS 让浏览器记住「这个站点只用 HTTPS」。"
+    }
+  ]
+}

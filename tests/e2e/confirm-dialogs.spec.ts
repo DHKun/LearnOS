@@ -10,7 +10,7 @@ import {
 test.describe("确认操作使用模态对话框", () => {
   test("退出课程先弹窗确认，可取消或确认", async ({ page }) => {
     const student = await createTestStudent("confirm-dialog");
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
 
     try {
       await login(page, student.email, student.password);

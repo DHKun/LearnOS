@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "r1",
+      "prompt": "创建留言后服务器返回 201 Created。想知道新留言的地址，应该看哪里？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "状态码本身"
+        },
+        {
+          "id": "b",
+          "label": "Location 响应头"
+        },
+        {
+          "id": "c",
+          "label": "Accept 请求头"
+        },
+        {
+          "id": "d",
+          "label": "Host 请求头"
+        }
+      ],
+      "answer": "b",
+      "explanation": "201 常配合 Location 头给出新资源的地址。"
+    },
+    {
+      "id": "r2",
+      "prompt": "浏览器请求 /old-catalog，收到 301 和 Location: /api/books。接下来通常会发生什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "页面显示 301 错误"
+        },
+        {
+          "id": "b",
+          "label": "浏览器自动请求 /api/books"
+        },
+        {
+          "id": "c",
+          "label": "浏览器清空 Cookie"
+        },
+        {
+          "id": "d",
+          "label": "服务器再推送一次数据"
+        }
+      ],
+      "answer": "b",
+      "explanation": "3xx 加 Location 时，浏览器会自动跟随重定向，发出第二个请求。"
+    },
+    {
+      "id": "r3",
+      "prompt": "API 返回 503 和 Retry-After: 30。客户端最合理的做法是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "立刻无限重试"
+        },
+        {
+          "id": "b",
+          "label": "认为请求格式有误并修改请求"
+        },
+        {
+          "id": "c",
+          "label": "等待约 30 秒后再重试"
+        },
+        {
+          "id": "d",
+          "label": "让用户重新登录"
+        }
+      ],
+      "answer": "c",
+      "explanation": "5xx 是服务端的问题；Retry-After 给出了建议的等待时间。"
+    },
+    {
+      "id": "r4",
+      "prompt": "接口返回 200，就说明响应正文一定是前端期望的 JSON 数据。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "200 只表示请求被成功处理。服务器也可能返回一张 HTML 登录页，要结合 Content-Type 和正文判断。"
+    }
+  ]
+}

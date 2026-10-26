@@ -23,7 +23,7 @@ content/courses/<slug>/
 ```json
 {
   "schemaVersion": 3,
-  "slug": "http-fundamentals",
+  "slug": "http-hands-on",
   "title": "HTTP 协议入门",
   "description": "...",
   "version": "1.0.0",
@@ -55,7 +55,7 @@ content/courses/<slug>/
       "required": true,
       "unit": "消息",
       "blocks": [
-        { "id": "request-lab", "kind": "simulation", "activityId": "http-fundamentals/request-console" },
+        { "id": "request-lab", "kind": "simulation", "activityId": "http-hands-on/request-lab" },
         { "id": "request-check", "kind": "question", "source": "assessments/check.server.json", "passScore": 60 }
       ],
       "completion": { "mode": "all", "requiredBlocks": ["request-lab"] }

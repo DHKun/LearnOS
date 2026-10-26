@@ -25,16 +25,16 @@ async function savedConceptStep(page: Page, blockId: string): Promise<number> {
 test.describe("概念动画", () => {
   test("URL 概念可播放、单步、重播、展开类比边界并刷新恢复", async ({ page }) => {
     const student = await createTestStudent("concept-url");
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
 
     try {
       await login(page, student.email, student.password);
       await page.goto(`/courses/${course.slug}`);
       await page.getByRole("button", { name: "参加课程" }).click();
       await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`));
-      await page.getByRole("link", { name: /URL：找到正确的资源/ }).first().click();
+      await page.getByRole("link", { name: /URL：哪些部分会到达服务器/ }).first().click();
 
-      const concept = page.locator('[data-concept-id="http-fundamentals/url"]');
+      const concept = page.locator('[data-concept-id="http-hands-on/url"]');
       await expect(concept).toBeVisible({ timeout: 20_000 });
       await concept.getByRole("button", { name: "播放动画" }).click();
       await expect(concept.getByRole("button", { name: "暂停动画" })).toBeVisible();
@@ -47,9 +47,9 @@ test.describe("概念动画", () => {
       await expect(concept.getByText("真实对象")).toBeVisible();
 
       await concept.getByRole("button", { name: "下一步" }).click();
-      await expect.poll(() => savedConceptStep(page, "url-parts"), { timeout: 20_000 }).toBe(1);
+      await expect.poll(() => savedConceptStep(page, "url-anatomy"), { timeout: 20_000 }).toBe(1);
       await page.reload();
-      const restored = page.locator('[data-concept-id="http-fundamentals/url"]');
+      const restored = page.locator('[data-concept-id="http-hands-on/url"]');
       await expect(restored).toBeVisible({ timeout: 20_000 });
       await expect(restored.getByText(/2 \/ 6/)).toBeVisible();
     } finally {

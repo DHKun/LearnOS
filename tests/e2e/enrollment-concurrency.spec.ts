@@ -19,7 +19,7 @@ test.describe("课程占用：并发、幂等与恢复", () => {
     browser,
   }) => {
     const student = await createTestStudent("concurrent");
-    const mainCourse = await getCourseBySlug("http-fundamentals");
+    const mainCourse = await getCourseBySlug("http-hands-on");
     const courseA = await createTestCourse("concurrent-a");
     const courseB = await createTestCourse("concurrent-b");
 

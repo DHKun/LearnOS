@@ -10,7 +10,7 @@ import {
 test.describe("章节笔记", () => {
   test("自动保存、刷新恢复、Markdown 预览", async ({ page }) => {
     const student = await createTestStudent("notes");
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
 
     try {
       await login(page, student.email, student.password);

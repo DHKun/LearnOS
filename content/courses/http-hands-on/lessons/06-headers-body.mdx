@@ -1,0 +1,39 @@
+## Header：关于这条消息的说明
+
+请求头和响应头都是 `名称: 值` 的形式，用来补充说明这条消息。最常用的几个：
+
+| Header | 出现在 | 作用 |
+| --- | --- | --- |
+| `Host` | 请求 | 要访问哪个网站 |
+| `Accept` | 请求 | 希望收到什么格式 |
+| `Content-Type` | 请求 / 响应 | 正文**实际**是什么格式 |
+| `Content-Length` | 请求 / 响应 | 正文有多少字节 |
+| `Cookie` / `Set-Cookie` | 请求 / 响应 | 带上 / 下发 Cookie（下一章） |
+| `Authorization` | 请求 | 携带令牌等凭据 |
+| `Cache-Control` | 请求 / 响应 | 缓存规则（第 10 章） |
+| `Location` | 响应 | 新资源或新地址 |
+
+最容易混淆的是 `Accept` 和 `Content-Type`：
+
+<ConceptPlayer conceptId="http-hands-on/negotiation" blockId="negotiation" />
+
+## JSON 比 JavaScript 严格
+
+API 最常用 JSON 传数据。它长得像 JavaScript 对象，但规则更严：
+
+```text
+✗ {title: '周末读完第三章',}      键名没加引号、用了单引号、末尾多了逗号
+✓ {"title": "周末读完第三章"}
+```
+
+- 键名和字符串都必须用**双引号**；
+- 不能有末尾逗号，也不能写注释；
+- 数字、`true` / `false`、`null` 不加引号。
+
+## 动手：发不出去的留言
+
+下面是前端实际发出的请求，它有好几处问题。每次只改一处、发一次，看状态码和响应正文怎么变：服务器每次只会告诉你它最先发现的那个问题。
+
+<SimulationBlock blockId="json-lab" />
+
+<KnowledgeCheck blockId="headers-check" />

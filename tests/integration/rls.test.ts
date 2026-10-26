@@ -25,7 +25,7 @@ describe.skip("PostgreSQL RLS（已被服务层授权与 E2E 替代）", () => {
     studentB = await createTestUser("student");
     admin = await createTestUser("admin");
 
-    const course = await getCourse("http-fundamentals");
+    const course = await getCourse("http-hands-on");
     const lessons = await getLessons(course.id);
     lessonId = lessons[0].id;
 

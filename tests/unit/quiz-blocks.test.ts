@@ -64,14 +64,14 @@ describe("章节知识检查判分", () => {
   });
 
   it("章节公开 Block 数据不包含答案或解析", () => {
-    const course = loadCourse("http-fundamentals");
+    const course = loadCourse("http-hands-on");
     const lesson = course.manifest.lessons.find((item) => item.slug === "methods");
     if (!lesson) throw new Error("missing lesson");
     const resolved = resolveChapterBlocks(course, lesson);
     const json = JSON.stringify(resolved);
     expect(json).not.toContain("\"answer\"");
     expect(json).not.toContain("\"explanation\"");
-    expect(json).not.toContain("POST 一般不保证幂等");
+    expect(json).not.toContain("需要业务层的幂等键");
   });
 
   it("公开题目把判断题转成两项选择且不包含答案", () => {

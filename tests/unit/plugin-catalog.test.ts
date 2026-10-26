@@ -8,22 +8,27 @@ import { ACTIVITY_IDS, CONCEPT_IDS } from "@/lib/generated/course-catalog";
 describe("课程插件自动注册", () => {
   it("生成目录包含所有已安装课程的概念与活动", () => {
     expect([...CONCEPT_IDS].sort()).toEqual([
-      "http-fundamentals/cache",
-      "http-fundamentals/cookie",
-      "http-fundamentals/journey",
-      "http-fundamentals/request",
-      "http-fundamentals/status",
-      "http-fundamentals/tls",
-      "http-fundamentals/url",
+      "http-hands-on/auth",
+      "http-hands-on/cache",
+      "http-hands-on/cookie",
+      "http-hands-on/journey",
+      "http-hands-on/message",
+      "http-hands-on/negotiation",
+      "http-hands-on/redirect",
+      "http-hands-on/retry",
+      "http-hands-on/tls",
+      "http-hands-on/url",
     ]);
     expect([...ACTIVITY_IDS].sort()).toEqual([
-      "http-fundamentals/cache-console",
-      "http-fundamentals/cookie-console",
-      "http-fundamentals/diagnosis-console",
-      "http-fundamentals/final-mission",
-      "http-fundamentals/json-console",
-      "http-fundamentals/method-matcher",
-      "http-fundamentals/request-console",
+      "http-hands-on/cache-lab",
+      "http-hands-on/cookie-lab",
+      "http-hands-on/diagnosis-lab",
+      "http-hands-on/final-mission",
+      "http-hands-on/json-lab",
+      "http-hands-on/method-lab",
+      "http-hands-on/request-lab",
+      "http-hands-on/response-lab",
+      "http-hands-on/url-lab",
     ]);
   });
 
@@ -32,7 +37,7 @@ describe("课程插件自动注册", () => {
       path.join(process.cwd(), "lib/generated/course-components.tsx"),
       "utf8",
     );
-    expect(generated).toContain("content/courses/http-fundamentals/");
+    expect(generated).toContain("content/courses/http-hands-on/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

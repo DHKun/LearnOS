@@ -1,0 +1,40 @@
+## 同一个地址，不同的动作
+
+方法说明你想对资源**做什么**：
+
+| 方法 | 作用 | 例子 | 安全 | 幂等 |
+| --- | --- | --- | --- | --- |
+| GET | 读取 | `GET /api/books/7` | 是 | 是 |
+| HEAD | 和 GET 一样，但只要头部 | `HEAD /api/books/7` | 是 | 是 |
+| POST | 提交数据，常用于新建 | `POST /api/notes` | 否 | 否 |
+| PUT | 用完整的新内容**整体替换** | `PUT /api/books/7` | 否 | 是 |
+| PATCH | **局部修改** | `PATCH /api/books/7` | 否 | 不保证 |
+| DELETE | 删除 | `DELETE /api/books/7` | 否 | 是 |
+
+- **安全**：客户端不打算改变服务器上的数据。这是一种约定，和「防攻击」无关。
+- **幂等**：同一个请求做一次和做很多次，对服务器数据的**效果**相同。
+
+为什么要关心幂等？因为网络会出错。
+
+<ConceptPlayer conceptId="http-hands-on/retry" blockId="retry" />
+
+## PUT 和 PATCH 差在哪
+
+PUT 发送的是资源**完整的新样子**，没写的字段就等于不要了。PATCH 只描述要改的那部分：
+
+```http
+PATCH /api/books/7 HTTP/1.1
+Content-Type: application/json
+
+{"title": "TCP/IP 漫游指南"}
+```
+
+如果把同样的正文用 PUT 发出去，服务器会认为这本书只剩一个书名。
+
+## 动手：修正一个书名
+
+你已经以馆员身份登录。工作台右侧是服务器上的实时数据，每发一个请求都能看到它的变化。改坏了可以重置。提交时，服务器会把你的全部请求记录从头重放一遍，检查最终数据。
+
+<SimulationBlock blockId="method-lab" />
+
+<KnowledgeCheck blockId="method-check" />

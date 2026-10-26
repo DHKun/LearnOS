@@ -594,3 +594,19 @@ tests/e2e/admin-detail.spec.ts          1 test
 
 - `tests/unit/oidc.test.ts`：安全 next、身份识别、显示名。
 - 手工实测记录见 `docs/oidc-floatctf.md`。
+
+## 22. HTTP 课程重做：`http-hands-on` 取代 `http-fundamentals`（2026-10-26）
+
+**目标**：旧课实验照题干操作即可通过、模拟器开关无效果、动画只做高亮；重做为新课程并删除旧课。
+
+### 22.1 已完成
+
+- [x] 新课程 `content/courses/http-hands-on/`（2.0.0）：13 章、10 概念动画、9 个服务端验证实验、40 道服务端题；`pnpm courses:validate` 通过。
+- [x] 删除 `content/courses/http-fundamentals/` 及其专属单元测试；单元/集成/E2E 全部迁移到新课程。
+- [x] 新增 `tests/unit/http-hands-on.test.ts`（模拟器与九个校验器）与 `tests/e2e/http-hands-on.spec.ts`（13 章真实界面闭环，结课 180 分）。
+- [x] 本地验证（临时 PostgreSQL，数据库中只有新课程）：`pnpm test` 130 通过；E2E（不含 FloatCTF）21 通过；`pnpm build`、`pnpm typecheck`、`pnpm security:scan` 通过。
+
+### 22.2 部署前必须处理（未执行）
+
+- 生产数据库仍有 `http-fundamentals` 课程行与学习记录。部署扫描会把它列为 `removed` 阻塞项。按 D44 流程：整库备份 → 删除该课程的 enrollments（级联进度、笔记、积分、Block）→ 删除 lessons 与 courses 行 → 以新快照重建部署基线。
+- 未验证：FloatCTF 真实 IdP 相关 E2E（需外部环境）。

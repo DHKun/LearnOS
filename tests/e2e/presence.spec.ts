@@ -17,7 +17,7 @@ test.describe("在线状态与课程占用相互独立", () => {
     browser,
   }) => {
     const student = await createTestStudent("presence");
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
     const lessons = await getLessons(course.id);
     const adminContext = await browser.newContext();
     const adminPage = await adminContext.newPage();
