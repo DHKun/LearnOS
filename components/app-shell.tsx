@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { LogoutButton } from "@/components/logout-button";
+import { AccountActions } from "@/components/account-actions";
 import { NavigationProgress } from "@/components/navigation-progress";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NavLinks, type NavItem } from "@/components/nav-links";
@@ -65,7 +65,7 @@ export function AppShell({
               <span>{isAdmin ? "管理员" : "学生"}</span>
             </span>
             <ThemeToggle />
-            <LogoutButton />
+            <AccountActions />
           </div>
         </div>
         <div className="border-t border-border px-4 py-2 sm:hidden">
