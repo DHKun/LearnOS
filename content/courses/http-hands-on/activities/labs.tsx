@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, Globe, XCircle } from "lucide-react";
+import { Globe } from "lucide-react";
 
+import { LabFooter, Ticket, Verdict, useLabSubmit } from "@/components/education/lab-kit";
 import { Button } from "@/components/ui/button";
 import { useActivityState } from "@/lib/learning/hooks";
 import type { ActivityComponentProps } from "@/lib/learning/types";
@@ -41,24 +42,12 @@ import {
 import { type World, browserSend, createWorld, parseUrl, publicBook } from "../simulation/library";
 import {
   ExchangeView,
-  LabFooter,
   MessageText,
   NetworkList,
-  Ticket,
   Workbench,
   type WorkbenchState,
   normalizeWorkbench,
-  useLabSubmit,
 } from "./kit";
-
-function Verdict({ ok, children }: { ok: boolean; children: React.ReactNode }) {
-  return (
-    <span className={cn("inline-flex items-center gap-1.5 text-sm font-medium", ok ? "text-success" : "text-destructive")}>
-      {ok ? <CheckCircle2 className="size-4" aria-hidden /> : <XCircle className="size-4" aria-hidden />}
-      {children}
-    </span>
-  );
-}
 
 const selectClass = "mt-1 block w-full rounded-md border border-border bg-background p-2 text-sm";
 
