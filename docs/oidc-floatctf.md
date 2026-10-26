@@ -1,5 +1,8 @@
 # FloatCTF OIDC 接入（Supabase custom:floatctf）
 
+> 统一身份（FloatCTF 主站会话、多账号、「退出 FloatCTF 及所有应用」、Back-Channel Logout）与跨应用 E2E 见
+> [floatctf-unified-logout.md](floatctf-unified-logout.md)。
+
 > **当前架构是 Better Auth + PostgreSQL**（见 [better-auth-deployment.md](better-auth-deployment.md) 与 D49）。
 > 下文「状态」之后的 Supabase / Keycloak 章节是历史记录；最新的账号选择行为与 E2E 见紧接着的一节。
 
