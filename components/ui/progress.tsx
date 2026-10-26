@@ -4,10 +4,12 @@ export function Progress({
   value,
   className,
   label,
+  showValue = true,
 }: {
   value: number;
   className?: string;
   label?: string;
+  showValue?: boolean;
 }) {
   const clamped = Math.max(0, Math.min(100, Math.round(value)));
   return (
@@ -25,9 +27,11 @@ export function Progress({
           style={{ width: `${clamped}%` }}
         />
       </div>
-      <span className="w-10 shrink-0 text-right font-mono text-xs text-muted-foreground">
-        {clamped}%
-      </span>
+      {showValue && (
+        <span className="w-10 shrink-0 text-right font-mono text-xs text-muted-foreground">
+          {clamped}%
+        </span>
+      )}
     </div>
   );
 }

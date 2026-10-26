@@ -5,9 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { BookOpen, Focus, PanelLeftClose, PanelLeftOpen, StickyNote, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { LessonOutline } from "@/components/learning/lesson-outline";
 import { cn } from "@/lib/utils";
-import type { LessonHeading } from "@/lib/content/headings";
 
 /**
  * Learning workspace shell.
@@ -23,14 +21,12 @@ export function LearningWorkspace({
   content,
   pager,
   lessonLabel,
-  outline = [],
 }: {
   nav: React.ReactNode;
   notes: React.ReactNode;
   content: React.ReactNode;
   pager: React.ReactNode;
   lessonLabel: string;
-  outline?: LessonHeading[];
 }) {
   const [navOpen, setNavOpen] = React.useState(true);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
@@ -63,6 +59,13 @@ export function LearningWorkspace({
     setMobileNavOpen(false);
   }, [pathname, lessonParam]);
 
+  // Jumping to a section from the directory's chapter outline also closes it.
+  React.useEffect(() => {
+    const onHash = () => setMobileNavOpen(false);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
   React.useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -87,14 +90,11 @@ export function LearningWorkspace({
   }, [isDesktop, mobileNavOpen, notesOpen]);
 
   const closeNotes = () => setNotesOpen(false);
-  // At 1024–1279px, giving the notes column its width while keeping a 240px
+  // At 1024–1279px, giving the notes column its width while keeping the
   // chapter rail would leave too little article width. The rail yields and
   // comes back automatically when notes close.
   const autoHideNav = notesOpen && isDesktop && !isWide;
   const showNav = !focusMode && navOpen && !autoHideNav;
-  // Notes take priority over the outline; the rail is only used at ≥1536px.
-  const showOutlineRail = !focusMode && outline.length > 0 && !notesOpen;
-  const showOutlineInline = !focusMode && outline.length > 0 && !notesOpen;
 
   return (
     <div
@@ -147,33 +147,18 @@ export function LearningWorkspace({
         </div>
       </div>
 
-      <div
-        className={cn(
-          "grid gap-6",
-          showNav && !showOutlineRail && "lg:grid-cols-[15rem_minmax(0,1fr)]",
-          showNav &&
-            showOutlineRail &&
-            "lg:grid-cols-[15rem_minmax(0,1fr)] 2xl:grid-cols-[15rem_minmax(0,1fr)_12.5rem]",
-          !showNav && showOutlineRail && "2xl:grid-cols-[minmax(0,1fr)_12.5rem]",
-        )}
-      >
+      <div className={cn("grid gap-6", showNav && "lg:grid-cols-[17rem_minmax(0,1fr)]")}>
         {showNav && (
           <aside className="hidden lg:block" aria-label="课程目录">
-            <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto pr-1">{nav}</div>
-          </aside>
-        )}
-        <main className="min-w-0 space-y-6">
-          {showOutlineInline && <LessonOutline headings={outline} variant="inline" />}
-          {content}
-          {pager}
-        </main>
-        {showOutlineRail && (
-          <aside data-testid="outline-rail-aside" className="hidden 2xl:block" aria-label="本章大纲">
-            <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto pl-1">
-              <LessonOutline headings={outline} variant="rail" />
+            <div data-nav-scroll className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto pr-1">
+              {nav}
             </div>
           </aside>
         )}
+        <main className="min-w-0 space-y-6">
+          {content}
+          {pager}
+        </main>
       </div>
 
       {mobileNavOpen && (
@@ -185,6 +170,7 @@ export function LearningWorkspace({
             onClick={() => setMobileNavOpen(false)}
           />
           <aside
+            data-nav-scroll
             className="absolute inset-y-0 left-0 w-[min(86vw,20rem)] overflow-y-auto border-r border-border bg-card p-4 shadow-xl"
             role="dialog"
             aria-modal="true"

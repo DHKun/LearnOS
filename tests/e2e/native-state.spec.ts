@@ -17,6 +17,11 @@ test.describe("原生互动组件状态", () => {
       await page.goto(`/courses/${course.slug}`);
       await page.getByRole("button", { name: "参加课程" }).click();
       await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`));
+      // 第 3 章所在的「报文」单元默认收起，先展开。
+      await page
+        .getByRole("navigation", { name: "课程章节" })
+        .locator('li[data-unit="报文"] > button')
+        .click();
       await page.getByRole("link", { name: /请求：把要什么说清楚/ }).click();
       await expect(page.getByTestId("http-hands-on-request")).toBeVisible();
 
