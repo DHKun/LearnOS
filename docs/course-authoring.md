@@ -319,3 +319,10 @@ pnpm courses:sync --publish  # 显式发布（演示/种子）
 - [ ] 错误提交返回失败，正确提交由服务端判定通过。
 - [ ] 测验及格线合理，答案未出现在 API 响应/客户端资源。
 - [ ] 完成全部必修后课程结课、积分正确（每章 10 + 最终测验 50）；混合章节多个 Block 只发一次章节积分。
+
+## 共用组件与制作流程
+
+- 实验外壳：`components/education/lab-kit.tsx`（`Ticket` 工单、`LabFooter` 提交与验证结果、`useLabSubmit`、`Verdict`）。
+- 概念动画基础组件：`components/education/scene-kit.tsx`（`Node`、`Lane`、`MessageLines`、`Chip`、`Segmented`），只用主题 token，支持暗色与 reduced-motion。
+- 只属于某门课的组件（如 HTTP 课的请求工作台）留在该课程目录内，不要让一门课去 import 另一门课的文件。
+- 从设计到验证的完整流程、实验类型与已知的坑见 `.claude/skills/learnos-course-authoring/SKILL.md`；`content/courses/http-hands-on/` 是按该流程制作的完整样例。
