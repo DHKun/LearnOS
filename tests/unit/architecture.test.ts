@@ -26,14 +26,14 @@ describe("单站点原生互动架构", () => {
   });
 
   it("模拟实验 Block 使用课程命名空间的 activityId 并已注册组件", () => {
-    const manifest = read("content/courses/http-fundamentals/course.json");
+    const manifest = read("content/courses/http-hands-on/course.json");
     const registry = read("lib/generated/course-components.tsx");
-    expect(manifest).toContain('"activityId": "http-fundamentals/request-console"');
-    expect(manifest).toContain('"activityId": "http-fundamentals/method-matcher"');
+    expect(manifest).toContain('"activityId": "http-hands-on/request-lab"');
+    expect(manifest).toContain('"activityId": "http-hands-on/method-lab"');
     expect(manifest).not.toContain("legacyGlobalId");
     expect(manifest).not.toContain("entryUrl");
-    expect(registry).toContain("http-fundamentals/request-console");
-    expect(registry).toContain("http-fundamentals/method-matcher");
+    expect(registry).toContain("http-hands-on/request-lab");
+    expect(registry).toContain("http-hands-on/method-lab");
     expect(read("components/activities/registry.tsx")).toContain("ACTIVITY_COMPONENTS");
   });
 });

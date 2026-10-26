@@ -205,7 +205,7 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     expect(callback.searchParams.get("iss")).toBe(OP);
 
     // A 的学习记录：报名 + 一条笔记（之后用来验证 B 读不到）
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
     const joined = await api(page, "/api/enrollments", "POST", { courseId: course.id });
     expect(joined.status).toBe(200);
     const lesson = await queryOne<{ id: string }>(
@@ -248,7 +248,7 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     expect(await codesIssued()).toBe(codesBefore + 1);
     // A 的学习记录仍然属于 A
     const current = await api(page, "/api/enrollments/current");
-    expect(current.body?.data?.course?.slug).toBe("http-fundamentals");
+    expect(current.body?.data?.course?.slug).toBe("http-hands-on");
   });
 
   test("11 取消选择：access_denied + state + iss 回到 LearnOS，不建立会话", async () => {
@@ -291,7 +291,7 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     expect(me.body?.data?.id).toBe(learnosBob);
     const current = await api(page, "/api/enrollments/current");
     expect(current.body?.data ?? null).toBeNull();
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
     const lesson = await queryOne<{ id: string }>(
       "select id from public.lessons where course_id = $1 order by position limit 1",
       [course.id],

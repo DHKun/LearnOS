@@ -10,7 +10,7 @@ import {
 
 test.describe("管理员课程管理", () => {
   test("归档禁止新报名；恢复发布后可参加；元信息可编辑", async ({ browser }) => {
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
     const adminContext = await browser.newContext();
     const adminPage = await adminContext.newPage();
     const student = await createTestStudent("course-admin");

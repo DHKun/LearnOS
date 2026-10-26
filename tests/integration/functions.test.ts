@@ -56,7 +56,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   beforeAll(async () => {
     student = await createTestUser("student");
     otherStudent = await createTestUser("student");
-    const course = await getCourse("http-fundamentals");
+    const course = await getCourse("http-hands-on");
     courseId = course.id;
     lessons = await getLessons(courseId);
 
@@ -328,7 +328,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
   it("最终测验使用必需 Block，重复提交不重复发分并结课", async () => {
     const finalLesson = lessons.find((lesson) => lesson.slug === "final")!;
 
-    // Complete every other required chapter so the final exam actually closes
+    // Complete every other required chapter (12 × 10 points) so the final exam actually closes
     // the course. Manual chapters were completed above; request-lab already
     // passed. The remaining chapters are server-validated blocks.
     for (const lesson of lessons) {
@@ -356,7 +356,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         });
       }
     }
-    expect(await pointsTotal(student.id)).toBe(140);
+    expect(await pointsTotal(student.id)).toBe(120);
     const before = await pointsTotal(student.id);
 
     const failedAttempt = randomUUID();
@@ -548,7 +548,7 @@ describe("数据库事务函数：报名、心跳、状态、完成与积分", (
         [studentId, "Bulk Points"],
       );
       const course = await client.query(
-        "select id from public.courses where slug = 'http-fundamentals' limit 1",
+        "select id from public.courses where slug = 'http-hands-on' limit 1",
       );
       const joined = await client.query("select public.join_course($1, $2) as data", [
         studentId,

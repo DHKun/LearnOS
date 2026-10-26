@@ -218,7 +218,7 @@ export async function deleteTestUser(userId: string) {
   await serviceClient().auth.admin.deleteUser(userId);
 }
 
-export async function getCourse(slug = "http-fundamentals") {
+export async function getCourse(slug = "http-hands-on") {
   const { data, error } = await serviceClient().from<{ id: string; slug: string; status: string }>("courses").select("id,slug,status").eq("slug", slug).single();
   if (error || !data) throw new Error(error?.message ?? "course not found");
   return data;

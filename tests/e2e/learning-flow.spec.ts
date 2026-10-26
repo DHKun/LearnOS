@@ -17,21 +17,21 @@ import {
 
 const FINAL_QUIZ_FILE = path.join(
   process.cwd(),
-  "content/courses/http-fundamentals/assessments/final.server.json",
+  "content/courses/http-hands-on/assessments/final.server.json",
 );
 
 type QuizFile = {
   questions: { id: string; answer: string | string[] }[];
 };
 
-test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
+test.describe("学生完整学习闭环（HTTP 实战）", () => {
   test("报名 → 图文 → 服务端验证实验 → 结业测验 → 结课 → 积分 → 管理员可见", async ({
     page,
     browser,
   }) => {
     test.setTimeout(180_000);
     const student = await createTestStudent("flow");
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
 
     try {
       await login(page, student.email, student.password);
@@ -39,12 +39,12 @@ test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
 
       await page.goto(`/courses/${course.slug}`);
       await expect(
-        page.getByRole("heading", { name: "HTTP 从零到会用：浏览器网络交互实战" }),
+        page.getByRole("heading", { name: "HTTP 实战：看懂并修好每一次请求" }),
       ).toBeVisible();
       await page.getByRole("button", { name: "参加课程" }).click();
       await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`), { timeout: 20_000 });
       await expect(
-        page.getByRole("heading", { name: "互联网中的浏览器与服务器" }).first(),
+        page.getByRole("heading", { name: "按下回车之后发生了什么" }).first(),
       ).toBeVisible();
 
       // 第一章节：纯图文，手动完成。
@@ -54,14 +54,15 @@ test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
       // 请求报文：真实浏览器内实验 + 服务端验证。
       const lessons = await getLessons(course.id);
       const requestLesson = lessons.find((lesson) => lesson.slug === "request")!;
-      await page.getByRole("link", { name: /请求报文：告诉服务器你要什么/ }).first().click();
-      await expect(page.getByTestId("http-fundamentals-request")).toBeVisible({
+      await page.getByRole("link", { name: /请求：把要什么说清楚/ }).first().click();
+      await expect(page.getByTestId("http-hands-on-request")).toBeVisible({
         timeout: 20_000,
       });
       await expect(page.locator("iframe")).toHaveCount(0);
 
-      await page.getByLabel("请求实验 请求路径").fill("/api/books/2");
-      await page.getByRole("button", { name: "提交实验结论" }).click();
+      await page.getByLabel("请求实验 URL").fill("/api/books/2");
+      await page.getByRole("button", { name: "发送请求" }).click();
+      await page.getByRole("button", { name: "提交选中的请求" }).click();
       await expect(page.getByText("服务端验证通过").first()).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText(/本章已完成/).first()).toBeVisible({ timeout: 20_000 });
 
@@ -72,7 +73,7 @@ test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
       const finalLesson = lessons.find((lesson) => lesson.slug === "final")!;
       await page.goto(`/learn/${course.id}?lesson=${finalLesson.id}`);
       await expect(
-        page.getByRole("heading", { name: "总结与结业测验" }).first(),
+        page.getByRole("heading", { name: "结业测验" }).first(),
       ).toBeVisible({ timeout: 20_000 });
 
       const quiz = JSON.parse(fs.readFileSync(FINAL_QUIZ_FILE, "utf8")) as QuizFile;
@@ -90,7 +91,7 @@ test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
         timeout: 20_000,
       });
 
-      // 15 × 10 + 结业测验 50 = 200
+      // 13 × 10 + 结业测验 50 = 180
       const enrollments = await getEnrollments(student.id);
       expect(enrollments).toHaveLength(1);
       expect(enrollments[0].status).toBe("completed");
@@ -101,10 +102,10 @@ test.describe("学生完整学习闭环（HTTP 从零到会用）", () => {
       expect(progress.filter((item) => item.status === "completed")).toHaveLength(
         lessons.length,
       );
-      expect(await getPointsTotal(student.id)).toBe(200);
+      expect(await getPointsTotal(student.id)).toBe(180);
 
       await page.goto("/me");
-      await expect(page.getByText("200", { exact: true }).first()).toBeVisible();
+      await expect(page.getByText("180", { exact: true }).first()).toBeVisible();
       await expect(page.getByText("已完成", { exact: true }).first()).toBeVisible();
 
       // 管理员能看到同一学生的课程记录。

@@ -27,7 +27,7 @@ Course
 ```json
 {
   "schemaVersion": 3,
-  "slug": "http-fundamentals",
+  "slug": "http-hands-on",
   "title": "HTTP 协议入门",
   "version": "1.0.0",
   "plugins": {
@@ -61,7 +61,7 @@ Course
         {
           "id": "request-lab",
           "kind": "simulation",
-          "activityId": "http-fundamentals/request-console",
+          "activityId": "http-hands-on/request-lab",
           "title": "构造 GET /users/1"
         }
       ],
@@ -87,7 +87,7 @@ Course
 {
   "id": "request-lab",
   "kind": "simulation",
-  "activityId": "http-fundamentals/request-console",
+  "activityId": "http-hands-on/request-lab",
   "title": "构造 GET /users/1"
 }
 ```
@@ -153,7 +153,7 @@ Course
 ### ConceptPlayer（可选、可多个）
 
 ```mdx
-<ConceptPlayer conceptId="http-fundamentals/request" blockId="flow-1" />
+<ConceptPlayer conceptId="http-hands-on/message" blockId="flow-1" />
 ```
 
 - `blockId` 应该在同一章内唯一；它同时是状态命名空间。
@@ -265,7 +265,7 @@ Content-Type: application/json
 ```
 
 ```mdx
-<ConceptPlayer conceptId="http-fundamentals/request" blockId="flow-1" />
+<ConceptPlayer conceptId="http-hands-on/message" blockId="flow-1" />
 ```
 
 ### 8.3 实验章节

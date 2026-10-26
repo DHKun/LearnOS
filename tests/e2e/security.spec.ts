@@ -16,7 +16,7 @@ import {
 
 const QUIZ_FILE = path.join(
   process.cwd(),
-  "content/courses/http-fundamentals/assessments/final.server.json",
+  "content/courses/http-hands-on/assessments/final.server.json",
 );
 
 type QuizFile = { questions: { id: string; answer: string | string[] | boolean }[] };
@@ -25,9 +25,9 @@ test.describe("服务端权威与越权防护", () => {
   test("伪造完成、重放、版本冲突、跨用户访问与答案保密", async ({ page, browser }) => {
     const studentA = await createTestStudent("secure-a");
     const studentB = await createTestStudent("secure-b");
-    const course = await getCourseBySlug("http-fundamentals");
+    const course = await getCourseBySlug("http-hands-on");
     const lessons = await getLessons(course.id);
-    const article = lessons.find((lesson) => lesson.slug === "internet-http")!;
+    const article = lessons.find((lesson) => lesson.slug === "first-request")!;
     const lab = lessons.find((lesson) => lesson.slug === "request")!;
     const quizLesson = lessons.find((lesson) => lesson.slug === "final")!;
 
@@ -58,7 +58,7 @@ test.describe("服务端权威与越权防护", () => {
           enrollmentId,
           lessonId: lab.id,
           blockId: "request-lab",
-          submission: { method: "GET", path: "/api/books/99" },
+          submission: { method: "GET", url: "/api/books/99" },
         },
       );
       expect(wrong.status).toBe(200);
@@ -67,7 +67,7 @@ test.describe("服务端权威与越权防护", () => {
 
       // 3. 正确的实验结论通过并只发一次积分；重放同一 attemptId 幂等
       const attemptId = crypto.randomUUID();
-      const submission = { method: "GET", path: "/api/books/2" };
+      const submission = { method: "GET", url: "/api/books/2" };
       const correct = await api<{ passed: boolean; pointsAwarded: number }>(
         page,
         "/api/learning/blocks/submit",
@@ -110,7 +110,7 @@ test.describe("服务端权威与越权防护", () => {
           enrollmentId,
           lessonId: lab.id,
           blockId: "request-lab",
-          submission: { method: "POST", path: "/api/books/2" },
+          submission: { method: "POST", url: "/api/books/2" },
         },
       );
       expect(reusedSubmission.status).toBe(409);
@@ -220,7 +220,7 @@ test.describe("服务端权威与越权防护", () => {
 
       // 7. 题目答案不下发；失败可重试，通过后幂等
       await page.goto(`/learn/${course.id}?lesson=${quizLesson.id}`);
-      await expect(page.getByRole("heading", { name: "总结与结业测验" }).first()).toBeVisible({
+      await expect(page.getByRole("heading", { name: "结业测验" }).first()).toBeVisible({
         timeout: 20_000,
       });
       const pageHtml = await page.content();

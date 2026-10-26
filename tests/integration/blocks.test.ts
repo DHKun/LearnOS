@@ -76,7 +76,7 @@ async function blockResult(lessonSlug: string, blockId: string) {
 
 beforeAll(async () => {
   student = await createTestUser("student");
-  const course = await getCourse("http-fundamentals");
+  const course = await getCourse("http-hands-on");
   courseId = course.id;
   lessons = await getLessons(courseId);
   const db = serviceClient();
@@ -211,7 +211,7 @@ describe("混合章节 Block 完成与积分事务", () => {
     const { error } = await db.rpc("save_block_result", {
       p_student: student.id,
       p_enrollment: enrollmentId,
-      p_lesson: lesson("headers").id,
+      p_lesson: lesson("headers-body").id,
       p_block_id: "not-declared",
       p_block_kind: "question",
       p_attempt_id: randomUUID(),
