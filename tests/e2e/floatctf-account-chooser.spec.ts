@@ -118,12 +118,23 @@ async function signOutOfLearnOS(page: Page) {
   await expect(page.getByText("已退出 LearnOS。这不会退出 FloatCTF")).toBeVisible();
 }
 
+/**
+ * 选择页上「以当前账号继续」：账号是整行可点击的按钮（FloatCTF P2 重设计后不再有单独的「继续使用此账号」按钮）。
+ * 本 spec 针对单会话模式（multi_account 关闭），列表里恰好一个账号。
+ */
+function continueWithShownAccount(page: Page) {
+  return page.getByRole("list", { name: "本浏览器中已登录的 FloatCTF 账号" }).getByRole("button");
+}
+
 async function expectChooserFor(page: Page, username: string, nickname: string) {
   // GET 打开的选择页带 ?txn=；POST 后要求重新确认时是同一地址的表单响应
   await expect(page).toHaveURL(new RegExp(`^${OP}/oauth/select-account(\\?txn=|$)`));
-  await expect(page.getByRole("heading", { name: "选择账号" })).toBeVisible();
-  await expect(page.getByText(nickname, { exact: true })).toBeVisible();
-  await expect(page.getByText(`@${username}`, { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "选择 FloatCTF 账号" })).toBeVisible();
+  await expect(continueWithShownAccount(page)).toHaveCount(1);
+  // 账号名同时出现在折叠的「退出账号」列表里：断言限定在账号选择列表内。
+  const accounts = page.getByRole("list", { name: "本浏览器中已登录的 FloatCTF 账号" });
+  await expect(accounts.getByText(nickname, { exact: true })).toBeVisible();
+  await expect(accounts.getByText(`@${username}`, { exact: true })).toBeVisible();
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
 }
 
@@ -228,7 +239,7 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     await expect(page).toHaveURL(new RegExp(`^${OP}/oauth/select-account`));
     expect(await codesIssued()).toBe(codesBefore);
 
-    await page.getByRole("button", { name: "继续使用此账号" }).click();
+    await continueWithShownAccount(page).click();
     await page.waitForURL(/\/courses/);
     expect(await learnosUserId(page)).toBe(learnosAlice);
     const afterChooser = navigations.slice(navigations.findIndex((u) => u.includes("/oauth/select-account")));
@@ -266,7 +277,8 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     await expect(page.locator('input[name="username"]')).toHaveValue("");
     await passwordLogin(page, USER_B);
     // B 第一次使用 LearnOS：需要 B 自己的授权，不继承 A 的
-    await expect(page.getByText(`${bob.nickname}（@${USER_B}）`).first()).toBeVisible();
+    await expect(page.getByText(bob.nickname, { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(`@${USER_B}`, { exact: true }).first()).toBeVisible();
     await expect(page.getByText(`@${USER_A}`)).toHaveCount(0);
     await allowConsent(page);
     await page.waitForURL(/\/courses/);
@@ -299,7 +311,7 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     await clickFloatctfLogin(page);
     await expectChooserFor(page, USER_B, bob.nickname);
     await expect(page.getByText(`@${USER_A}`)).toHaveCount(0);
-    await page.getByRole("button", { name: "继续使用此账号" }).click();
+    await continueWithShownAccount(page).click();
     await page.waitForURL(/\/courses/);
     expect(await learnosUserId(page)).toBe(learnosBob);
   });
@@ -309,7 +321,7 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     await clickFloatctfLogin(page);
     await expectChooserFor(page, USER_B, bob.nickname);
     const before = await codesIssued();
-    await page.getByRole("button", { name: "继续使用此账号" }).dblclick();
+    await continueWithShownAccount(page).dblclick();
     await page.waitForLoadState("networkidle");
     expect(await codesIssued()).toBe(before + 1);
     const who = await learnosUserId(page);
@@ -318,7 +330,7 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
       // 浏览器展示的是第二次提交的「已失效」页：重新登录即可，绝不会落到别的账号
       await expect(page.getByText("授权请求已过期或无效")).toBeVisible();
       await clickFloatctfLogin(page);
-      await page.getByRole("button", { name: "继续使用此账号" }).click();
+      await continueWithShownAccount(page).click();
       await page.waitForURL(/\/courses/);
     }
     expect(await learnosUserId(page)).toBe(learnosBob);
@@ -339,12 +351,12 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     await tab2.close();
 
     const before = await codesIssued();
-    await page.getByRole("button", { name: "继续使用此账号" }).click();
+    await continueWithShownAccount(page).click();
     await expect(page.getByText("登录账号已发生变化")).toBeVisible();
     await expectChooserFor(page, USER_A, alice.nickname);
     await expect(page.getByText(`@${USER_B}`)).toHaveCount(0);
     expect(await codesIssued()).toBe(before);
-    await page.getByRole("button", { name: "继续使用此账号" }).click();
+    await continueWithShownAccount(page).click();
     await page.waitForURL(/\/courses/);
     expect(await learnosUserId(page)).toBe(learnosAlice);
   });
@@ -352,8 +364,8 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
   test("14 跨站伪造的选择页表单被拒绝", async () => {
     await signOutOfLearnOS(page);
     await clickFloatctfLogin(page);
-    const txn = await page.locator('input[name="txn"]').inputValue();
-    const csrf = await page.locator('input[name="csrf"]').inputValue();
+    const txn = await page.locator('input[name="txn"]').first().inputValue();
+    const csrf = await page.locator('input[name="csrf"]').first().inputValue();
     const before = await codesIssued();
     // 攻击者站点（另一个 origin，无 CSP）自动提交一个带正确 txn/csrf 的表单到真实 OP。
     // （不能用 LearnOS 页面充当攻击者：LearnOS 自己的 CSP form-action 'self' 会先拦下。）
@@ -478,7 +490,10 @@ test.describe("FloatCTF 账号选择（真实 LearnOS × FloatCTF）", () => {
     const width = await phone.evaluate(() => document.documentElement.scrollWidth);
     expect(width).toBeLessThanOrEqual(390);
     await phone.screenshot({ path: "test-results/floatctf-account-chooser-mobile-dark.png", fullPage: true });
-    await phone.keyboard.press("Enter"); // autofocus 在「继续使用此账号」
+    // 键盘可用：第一次 Tab 落在账号行上（页面不再 autofocus，避免一打开就像「已选中」），Enter 即继续。
+    await phone.keyboard.press("Tab");
+    await expect(continueWithShownAccount(phone)).toBeFocused();
+    await phone.keyboard.press("Enter");
     await phone.waitForURL(/\/courses/);
     await mobile.close();
   });

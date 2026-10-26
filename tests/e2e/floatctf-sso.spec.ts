@@ -69,7 +69,7 @@ async function completeIdpPages(page: Page) {
     }
     if (url.includes("/oauth/select-account")) {
       // LearnOS sends prompt=select_account: FloatCTF asks which account to use.
-      await page.getByRole("button", { name: "继续使用此账号" }).click();
+      await page.getByRole("list", { name: "本浏览器中已登录的 FloatCTF 账号" }).getByRole("button").first().click();
       await page
         .waitForURL((url) => !url.pathname.includes("/oauth/select-account"), { timeout: 30_000 })
         .catch(() => undefined);
