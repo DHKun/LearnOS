@@ -28,6 +28,7 @@
 - 输入校验：**Zod**；数据操作需行级授权；关键写操作使用数据库事务、唯一约束和幂等键。
 - 课程：每门课程是 `content/courses/<slug>/` 插件；Manifest v2 保持兼容，v3 增加章节内 `blocks` / `completion`。`pnpm courses:prepare` 自动生成 Registry，禁止手工维护注册表。
 - 章节模型：Course → Chapter（`lessons`）→ Block。MDX 负责文字/图片/动画/实验/题目的顺序与排版；Manifest 只声明需要验证的 simulation/question Block 及完成规则。纯文字、纯动画、纯实验、纯题目章节均合法。
+- 制作或重做课程：先读 `.claude/skills/learnos-course-authoring/SKILL.md`（教学设计原则、实验类型、平台契约、验证流程与已知坑；Claude Code 会自动加载，其他 Agent 请直接阅读该目录）。样例课程为 `content/courses/http-hands-on/`；通用实验外壳与动画组件在 `components/education/lab-kit.tsx`、`scene-kit.tsx`。
 - 互动：主应用内原生 React 组件 + 同源认证 Learning SDK；后端核准完成状态及积分。不得使用 iframe、postMessage 或独立 Labs 站点。
 - 教学：抽象概念优先使用「生活类比 → 动画解释 → 自由探索 → 即时反馈 → 知识检查 → 原理总结」。动画必须有暂停/重播/单步/静态替代，并支持 reduced-motion；动画播放本身不产生积分。
 - 本地包管理：优先 **pnpm**，提交 lockfile；测试框架使用与 Next.js 兼容的轻量组合，可选 Vitest + Playwright。

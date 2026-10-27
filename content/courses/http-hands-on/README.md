@@ -46,12 +46,13 @@ simulation/http.ts      报文类型、格式化、严格解析（前端与校�
 simulation/library.ts   library.test 服务器（serve）与模拟浏览器（browserSend：URL、Host、Cookie 罐）
 simulation/labs.ts      各实验的数据与判分规则
 validators.ts           服务端校验器：严格解析输入后调用 labs.ts 的判分规则
-activities/kit.tsx      工单、报文高亮、请求编辑器、工作台、Network 列表
+activities/kit.tsx      报文高亮、请求编辑器、工作台、Network 列表（HTTP 专用）
 activities/labs.tsx     九个实验组件
-concepts/scenes.tsx     动画用的节点、通道、报文行等基础组件（只用主题 token，支持暗色）
 concepts/http-concepts.tsx  十个概念动画
 assessments/*.server.json   服务端题库（答案不下发浏览器）
 ```
+
+通用的实验外壳（工单、提交与验证结果）和动画基础组件在平台的 `components/education/lab-kit.tsx`、`scene-kit.tsx` 里，其他课程可以直接复用。制作新课的完整流程见 `.claude/skills/learnos-course-authoring/`。
 
 ## 判分与安全
 

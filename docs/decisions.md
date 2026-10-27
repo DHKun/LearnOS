@@ -488,3 +488,18 @@
 **理由**：左侧放课程结构、右侧给笔记是主流学习/文档站的习惯，也避免目录与笔记争夺右栏；把「全课在哪 + 本章在哪」放在一处，比拆在两侧更容易看到。
 
 **影响**：≥1536px 时正文比原三栏宽约 190px；1024–1535px 时目录比原来宽 32px。专注模式或收起目录时不再显示本章大纲。E2E：`learning-responsive` 改为断言两栏与目录内大纲，新增 `learning-nav.spec.ts` 覆盖折叠、跟随、记忆、滚动高亮与移动端抽屉。
+
+## D52 — 课程制作 skill 与共用实验组件
+
+**日期**：2026-10-26
+
+**背景**：重做 HTTP 课时形成了一套可复用的做法（一个模拟世界、症状先行的实验、服务端按结果判分与重放、展示状态变化的动画）和一批共用组件，但它们散落在单门课程目录里，后续课程容易重新踩坑或跨课程互相 import。
+
+**决定**：
+
+1. 与课程主题无关的组件移到平台：`components/education/lab-kit.tsx`（`Ticket`、`LabFooter`、`useLabSubmit`、`Verdict`）和 `components/education/scene-kit.tsx`（`Node`、`Lane`、`MessageLines`、`Chip`、`Segmented`）。只属于某门课的组件仍留在课程目录内。
+2. 新增项目级 skill `.claude/skills/learnos-course-authoring/`：`SKILL.md`（原则、流程、已知坑）、`references/`（平台契约、实验类型、验证模板）、`scripts/review-shots.ts`（逐章截图并检查溢出）。`AGENTS.md` 指向它，供不自动加载 skill 的 Agent 使用。
+
+**理由**：做课的质量问题主要出在交互设计，而不在平台；把原则与检查清单放进仓库，比依赖个人经验更可靠。
+
+**影响**：skill 引用的组件、命令和约定发生变化时，需要同步更新 skill，否则会误导后续作者。

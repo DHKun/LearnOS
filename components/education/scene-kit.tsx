@@ -1,6 +1,11 @@
 "use client";
 
-/** Visual primitives for concept scenes. Theme tokens only, so light/dark both work. */
+/**
+ * Visual primitives for concept animation scenes: nodes, a lane with a
+ * sliding message chip, raw message lines, chips and segmented controls.
+ * Theme tokens only, so light and dark both work; transitions are
+ * motion-safe so reduced-motion users get the end state of each step.
+ */
 import * as React from "react";
 
 import { cn } from "@/lib/utils";

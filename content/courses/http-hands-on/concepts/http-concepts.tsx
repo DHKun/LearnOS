@@ -6,7 +6,7 @@ import { ConceptFrame, type ConceptMapping, type ConceptStep } from "@/component
 import type { ConceptId } from "@/lib/education/concepts";
 import { cn } from "@/lib/utils";
 
-import { Chip, Lane, MessageLines, Node, Segmented } from "./scenes";
+import { Chip, Lane, MessageLines, Node, Segmented } from "@/components/education/scene-kit";
 
 const PREFIX = "http-hands-on/";
 const mapping = (...rows: [string, string, string][]): ConceptMapping[] =>
