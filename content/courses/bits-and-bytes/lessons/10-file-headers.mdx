@@ -1,0 +1,53 @@
+## 改了扩展名，为什么还是打不开
+
+把 `photo.png` 改名成 `photo.jpg`，有的软件照样能打开，有的却说“文件已损坏”。把 `.docx` 改成 `.zip`，居然能解压出一堆文件。计算机到底是怎么认出一个文件的？
+
+<ConceptPlayer conceptId="bits-and-bytes/signature" blockId="signature" />
+
+## 文件签名
+
+大多数文件格式在开头放一段固定的字节，叫**文件签名**或**魔数**（magic number）。软件读开头几个字节就知道它是什么：
+
+| 格式 | 开头的字节 | 小知识 |
+| --- | --- | --- |
+| PNG | `89 50 4E 47 0D 0A 1A 0A` | `50 4E 47` 就是 ASCII 的 PNG |
+| JPEG | `FF D8 FF` | |
+| GIF | `47 49 46 38` | ASCII 的 GIF8 |
+| PDF | `25 50 44 46` | ASCII 的 %PDF |
+| ZIP | `50 4B 03 04` | PK，取自格式作者的名字缩写；docx、xlsx、apk 都是 ZIP |
+| MP3 | `49 44 33` | ASCII 的 ID3，存放歌曲信息的标签 |
+| Windows 程序 | `4D 5A` | ASCII 的 MZ |
+| 带 BOM 的 UTF-8 文本 | `EF BB BF` | 文本文件的“签名” |
+
+**扩展名只是名字，签名才是身份。** 看图软件、浏览器、杀毒软件都会看签名，而不是只信扩展名。
+
+<MiniCheck
+  id="invoice-exe"
+  question="邮件附件叫 invoice.pdf，开头两个字节却是 4D 5A。应该怎么办？"
+  options={["正常打开，扩展名说了是 PDF", "不要打开：它其实是 Windows 可执行程序", "改名成 .txt 再打开"]}
+  answer={1}
+  explanation="4D 5A 是 Windows 程序的签名。把程序伪装成文档是常见的骗局，内容和扩展名不符时要警惕。"
+/>
+
+## 签名之后：文件头
+
+签名后面通常紧跟着**文件头**，用固定的位置和长度存放文件的基本信息。以 PNG 为例，签名之后是一个叫 IHDR 的数据块：
+
+```text
+00 00 00 0D   数据块长度：13 字节（大端序）
+49 48 44 52   数据块类型：ASCII 的 IHDR
+00 00 07 80   图片宽度（大端序）
+00 00 04 38   图片高度（大端序）
+```
+
+这里会用到第 3 章的字节序：读错顺序，1920 就会变成一个天文数字。
+
+## BOM：文本文件的“签名”
+
+有些程序保存 UTF-8 文本时会在开头加上 `EF BB BF`，叫 **BOM**。认识它的软件会悄悄跳过；不认识的软件会把它当成三个字符显示，于是 CSV 的第一列标题前面多出了 `ï»¿`（正是这三个字节按 Latin-1 读出来的样子）。
+
+## 动手：U 盘里的可疑文件
+
+<SimulationBlock blockId="header-lab" />
+
+<KnowledgeCheck blockId="file-check" />

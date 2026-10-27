@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 3,
+  "slug": "bits-and-bytes",
+  "title": "0 和 1 的世界：计算机怎么表示信息",
+  "description": "零基础的计算机通识课。整门课围绕一台模拟的“字节机”：同一串字节，换一种读法就是另一样东西。你会修好亮错的灯带、溢出的金币、算错的钱、乱码的短信、看不清的配色、太大的图片和打不开的文件，最后亲手修复一个坏掉的二进制文件。所有实验都在浏览器内模拟。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      { "id": "switches", "component": "concepts/concepts.tsx", "export": "SwitchesConcept", "title": "一排开关能记住什么", "analogy": "一排电灯开关，加上一本约定好的密码本" },
+      { "id": "hex", "component": "concepts/concepts.tsx", "export": "HexConcept", "title": "十六进制", "analogy": "电话号码分段写" },
+      { "id": "endian", "component": "concepts/concepts.tsx", "export": "EndianConcept", "title": "字节序", "analogy": "年-月-日还是日/月/年" },
+      { "id": "overflow", "component": "concepts/concepts.tsx", "export": "OverflowConcept", "title": "整数溢出与补码", "analogy": "里程表从 999999 跳回 000000" },
+      { "id": "float", "component": "concepts/concepts.tsx", "export": "FloatConcept", "title": "浮点数的误差", "analogy": "只有厘米刻度的尺子" },
+      { "id": "utf8", "component": "concepts/concepts.tsx", "export": "Utf8Concept", "title": "UTF-8 编码", "analogy": "按编号长短选大小合适的盒子" },
+      { "id": "codebook", "component": "concepts/concepts.tsx", "export": "CodebookConcept", "title": "乱码与编码", "analogy": "拿错了密码本" },
+      { "id": "color", "component": "concepts/concepts.tsx", "export": "ColorConcept", "title": "颜色与对比度", "analogy": "三盏彩色追光灯" },
+      { "id": "compression", "component": "concepts/concepts.tsx", "export": "CompressionConcept", "title": "无损与有损压缩", "analogy": "“王 × 50”与大致描下来" },
+      { "id": "signature", "component": "concepts/concepts.tsx", "export": "SignatureConcept", "title": "文件签名与文件头", "analogy": "盒子里说明书的第一页" },
+      { "id": "parity", "component": "concepts/concepts.tsx", "export": "ParityConcept", "title": "奇偶校验", "analogy": "每排每列都报人数" }
+    ],
+    "activities": [
+      { "id": "led-lab", "component": "activities/labs.tsx", "export": "LedLab", "title": "亮错的灯带", "validator": { "path": "validators.ts", "export": "validateLedLab" } },
+      { "id": "size-lab", "component": "activities/labs.tsx", "export": "SizeLab", "title": "缩水的硬盘与读错的数", "validator": { "path": "validators.ts", "export": "validateSizeLab" } },
+      { "id": "int-lab", "component": "activities/labs.tsx", "export": "IntLab", "title": "变成负数的金币", "validator": { "path": "validators.ts", "export": "validateIntLab" } },
+      { "id": "money-lab", "component": "activities/labs.tsx", "export": "MoneyLab", "title": "少了一分钱的钱包", "validator": { "path": "validators.ts", "export": "validateMoneyLab" } },
+      { "id": "utf8-lab", "component": "activities/labs.tsx", "export": "Utf8Lab", "title": "数一数字节", "validator": { "path": "validators.ts", "export": "validateUtf8Lab" } },
+      { "id": "mojibake-lab", "component": "activities/labs.tsx", "export": "MojibakeLab", "title": "乱码诊断台", "validator": { "path": "validators.ts", "export": "validateMojibakeLab" } },
+      { "id": "color-lab", "component": "activities/labs.tsx", "export": "ColorLab", "title": "看不清的品牌色", "validator": { "path": "validators.ts", "export": "validateColorLab" } },
+      { "id": "image-lab", "component": "activities/labs.tsx", "export": "ImageLab", "title": "加载太慢的首页", "validator": { "path": "validators.ts", "export": "validateImageLab" } },
+      { "id": "header-lab", "component": "activities/labs.tsx", "export": "HeaderLab", "title": "U 盘里的可疑文件", "validator": { "path": "validators.ts", "export": "validateHeaderLab" } },
+      { "id": "parity-lab", "component": "activities/labs.tsx", "export": "ParityLab", "title": "找出传错的那一位", "validator": { "path": "validators.ts", "export": "validateParityLab" } },
+      { "id": "repair-lab", "component": "activities/labs.tsx", "export": "RepairLab", "title": "修好一个坏文件", "validator": { "path": "validators.ts", "export": "validateRepairLab" } }
+    ]
+  },
+  "lessons": [
+    { "slug": "why-binary", "title": "为什么只用 0 和 1", "source": "lessons/01-why-binary.mdx", "required": true, "unit": "基础" },
+    {
+      "slug": "hex", "title": "二进制与十六进制", "source": "lessons/02-hex.mdx", "required": true, "unit": "基础",
+      "blocks": [{ "id": "led-lab", "kind": "simulation", "activityId": "bits-and-bytes/led-lab", "title": "亮错的灯带" }],
+      "completion": { "mode": "all", "requiredBlocks": ["led-lab"] }
+    },
+    {
+      "slug": "bytes", "title": "字节：有多大，按什么顺序存", "source": "lessons/03-bytes.mdx", "required": true, "unit": "基础",
+      "blocks": [
+        { "id": "size-lab", "kind": "simulation", "activityId": "bits-and-bytes/size-lab", "title": "缩水的硬盘与读错的数" },
+        { "id": "bytes-check", "kind": "question", "source": "assessments/bytes.server.json", "title": "字节检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["size-lab", "bytes-check"] }
+    },
+    {
+      "slug": "integers", "title": "整数：范围与溢出", "source": "lessons/04-integers.mdx", "required": true, "unit": "数字",
+      "blocks": [
+        { "id": "int-lab", "kind": "simulation", "activityId": "bits-and-bytes/int-lab", "title": "变成负数的金币" },
+        { "id": "int-check", "kind": "question", "source": "assessments/integers.server.json", "title": "整数检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["int-lab", "int-check"] }
+    },
+    {
+      "slug": "decimals", "title": "小数：0.1 + 0.2 的陷阱", "source": "lessons/05-decimals.mdx", "required": true, "unit": "数字",
+      "blocks": [{ "id": "money-lab", "kind": "simulation", "activityId": "bits-and-bytes/money-lab", "title": "少了一分钱的钱包" }],
+      "completion": { "mode": "all", "requiredBlocks": ["money-lab"] }
+    },
+    {
+      "slug": "unicode", "title": "字符怎么变成字节", "source": "lessons/06-unicode.mdx", "required": true, "unit": "文本",
+      "blocks": [
+        { "id": "utf8-lab", "kind": "simulation", "activityId": "bits-and-bytes/utf8-lab", "title": "数一数字节" },
+        { "id": "text-check", "kind": "question", "source": "assessments/text.server.json", "title": "编码检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["utf8-lab", "text-check"] }
+    },
+    {
+      "slug": "mojibake", "title": "乱码诊断", "source": "lessons/07-mojibake.mdx", "required": true, "unit": "文本",
+      "blocks": [{ "id": "mojibake-lab", "kind": "simulation", "activityId": "bits-and-bytes/mojibake-lab", "title": "乱码诊断台" }],
+      "completion": { "mode": "all", "requiredBlocks": ["mojibake-lab"] }
+    },
+    {
+      "slug": "color", "title": "颜色就是三个字节", "source": "lessons/08-color.mdx", "required": true, "unit": "媒体",
+      "blocks": [{ "id": "color-lab", "kind": "simulation", "activityId": "bits-and-bytes/color-lab", "title": "看不清的品牌色" }],
+      "completion": { "mode": "all", "requiredBlocks": ["color-lab"] }
+    },
+    {
+      "slug": "images", "title": "图片的大小与压缩", "source": "lessons/09-images.mdx", "required": true, "unit": "媒体",
+      "blocks": [
+        { "id": "image-lab", "kind": "simulation", "activityId": "bits-and-bytes/image-lab", "title": "加载太慢的首页" },
+        { "id": "image-check", "kind": "question", "source": "assessments/images.server.json", "title": "图片检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["image-lab", "image-check"] }
+    },
+    {
+      "slug": "file-headers", "title": "文件头：计算机怎么认出一个文件", "source": "lessons/10-file-headers.mdx", "required": true, "unit": "文件",
+      "blocks": [
+        { "id": "header-lab", "kind": "simulation", "activityId": "bits-and-bytes/header-lab", "title": "U 盘里的可疑文件" },
+        { "id": "file-check", "kind": "question", "source": "assessments/files.server.json", "title": "文件头检查", "passScore": 75 }
+      ],
+      "completion": { "mode": "all", "requiredBlocks": ["header-lab", "file-check"] }
+    },
+    {
+      "slug": "checksum", "title": "看不见的错误：校验", "source": "lessons/11-checksum.mdx", "required": true, "unit": "文件",
+      "blocks": [{ "id": "parity-lab", "kind": "simulation", "activityId": "bits-and-bytes/parity-lab", "title": "找出传错的那一位" }],
+      "completion": { "mode": "all", "requiredBlocks": ["parity-lab"] }
+    },
+    {
+      "slug": "repair", "title": "综合任务：修好一个坏文件", "source": "lessons/12-repair.mdx", "required": true, "unit": "文件",
+      "blocks": [{ "id": "repair-lab", "kind": "simulation", "activityId": "bits-and-bytes/repair-lab", "title": "修好一个坏文件" }],
+      "completion": { "mode": "all", "requiredBlocks": ["repair-lab"] }
+    },
+    {
+      "slug": "final", "title": "结业测验", "source": "lessons/13-final.mdx", "required": true, "unit": "结业",
+      "blocks": [{ "id": "final-check", "kind": "question", "source": "assessments/final.server.json", "title": "结业测验", "passScore": 80 }],
+      "completion": { "mode": "all", "requiredBlocks": ["final-check"] },
+      "finalExam": true
+    }
+  ]
+}
