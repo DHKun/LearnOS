@@ -29,6 +29,15 @@ const Concept17 = dynamic(() => import("../../content/courses/http-hands-on/conc
 const Concept18 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.RetryConcept), { ssr: false, loading });
 const Concept19 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.TlsConcept), { ssr: false, loading });
 const Concept20 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.UrlConcept), { ssr: false, loading });
+const Concept21 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.ArpConcept), { ssr: false, loading });
+const Concept22 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.DnsConcept), { ssr: false, loading });
+const Concept23 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.NatConcept), { ssr: false, loading });
+const Concept24 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.PacketsConcept), { ssr: false, loading });
+const Concept25 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.PortsConcept), { ssr: false, loading });
+const Concept26 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.RoutingConcept), { ssr: false, loading });
+const Concept27 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.SubnetConcept), { ssr: false, loading });
+const Concept28 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TcpConcept), { ssr: false, loading });
+const Concept29 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TracerouteConcept), { ssr: false, loading });
 const Activity0 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.ColorLab), { ssr: false, loading });
 const Activity1 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.HeaderLab), { ssr: false, loading });
 const Activity2 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.ImageLab), { ssr: false, loading });
@@ -49,6 +58,15 @@ const Activity16 = dynamic<ActivityComponentProps>(() => import("../../content/c
 const Activity17 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.RequestLab), { ssr: false, loading });
 const Activity18 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.ResponseLab), { ssr: false, loading });
 const Activity19 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.UrlLab), { ssr: false, loading });
+const Activity20 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.ArpLab), { ssr: false, loading });
+const Activity21 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.DnsLab), { ssr: false, loading });
+const Activity22 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.FirewallLab), { ssr: false, loading });
+const Activity23 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.LaptopLab), { ssr: false, loading });
+const Activity24 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.NatLab), { ssr: false, loading });
+const Activity25 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.RouteLab), { ssr: false, loading });
+const Activity26 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.SubnetLab), { ssr: false, loading });
+const Activity27 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TcpLab), { ssr: false, loading });
+const Activity28 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TraceLab), { ssr: false, loading });
 
 export const CONCEPT_COMPONENTS: Record<ConceptId, ComponentType> = {
   "bits-and-bytes/codebook": Concept0,
@@ -72,6 +90,15 @@ export const CONCEPT_COMPONENTS: Record<ConceptId, ComponentType> = {
   "http-hands-on/retry": Concept18,
   "http-hands-on/tls": Concept19,
   "http-hands-on/url": Concept20,
+  "networking-basics/arp": Concept21,
+  "networking-basics/dns": Concept22,
+  "networking-basics/nat": Concept23,
+  "networking-basics/packets": Concept24,
+  "networking-basics/ports": Concept25,
+  "networking-basics/routing": Concept26,
+  "networking-basics/subnet": Concept27,
+  "networking-basics/tcp": Concept28,
+  "networking-basics/traceroute": Concept29,
 };
 
 export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityComponentProps>> = {
@@ -95,4 +122,13 @@ export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityCompo
   "http-hands-on/request-lab": Activity17,
   "http-hands-on/response-lab": Activity18,
   "http-hands-on/url-lab": Activity19,
+  "networking-basics/arp-lab": Activity20,
+  "networking-basics/dns-lab": Activity21,
+  "networking-basics/firewall-lab": Activity22,
+  "networking-basics/laptop-lab": Activity23,
+  "networking-basics/nat-lab": Activity24,
+  "networking-basics/route-lab": Activity25,
+  "networking-basics/subnet-lab": Activity26,
+  "networking-basics/tcp-lab": Activity27,
+  "networking-basics/trace-lab": Activity28,
 };

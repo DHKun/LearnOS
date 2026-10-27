@@ -1,0 +1,435 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "一个 IPv4 地址有多少个比特？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "8"
+        },
+        {
+          "id": "b",
+          "label": "16"
+        },
+        {
+          "id": "c",
+          "label": "32"
+        },
+        {
+          "id": "d",
+          "label": "128"
+        }
+      ],
+      "answer": "c",
+      "explanation": "4 个字节，共 32 个比特。"
+    },
+    {
+      "id": "q2",
+      "prompt": "255.255.255.0 换成前缀长度是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "/8"
+        },
+        {
+          "id": "b",
+          "label": "/16"
+        },
+        {
+          "id": "c",
+          "label": "/24"
+        },
+        {
+          "id": "d",
+          "label": "/32"
+        }
+      ],
+      "answer": "c",
+      "explanation": "前 24 位是 1。"
+    },
+    {
+      "id": "q3",
+      "prompt": "10.8.1.0/24 这个网段里能分给设备的地址有多少个？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "254"
+        },
+        {
+          "id": "b",
+          "label": "255"
+        },
+        {
+          "id": "c",
+          "label": "256"
+        },
+        {
+          "id": "d",
+          "label": "24"
+        }
+      ],
+      "answer": "a",
+      "explanation": "256 个地址减去网络地址和广播地址，剩 254 个。"
+    },
+    {
+      "id": "q4",
+      "prompt": "笔记本 192.168.1.23/24 要访问 192.168.1.60，数据怎么走？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "交给默认网关"
+        },
+        {
+          "id": "b",
+          "label": "在局域网里直接送达"
+        },
+        {
+          "id": "c",
+          "label": "交给 DNS 服务器"
+        }
+      ],
+      "answer": "b",
+      "explanation": "同一网段，直接送达。"
+    },
+    {
+      "id": "q5",
+      "prompt": "ARP 请求的目的 MAC 地址通常是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "对方的 MAC"
+        },
+        {
+          "id": "b",
+          "label": "ff:ff:ff:ff:ff:ff"
+        },
+        {
+          "id": "c",
+          "label": "路由器的 MAC"
+        },
+        {
+          "id": "d",
+          "label": "00:00:00:00:00:00"
+        }
+      ],
+      "answer": "b",
+      "explanation": "ARP 请求是广播，局域网里所有设备都会收到。"
+    },
+    {
+      "id": "q6",
+      "prompt": "两台设备被设成了同一个 IP，最典型的现象是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "两台都完全上不了网"
+        },
+        {
+          "id": "b",
+          "label": "通信时好时坏"
+        },
+        {
+          "id": "c",
+          "label": "网速变快"
+        }
+      ],
+      "answer": "b",
+      "explanation": "后到的 ARP 回答会覆盖前一个，数据时而送到这台、时而送到那台。"
+    },
+    {
+      "id": "q7",
+      "prompt": "路由表里有 10.0.0.0/8、10.8.0.0/16、0.0.0.0/0 三条，去往 10.8.3.4 的包走哪条？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "10.0.0.0/8"
+        },
+        {
+          "id": "b",
+          "label": "10.8.0.0/16"
+        },
+        {
+          "id": "c",
+          "label": "0.0.0.0/0"
+        }
+      ],
+      "answer": "b",
+      "explanation": "三条都匹配，选前缀最长的 /16。"
+    },
+    {
+      "id": "q8",
+      "prompt": "两台路由器互相把对方设成默认路由，去往未知地址的包会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "被立刻丢弃"
+        },
+        {
+          "id": "b",
+          "label": "来回转发，直到 TTL 减到 0 被丢弃"
+        },
+        {
+          "id": "c",
+          "label": "被送到 DNS 服务器"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这就是路由环路，TTL 防止包永远转下去。"
+    },
+    {
+      "id": "q9",
+      "prompt": "去往 192.168.x.x 的包可以经由运营商在互联网上送达。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "私有地址在互联网上不可路由，运营商会丢弃。"
+    },
+    {
+      "id": "q10",
+      "prompt": "系统解析域名时，最先查的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "根服务器"
+        },
+        {
+          "id": "b",
+          "label": "本机缓存和 hosts 文件"
+        },
+        {
+          "id": "c",
+          "label": "权威服务器"
+        }
+      ],
+      "answer": "b",
+      "explanation": "先查本机，查不到才问递归 DNS。"
+    },
+    {
+      "id": "q11",
+      "prompt": "权威服务器已经返回新地址，有的用户还拿到旧地址。原因最可能是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "记录填错了"
+        },
+        {
+          "id": "b",
+          "label": "旧地址还在缓存里，TTL 没过期"
+        },
+        {
+          "id": "c",
+          "label": "域名被注销了"
+        }
+      ],
+      "answer": "b",
+      "explanation": "缓存会保存到 TTL 到期为止。"
+    },
+    {
+      "id": "q12",
+      "prompt": "下面哪些服务通常使用 TCP？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "HTTPS 网页"
+        },
+        {
+          "id": "b",
+          "label": "SSH 远程登录"
+        },
+        {
+          "id": "c",
+          "label": "实时语音通话"
+        },
+        {
+          "id": "d",
+          "label": "文件下载"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": "需要完整、按顺序到达的数据用 TCP；实时语音多用 UDP。"
+    },
+    {
+      "id": "q13",
+      "prompt": "连接某端口立刻收到“连接被拒绝”，说明？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "被防火墙拦截"
+        },
+        {
+          "id": "b",
+          "label": "路通了，但这个端口没有程序在监听"
+        },
+        {
+          "id": "c",
+          "label": "DNS 解析失败"
+        }
+      ],
+      "answer": "b",
+      "explanation": "“拒绝”是服务器主动回的。"
+    },
+    {
+      "id": "q14",
+      "prompt": "数据库只给本机上的网站程序用，防火墙应该怎么处理 5432 端口？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "对互联网放行"
+        },
+        {
+          "id": "b",
+          "label": "不对外放行"
+        },
+        {
+          "id": "c",
+          "label": "改成 UDP"
+        }
+      ],
+      "answer": "b",
+      "explanation": "本机访问不经过外部防火墙规则，对外开放只会招来攻击。"
+    },
+    {
+      "id": "q15",
+      "prompt": "TCP 接收方连续回复 ack=1001，说明？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "1001 号字节之前的数据丢了"
+        },
+        {
+          "id": "b",
+          "label": "它还在等从 1001 开始的那段数据"
+        },
+        {
+          "id": "c",
+          "label": "连接要断开了"
+        }
+      ],
+      "answer": "b",
+      "explanation": "确认号停住不动，就是在提醒发送方“我还缺这一段”。"
+    },
+    {
+      "id": "q16",
+      "prompt": "TCP 三次握手的顺序是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "SYN → SYN, ACK → ACK"
+        },
+        {
+          "id": "b",
+          "label": "ACK → SYN → FIN"
+        },
+        {
+          "id": "c",
+          "label": "SYN → ACK → FIN"
+        }
+      ],
+      "answer": "a",
+      "explanation": "先 SYN，对方回 SYN, ACK，再回 ACK。"
+    },
+    {
+      "id": "q17",
+      "prompt": "游戏机需要外部能连入 UDP 3074，端口转发配成了 TCP 3074，结果会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "没有区别"
+        },
+        {
+          "id": "b",
+          "label": "UDP 连接依然进不来"
+        },
+        {
+          "id": "c",
+          "label": "游戏机网速变慢"
+        }
+      ],
+      "answer": "b",
+      "explanation": "协议不同就是不同的端口。"
+    },
+    {
+      "id": "q18",
+      "prompt": "为了让端口转发在路由器重启后依然有效，应该给目标设备做什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "换一个外部端口"
+        },
+        {
+          "id": "b",
+          "label": "DHCP 地址保留"
+        },
+        {
+          "id": "c",
+          "label": "关闭 DHCP"
+        }
+      ],
+      "answer": "b",
+      "explanation": "地址保留让设备每次都拿到同一个 IP。"
+    },
+    {
+      "id": "q19",
+      "prompt": "traceroute 第 4 跳显示 * * *，第 5 跳以后都正常。说明？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "第 4 跳断网了"
+        },
+        {
+          "id": "b",
+          "label": "第 4 跳的路由器不回应探测包，但照常转发"
+        },
+        {
+          "id": "c",
+          "label": "目标网站宕机"
+        }
+      ],
+      "answer": "b",
+      "explanation": "后面的跳都有回应，说明包确实经过了第 4 跳。"
+    },
+    {
+      "id": "q20",
+      "prompt": "新电脑连上了 Wi-Fi，ping 192.168.1.1 正常，ping 198.51.100.10 超时。最先检查什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "DNS 服务器"
+        },
+        {
+          "id": "b",
+          "label": "默认网关的设置"
+        },
+        {
+          "id": "c",
+          "label": "浏览器缓存"
+        }
+      ],
+      "answer": "b",
+      "explanation": "本地能通、外面不通，问题多半在默认网关：包出不了家门。"
+    }
+  ]
+}

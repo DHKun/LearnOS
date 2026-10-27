@@ -1,0 +1,79 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "t1",
+      "prompt": "视频通话卡顿时宁可跳过一小段也不要卡住，通常用哪种协议？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "TCP"
+        },
+        {
+          "id": "b",
+          "label": "UDP"
+        },
+        {
+          "id": "c",
+          "label": "HTTP"
+        }
+      ],
+      "answer": "b",
+      "explanation": "UDP 不重传，适合实时性要求高、能容忍少量丢失的场景。"
+    },
+    {
+      "id": "t2",
+      "prompt": "只想让公司的人通过 SSH 登录服务器，防火墙规则最好怎么写？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "放行 TCP 22，来源不限"
+        },
+        {
+          "id": "b",
+          "label": "放行 TCP 22，只允许公司的地址段"
+        },
+        {
+          "id": "c",
+          "label": "放行 UDP 22"
+        },
+        {
+          "id": "d",
+          "label": "关闭防火墙"
+        }
+      ],
+      "answer": "b",
+      "explanation": "限定来源，能挡住互联网上的扫描和暴力破解。"
+    },
+    {
+      "id": "t3",
+      "prompt": "连接服务器的 8080 端口，等了很久最后超时。最可能的原因？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "8080 上的程序拒绝了连接"
+        },
+        {
+          "id": "b",
+          "label": "包被防火墙丢弃，或者路不通"
+        },
+        {
+          "id": "c",
+          "label": "服务器在用 UDP"
+        }
+      ],
+      "answer": "b",
+      "explanation": "被丢弃的包得不到任何回应，所以表现为超时；如果是程序拒绝，会立刻收到“拒绝”。"
+    },
+    {
+      "id": "t4",
+      "prompt": "放行了 TCP 3478，UDP 3478 也就一起放行了。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "TCP 和 UDP 是两套独立的端口，要分别放行。"
+    }
+  ]
+}

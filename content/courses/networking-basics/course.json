@@ -1,0 +1,419 @@
+{
+  "schemaVersion": 3,
+  "slug": "networking-basics",
+  "title": "网络基础：数据包怎么到达",
+  "description": "零基础的计算机网络课。整门课围绕一座模拟的“小城”：你的家、运营商、分公司和 library.test 的机房。你会修好找不到的打印机、打转的路由、搬家后的 DNS、敞开的防火墙和重启后失效的端口转发，最后用命令行把一台新电脑调通上网。所有实验都在浏览器内模拟，不向真实网络发包。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "packets",
+        "component": "concepts/concepts.tsx",
+        "export": "PacketsConcept",
+        "title": "一张图片怎么来到你电脑上",
+        "analogy": "拆成包裹分别寄"
+      },
+      {
+        "id": "subnet",
+        "component": "concepts/concepts.tsx",
+        "export": "SubnetConcept",
+        "title": "子网掩码与网段",
+        "analogy": "同一个小区直接送"
+      },
+      {
+        "id": "arp",
+        "component": "concepts/concepts.tsx",
+        "export": "ArpConcept",
+        "title": "ARP：从 IP 找到 MAC",
+        "analogy": "在小区群里问一声"
+      },
+      {
+        "id": "routing",
+        "component": "concepts/concepts.tsx",
+        "export": "RoutingConcept",
+        "title": "最长前缀匹配",
+        "analogy": "分拣站的规则表"
+      },
+      {
+        "id": "dns",
+        "component": "concepts/concepts.tsx",
+        "export": "DnsConcept",
+        "title": "DNS 解析",
+        "analogy": "打查号台"
+      },
+      {
+        "id": "ports",
+        "component": "concepts/concepts.tsx",
+        "export": "PortsConcept",
+        "title": "端口与防火墙",
+        "analogy": "写字楼的门卫与房间号"
+      },
+      {
+        "id": "tcp",
+        "component": "concepts/concepts.tsx",
+        "export": "TcpConcept",
+        "title": "TCP 的可靠传输",
+        "analogy": "“下一本请寄第几号”"
+      },
+      {
+        "id": "nat",
+        "component": "concepts/concepts.tsx",
+        "export": "NatConcept",
+        "title": "NAT 与端口转发",
+        "analogy": "公司前台的登记本"
+      },
+      {
+        "id": "traceroute",
+        "component": "concepts/concepts.tsx",
+        "export": "TracerouteConcept",
+        "title": "traceroute 探路",
+        "analogy": "限定最多经过几站"
+      }
+    ],
+    "activities": [
+      {
+        "id": "subnet-lab",
+        "component": "activities/labs.tsx",
+        "export": "SubnetLab",
+        "title": "找不到的打印机",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateSubnetLab"
+        }
+      },
+      {
+        "id": "arp-lab",
+        "component": "activities/labs.tsx",
+        "export": "ArpLab",
+        "title": "时好时坏的扫描仪",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateArpLab"
+        }
+      },
+      {
+        "id": "route-lab",
+        "component": "activities/labs.tsx",
+        "export": "RouteLab",
+        "title": "打不开的外网",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateRouteLab"
+        }
+      },
+      {
+        "id": "dns-lab",
+        "component": "activities/labs.tsx",
+        "export": "DnsLab",
+        "title": "搬家之后的 DNS",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateDnsLab"
+        }
+      },
+      {
+        "id": "firewall-lab",
+        "component": "activities/labs.tsx",
+        "export": "FirewallLab",
+        "title": "服务器的防火墙",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateFirewallLab"
+        }
+      },
+      {
+        "id": "tcp-lab",
+        "component": "activities/labs.tsx",
+        "export": "TcpLab",
+        "title": "丢了一个包的上传",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateTcpLab"
+        }
+      },
+      {
+        "id": "nat-lab",
+        "component": "activities/labs.tsx",
+        "export": "NatLab",
+        "title": "重启后失效的端口转发",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateNatLab"
+        }
+      },
+      {
+        "id": "trace-lab",
+        "component": "activities/labs.tsx",
+        "export": "TraceLab",
+        "title": "断在哪一跳",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateTraceLab"
+        }
+      },
+      {
+        "id": "laptop-lab",
+        "component": "activities/labs.tsx",
+        "export": "LaptopLab",
+        "title": "上不了网的新笔记本",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateLaptopLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "how-networks-work",
+      "title": "数据在网上怎么走",
+      "source": "lessons/01-how-networks-work.mdx",
+      "required": true,
+      "unit": "基础"
+    },
+    {
+      "slug": "ip-subnet",
+      "title": "IP 地址与子网",
+      "source": "lessons/02-ip-subnet.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "subnet-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/subnet-lab",
+          "title": "找不到的打印机"
+        },
+        {
+          "id": "ip-check",
+          "kind": "question",
+          "source": "assessments/ip.server.json",
+          "title": "地址与子网检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "subnet-lab",
+          "ip-check"
+        ]
+      }
+    },
+    {
+      "slug": "lan-arp",
+      "title": "局域网：MAC 与 ARP",
+      "source": "lessons/03-lan-arp.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "arp-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/arp-lab",
+          "title": "时好时坏的扫描仪"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "arp-lab"
+        ]
+      }
+    },
+    {
+      "slug": "routing",
+      "title": "路由：下一站去哪",
+      "source": "lessons/04-routing.mdx",
+      "required": true,
+      "unit": "送达",
+      "blocks": [
+        {
+          "id": "route-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/route-lab",
+          "title": "打不开的外网"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "route-lab"
+        ]
+      }
+    },
+    {
+      "slug": "dns",
+      "title": "DNS：从名字到地址",
+      "source": "lessons/05-dns.mdx",
+      "required": true,
+      "unit": "送达",
+      "blocks": [
+        {
+          "id": "dns-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/dns-lab",
+          "title": "搬家之后的 DNS"
+        },
+        {
+          "id": "dns-check",
+          "kind": "question",
+          "source": "assessments/dns.server.json",
+          "title": "DNS 检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "dns-lab",
+          "dns-check"
+        ]
+      }
+    },
+    {
+      "slug": "ports",
+      "title": "端口、TCP 与 UDP",
+      "source": "lessons/06-ports.mdx",
+      "required": true,
+      "unit": "传输",
+      "blocks": [
+        {
+          "id": "firewall-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/firewall-lab",
+          "title": "服务器的防火墙"
+        },
+        {
+          "id": "transport-check",
+          "kind": "question",
+          "source": "assessments/transport.server.json",
+          "title": "传输层检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "firewall-lab",
+          "transport-check"
+        ]
+      }
+    },
+    {
+      "slug": "tcp",
+      "title": "TCP 怎么保证不丢",
+      "source": "lessons/07-tcp.mdx",
+      "required": true,
+      "unit": "传输",
+      "blocks": [
+        {
+          "id": "tcp-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/tcp-lab",
+          "title": "丢了一个包的上传"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "tcp-lab"
+        ]
+      }
+    },
+    {
+      "slug": "nat",
+      "title": "NAT：全家共用一个公网地址",
+      "source": "lessons/08-nat.mdx",
+      "required": true,
+      "unit": "家庭网络",
+      "blocks": [
+        {
+          "id": "nat-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/nat-lab",
+          "title": "重启后失效的端口转发"
+        },
+        {
+          "id": "nat-check",
+          "kind": "question",
+          "source": "assessments/nat.server.json",
+          "title": "NAT 检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "nat-lab",
+          "nat-check"
+        ]
+      }
+    },
+    {
+      "slug": "troubleshooting",
+      "title": "用 ping 和 traceroute 排查",
+      "source": "lessons/09-troubleshooting.mdx",
+      "required": true,
+      "unit": "家庭网络",
+      "blocks": [
+        {
+          "id": "trace-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/trace-lab",
+          "title": "断在哪一跳"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "trace-lab"
+        ]
+      }
+    },
+    {
+      "slug": "get-online",
+      "title": "综合任务：让新电脑上网",
+      "source": "lessons/10-get-online.mdx",
+      "required": true,
+      "unit": "综合",
+      "blocks": [
+        {
+          "id": "laptop-lab",
+          "kind": "simulation",
+          "activityId": "networking-basics/laptop-lab",
+          "title": "上不了网的新笔记本"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "laptop-lab"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/11-final.mdx",
+      "required": true,
+      "unit": "结业",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}

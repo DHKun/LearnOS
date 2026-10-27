@@ -1,0 +1,41 @@
+## 一台服务器，好几扇门
+
+library.test 的服务器上同时跑着网站、SSH 远程登录、数据库和语音通话中继。数据包到了这台机器，怎么知道交给哪个程序？答案是**端口**：0～65535 之间的一个数。
+
+<ConceptPlayer conceptId="networking-basics/ports" blockId="ports" />
+
+## 常见端口
+
+| 端口 | 协议 | 用途 |
+| --- | --- | --- |
+| 80 | TCP | HTTP 网页 |
+| 443 | TCP | HTTPS 网页 |
+| 22 | TCP | SSH 远程登录 |
+| 53 | UDP / TCP | DNS |
+| 5432 | TCP | PostgreSQL 数据库 |
+| 3478 | UDP | 语音、视频通话的中继（STUN/TURN） |
+
+## TCP 和 UDP
+
+- **TCP**：先建立连接，保证数据完整、按顺序到达，丢了会重传。网页、文件、SSH 都用它。下一章细讲。
+- **UDP**：不建立连接，发出去就不管了。快，但可能丢。语音、视频、游戏宁可丢一点，也不愿意卡住等重传。
+
+TCP 和 UDP 各有一套端口：放行了 TCP 3478，UDP 3478 依然进不来。
+
+## 防火墙：只开必要的门
+
+服务器上的**防火墙**按规则决定哪些连接能进来。安全的做法是：默认全部拦截，只放行必要的，并尽量**限定来源**，比如 SSH 只允许公司的地址段登录。
+
+<MiniCheck
+  id="refused-vs-timeout"
+  question="连接服务器的某个端口，立刻收到“连接被拒绝”。最可能是什么情况？"
+  options={["防火墙把连接拦下了", "路是通的，但这个端口上没有程序在监听", "服务器关机了"]}
+  answer={1}
+  explanation="被防火墙拦下或服务器不在线，通常表现为毫无回应、最后超时；“拒绝”是服务器主动回的，说明路通、端口没人听。"
+/>
+
+## 动手：服务器的防火墙
+
+<SimulationBlock blockId="firewall-lab" />
+
+<KnowledgeCheck blockId="transport-check" />
