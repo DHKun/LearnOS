@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "slug": "computer-foundations",
+  "title": "计算机基础入门",
+  "description": "从零开始，自下而上地理解一台联网的计算机：里面装的是什么，两台电脑怎么找到对方，网站之间怎么对话，以及怎样用命令行和 Git 动手干活。所有实验都在浏览器里完成，不需要安装任何软件。",
+  "level": "入门",
+  "courses": [
+    { "course": "bits-and-bytes", "summary": "计算机里装的是什么：字节、编码、颜色、图片和文件。" },
+    { "course": "networking-basics", "title": "网络基础：数据包怎么到达", "summary": "两台电脑怎么找到对方：IP、子网、路由、DNS、TCP 与端口。" },
+    { "course": "http-hands-on", "summary": "网站之间怎么对话：读懂并修好每一次 HTTP 请求。" },
+    { "course": "command-line", "title": "命令行与文件系统", "summary": "不用图形界面也能操作电脑：路径、权限、管道和进程。" },
+    { "course": "git-basics", "title": "Git 版本控制", "summary": "记录每一次修改，和别人协作而不互相覆盖。" }
+  ]
+}

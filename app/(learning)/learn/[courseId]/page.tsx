@@ -18,6 +18,7 @@ import { requireStudent } from "@/lib/auth/session";
 import { loadCourse, readArticleSource } from "@/lib/content/loader";
 import { extractHeadings, type LessonHeading } from "@/lib/content/headings";
 import { getCourseDetailById } from "@/lib/services/courses";
+import { getCoursePathContext } from "@/lib/services/paths";
 import { getBlockResults } from "@/lib/services/blocks";
 import { resolveChapterBlocks } from "@/lib/content/blocks";
 import { getStateForEnrollment } from "@/lib/services/learning";
@@ -71,6 +72,10 @@ export default async function LearnPage({
     requested ?? currentFromEnrollment ?? firstIncomplete ?? lessons[0];
 
   const readOnly = enrollment.status === "completed";
+  // Only a finished course needs to know what comes next on its path.
+  const nextOnPath = readOnly
+    ? ((await getCoursePathContext(student.id, course.slug)).find((context) => context.next)?.next ?? null)
+    : null;
   const abandoned = enrollment.status === "abandoned";
   const completedCurrent = myLessonProgress[current.id]?.status === "completed";
   const currentIndex = lessons.findIndex((lesson) => lesson.id === current.id);
@@ -154,6 +159,7 @@ export default async function LearnPage({
             lessons={navLessons}
             currentLessonId={current.id}
             courseCompleted={enrollment.status === "completed"}
+            nextOnPath={nextOnPath}
           />
         )
       }

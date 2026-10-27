@@ -623,3 +623,10 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `tests/unit/bits-and-bytes.test.ts`（字节机与 11 个校验器，15 项）；`tests/e2e/bits-and-bytes.spec.ts`（13 章真实界面闭环，结课 180 分）。
 - [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正奇偶校验方阵直接圈出答案、十六进制转储受 prose 表格样式影响、图片实验超限仍显示“没有问题”三处问题。
 - [x] 本地验证（临时 PostgreSQL）：`pnpm test` 160 通过；E2E（不含 FloatCTF）23 通过；`pnpm build`、`pnpm typecheck`、`pnpm security:scan` 通过；`pnpm lint` 仅有原有的 3 个问题。
+
+## 25. 学习路线（2026-10-27）
+
+- [x] `content/paths/<slug>/path.json` 定义路线；`lib/content/paths.ts` 校验与加载；`pnpm courses:validate` 一并校验（D54）。
+- [x] 课程目录页的路线卡片（已完成 / 进行中 / 已暂停 / 可参加 / 即将上线）、课程详情页的路线位置与下一门、结课后的“路线下一门”按钮。
+- [x] 第一条路线《计算机基础入门》，5 门课中 2 门已上线。
+- [x] 单元测试 `tests/unit/learning-paths.test.ts`；E2E `tests/e2e/learning-paths.spec.ts`（展示 → 学完第一门 → 推荐下一门）。
