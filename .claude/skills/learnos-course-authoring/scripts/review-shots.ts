@@ -11,8 +11,8 @@
  * The student is enrolled in the course if not already; an active enrollment
  * in another course makes the script stop rather than abandon it.
  *
- * Output per chapter, width and theme: a full-page PNG plus one PNG per
- * concept animation and simulation lab of the course.
+ * Output per chapter, width and theme: a full-page PNG, one PNG per
+ * simulation lab, and two per concept animation (first and last step).
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -124,7 +124,16 @@ async function main() {
             const block = blocks.nth(index);
             const id =
               (await block.getAttribute("data-concept-id")) ?? (await block.getAttribute("data-testid")) ?? `block-${index}`;
-            await block.screenshot({ path: path.join(out, `${name}--${id.replace(/[^a-z0-9-]+/gi, "_")}.png`) });
+            const file = `${name}--${id.replace(/[^a-z0-9-]+/gi, "_")}`;
+            await block.screenshot({ path: path.join(out, `${file}.png`) });
+            // Concept animations show most of their content in later steps:
+            // step to the end and capture that too.
+            if (await block.getAttribute("data-concept-id")) {
+              const next = block.getByRole("button", { name: "下一步" });
+              for (let step = 0; step < 12 && (await next.isEnabled()); step += 1) await next.click();
+              await page.waitForTimeout(800);
+              await block.screenshot({ path: path.join(out, `${file}--last.png`) });
+            }
           }
         }
       }

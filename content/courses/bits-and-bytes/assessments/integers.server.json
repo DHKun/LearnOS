@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "i1",
+      "prompt": "一个 int8 变量存着 127，再加 1，结果是多少？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "128"
+        },
+        {
+          "id": "b",
+          "label": "0"
+        },
+        {
+          "id": "c",
+          "label": "-128"
+        },
+        {
+          "id": "d",
+          "label": "报错"
+        }
+      ],
+      "answer": "c",
+      "explanation": "int8 最大 127，加 1 回绕到最小值 -128，不会报错。"
+    },
+    {
+      "id": "i2",
+      "prompt": "要存一个班级的学生人数（不超过 60 人），最省空间又不会出错的类型是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "uint8"
+        },
+        {
+          "id": "b",
+          "label": "int32"
+        },
+        {
+          "id": "c",
+          "label": "float"
+        },
+        {
+          "id": "d",
+          "label": "uint64"
+        }
+      ],
+      "answer": "a",
+      "explanation": "uint8 能存 0～255，一个字节就够了。"
+    },
+    {
+      "id": "i3",
+      "prompt": "一个温度传感器读数范围是 -40～125 ℃（整数），下面哪个类型合适？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "uint8"
+        },
+        {
+          "id": "b",
+          "label": "int8"
+        },
+        {
+          "id": "c",
+          "label": "uint16"
+        },
+        {
+          "id": "d",
+          "label": "int8 和 uint16 都不行"
+        }
+      ],
+      "answer": "b",
+      "explanation": "int8 的范围是 -128～127，正好覆盖 -40～125；uint8 存不了负数。"
+    },
+    {
+      "id": "i4",
+      "prompt": "整数溢出时，程序一定会报错提醒你。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "大多数语言里定宽整数溢出会悄悄回绕，不会报错，这正是它危险的地方。"
+    }
+  ]
+}

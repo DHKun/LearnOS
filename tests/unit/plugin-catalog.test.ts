@@ -8,6 +8,17 @@ import { ACTIVITY_IDS, CONCEPT_IDS } from "@/lib/generated/course-catalog";
 describe("课程插件自动注册", () => {
   it("生成目录包含所有已安装课程的概念与活动", () => {
     expect([...CONCEPT_IDS].sort()).toEqual([
+      "bits-and-bytes/codebook",
+      "bits-and-bytes/color",
+      "bits-and-bytes/compression",
+      "bits-and-bytes/endian",
+      "bits-and-bytes/float",
+      "bits-and-bytes/hex",
+      "bits-and-bytes/overflow",
+      "bits-and-bytes/parity",
+      "bits-and-bytes/signature",
+      "bits-and-bytes/switches",
+      "bits-and-bytes/utf8",
       "http-hands-on/auth",
       "http-hands-on/cache",
       "http-hands-on/cookie",
@@ -20,6 +31,17 @@ describe("课程插件自动注册", () => {
       "http-hands-on/url",
     ]);
     expect([...ACTIVITY_IDS].sort()).toEqual([
+      "bits-and-bytes/color-lab",
+      "bits-and-bytes/header-lab",
+      "bits-and-bytes/image-lab",
+      "bits-and-bytes/int-lab",
+      "bits-and-bytes/led-lab",
+      "bits-and-bytes/mojibake-lab",
+      "bits-and-bytes/money-lab",
+      "bits-and-bytes/parity-lab",
+      "bits-and-bytes/repair-lab",
+      "bits-and-bytes/size-lab",
+      "bits-and-bytes/utf8-lab",
       "http-hands-on/cache-lab",
       "http-hands-on/cookie-lab",
       "http-hands-on/diagnosis-lab",
@@ -38,6 +60,7 @@ describe("课程插件自动注册", () => {
       "utf8",
     );
     expect(generated).toContain("content/courses/http-hands-on/");
+    expect(generated).toContain("content/courses/bits-and-bytes/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

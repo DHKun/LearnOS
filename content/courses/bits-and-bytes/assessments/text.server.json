@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "t1",
+      "prompt": "按 UTF-8 编码，“A你😀”一共占多少个字节？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "3"
+        },
+        {
+          "id": "b",
+          "label": "6"
+        },
+        {
+          "id": "c",
+          "label": "8"
+        },
+        {
+          "id": "d",
+          "label": "9"
+        }
+      ],
+      "answer": "c",
+      "explanation": "A 1 个字节，你 3 个，😀 4 个，共 8 个。"
+    },
+    {
+      "id": "t2",
+      "prompt": "UTF-8 文本里出现字节 9F，可以断定它是什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "一个英文字符"
+        },
+        {
+          "id": "b",
+          "label": "某个多字节字符的后续字节"
+        },
+        {
+          "id": "c",
+          "label": "一个 2 字节字符的开头"
+        },
+        {
+          "id": "d",
+          "label": "一个表情符号的开头"
+        }
+      ],
+      "answer": "b",
+      "explanation": "9F = 10011111，以 10 开头，是后续字节，不能单独成为字符。"
+    },
+    {
+      "id": "t3",
+      "prompt": "数据库字段限制“最多 30 个字节”，要存 15 个常用汉字的名字（UTF-8），会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "正好存下"
+        },
+        {
+          "id": "b",
+          "label": "存不下，需要 45 个字节"
+        },
+        {
+          "id": "c",
+          "label": "存不下，需要 60 个字节"
+        },
+        {
+          "id": "d",
+          "label": "汉字不占字节"
+        }
+      ],
+      "answer": "b",
+      "explanation": "常用汉字在 UTF-8 中各占 3 个字节，15 × 3 = 45。"
+    },
+    {
+      "id": "t4",
+      "prompt": "Unicode 码点和 UTF-8 是同一回事。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "码点是字符的编号；UTF-8 是把码点存成字节的一种方法，还有 UTF-16 等其他方法。"
+    }
+  ]
+}

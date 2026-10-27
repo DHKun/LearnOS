@@ -1,0 +1,491 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "8 个比特能表示多少种不同的状态？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "8"
+        },
+        {
+          "id": "b",
+          "label": "64"
+        },
+        {
+          "id": "c",
+          "label": "256"
+        },
+        {
+          "id": "d",
+          "label": "512"
+        }
+      ],
+      "answer": "c",
+      "explanation": "2⁸ = 256。"
+    },
+    {
+      "id": "q2",
+      "prompt": "0x2A 换成十进制是多少？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "42"
+        },
+        {
+          "id": "b",
+          "label": "210"
+        },
+        {
+          "id": "c",
+          "label": "26"
+        },
+        {
+          "id": "d",
+          "label": "32"
+        }
+      ],
+      "answer": "a",
+      "explanation": "2 × 16 + 10 = 42。"
+    },
+    {
+      "id": "q3",
+      "prompt": "把一个字节中“第 3 位”置 1 而不影响其他位，相当于什么操作？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把这个字节清零"
+        },
+        {
+          "id": "b",
+          "label": "和对应那一位为 1 的数按位“或”"
+        },
+        {
+          "id": "c",
+          "label": "把这个字节加 1"
+        },
+        {
+          "id": "d",
+          "label": "把这个字节取反"
+        }
+      ],
+      "answer": "b",
+      "explanation": "按位或（OR）只会把对应位变成 1，其他位保持不变。"
+    },
+    {
+      "id": "q4",
+      "prompt": "标称 2 TB 的硬盘，系统按 1024³ 换算后大约显示多少？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "约 2048 GB"
+        },
+        {
+          "id": "b",
+          "label": "约 1863 GB"
+        },
+        {
+          "id": "c",
+          "label": "约 2000 GB"
+        },
+        {
+          "id": "d",
+          "label": "约 1950 GB"
+        }
+      ],
+      "answer": "b",
+      "explanation": "2 × 10¹² ÷ 1024³ ≈ 1862.6。"
+    },
+    {
+      "id": "q5",
+      "prompt": "接收方把大端序的 01 00 读成了 1，它用的是什么字节序？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "大端序"
+        },
+        {
+          "id": "b",
+          "label": "小端序"
+        },
+        {
+          "id": "c",
+          "label": "无法判断"
+        },
+        {
+          "id": "d",
+          "label": "和字节序无关"
+        }
+      ],
+      "answer": "b",
+      "explanation": "01 00 按大端是 256；按小端（低位在前）是 0x0001 = 1。"
+    },
+    {
+      "id": "q6",
+      "prompt": "一个 uint16 计数器存着 65535，再加 1 会变成多少？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "65536"
+        },
+        {
+          "id": "b",
+          "label": "0"
+        },
+        {
+          "id": "c",
+          "label": "-1"
+        },
+        {
+          "id": "d",
+          "label": "-65536"
+        }
+      ],
+      "answer": "b",
+      "explanation": "uint16 上限 65535，加 1 回绕到 0。"
+    },
+    {
+      "id": "q7",
+      "prompt": "下面哪个字段最适合用有符号整数？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "用户编号"
+        },
+        {
+          "id": "b",
+          "label": "账户余额的变动（有收入也有支出）"
+        },
+        {
+          "id": "c",
+          "label": "文件大小"
+        },
+        {
+          "id": "d",
+          "label": "年龄"
+        }
+      ],
+      "answer": "b",
+      "explanation": "变动值有正有负，必须用有符号类型。"
+    },
+    {
+      "id": "q8",
+      "prompt": "某语言里 0.1 + 0.2 == 0.3 的结果是 false，原因是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "语言有 bug"
+        },
+        {
+          "id": "b",
+          "label": "0.1 和 0.2 在二进制浮点数中只能存近似值"
+        },
+        {
+          "id": "c",
+          "label": "需要先转成字符串"
+        },
+        {
+          "id": "d",
+          "label": "CPU 计算错误"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这两个十进制小数在二进制里是无限循环小数，只能存近似值。"
+    },
+    {
+      "id": "q9",
+      "prompt": "处理金额时，下面哪些做法是对的？",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "用以分为单位的整数存储"
+        },
+        {
+          "id": "b",
+          "label": "在每一笔扣款时按规定舍入到分"
+        },
+        {
+          "id": "c",
+          "label": "直接用浮点数比较余额是否足够"
+        },
+        {
+          "id": "d",
+          "label": "只在显示时格式化成两位小数"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": "用整数存最小单位、逐笔舍入、只在显示时格式化；浮点数比较会出错。"
+    },
+    {
+      "id": "q10",
+      "prompt": "按 UTF-8 编码，“Hello世界”占多少个字节？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "7"
+        },
+        {
+          "id": "b",
+          "label": "9"
+        },
+        {
+          "id": "c",
+          "label": "11"
+        },
+        {
+          "id": "d",
+          "label": "14"
+        }
+      ],
+      "answer": "c",
+      "explanation": "5 个英文字母各 1 字节，2 个汉字各 3 字节：5 + 6 = 11。"
+    },
+    {
+      "id": "q11",
+      "prompt": "一条推送标题按字节截断后，最后显示成“你�”。原因是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "服务器不支持中文"
+        },
+        {
+          "id": "b",
+          "label": "截断切坏了一个多字节字符"
+        },
+        {
+          "id": "c",
+          "label": "用了 GBK 编码"
+        },
+        {
+          "id": "d",
+          "label": "网络丢包"
+        }
+      ],
+      "answer": "b",
+      "explanation": "UTF-8 汉字占 3 个字节，只保留了其中一部分，解码时就成了替换符。"
+    },
+    {
+      "id": "q12",
+      "prompt": "文本显示成“浣犲ソ”，最可能的原因是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "UTF-8 的字节被当成 GBK 读"
+        },
+        {
+          "id": "b",
+          "label": "GBK 的字节被当成 UTF-8 读"
+        },
+        {
+          "id": "c",
+          "label": "文件被截断"
+        },
+        {
+          "id": "d",
+          "label": "原文已经丢失"
+        }
+      ],
+      "answer": "a",
+      "explanation": "这是 UTF-8 编码的“你好”被当成 GBK 解码的典型样子，换成 UTF-8 读即可恢复。"
+    },
+    {
+      "id": "q13",
+      "prompt": "下面哪种乱码的原文已经无法恢复？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "浣犲ソ"
+        },
+        {
+          "id": "b",
+          "label": "cafÃ©"
+        },
+        {
+          "id": "c",
+          "label": "锟斤拷"
+        },
+        {
+          "id": "d",
+          "label": "一串 �，但原文件尚未被另存"
+        }
+      ],
+      "answer": "c",
+      "explanation": "“锟斤拷”说明原文早已被替换成 EF BF BD，原始字节不在了。"
+    },
+    {
+      "id": "q14",
+      "prompt": "#00FF00 是什么颜色？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "纯红"
+        },
+        {
+          "id": "b",
+          "label": "纯绿"
+        },
+        {
+          "id": "c",
+          "label": "纯蓝"
+        },
+        {
+          "id": "d",
+          "label": "白色"
+        }
+      ],
+      "answer": "b",
+      "explanation": "R=00、G=FF、B=00，只有绿色通道全亮。"
+    },
+    {
+      "id": "q15",
+      "prompt": "同样数值的红、绿、蓝光，人眼觉得哪种最亮？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "红"
+        },
+        {
+          "id": "b",
+          "label": "绿"
+        },
+        {
+          "id": "c",
+          "label": "蓝"
+        },
+        {
+          "id": "d",
+          "label": "一样亮"
+        }
+      ],
+      "answer": "b",
+      "explanation": "人眼对绿光最敏感，亮度计算中绿色权重约 71.5%。"
+    },
+    {
+      "id": "q16",
+      "prompt": "一个按钮颜色在白底上对比度只有 3.2:1，最合理的修改是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "保持色相，把颜色调深"
+        },
+        {
+          "id": "b",
+          "label": "换成另一种色相的亮色"
+        },
+        {
+          "id": "c",
+          "label": "把字号调小"
+        },
+        {
+          "id": "d",
+          "label": "加粗边框"
+        }
+      ],
+      "answer": "a",
+      "explanation": "在白底上提高对比度，要让颜色更暗；保持色相能保留品牌感。"
+    },
+    {
+      "id": "q17",
+      "prompt": "一张带柔和阴影的透明图标，用 GIF 保存会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "完全正常"
+        },
+        {
+          "id": "b",
+          "label": "阴影边缘出现锯齿，因为 GIF 只有全透明和不透明两档"
+        },
+        {
+          "id": "c",
+          "label": "背景变成白色"
+        },
+        {
+          "id": "d",
+          "label": "体积变大十倍"
+        }
+      ],
+      "answer": "b",
+      "explanation": "GIF 不支持半透明，柔和的过渡会变成锯齿。"
+    },
+    {
+      "id": "q18",
+      "prompt": "一个文件叫 report.docx，开头是 25 50 44 46。它实际是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "Word 文档"
+        },
+        {
+          "id": "b",
+          "label": "PDF 文档"
+        },
+        {
+          "id": "c",
+          "label": "ZIP 压缩包"
+        },
+        {
+          "id": "d",
+          "label": "图片"
+        }
+      ],
+      "answer": "b",
+      "explanation": "25 50 44 46 是 ASCII 的“%PDF”，扩展名写错了。"
+    },
+    {
+      "id": "q19",
+      "prompt": "PNG 文件开头的 8 个字节被抹成了 00，图片数据都还在。最直接的修复办法是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "改扩展名"
+        },
+        {
+          "id": "b",
+          "label": "把开头 8 个字节改回 89 50 4E 47 0D 0A 1A 0A"
+        },
+        {
+          "id": "c",
+          "label": "重新压缩"
+        },
+        {
+          "id": "d",
+          "label": "无法修复"
+        }
+      ],
+      "answer": "b",
+      "explanation": "只是签名坏了，按格式写回正确的签名即可。"
+    },
+    {
+      "id": "q20",
+      "prompt": "二维奇偶校验能够定位并纠正任意两个比特的错误。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "两位出错时，对不上的行和列的交叉点有 4 个，无法确定是哪两个，只能发现、不能纠正。"
+    }
+  ]
+}

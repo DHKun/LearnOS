@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "一个文件开头是 50 4B 03 04，扩展名是 .xlsx。它最可能是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "一个损坏的表格"
+        },
+        {
+          "id": "b",
+          "label": "一个正常的 Excel 文件（本质是 ZIP 包）"
+        },
+        {
+          "id": "c",
+          "label": "一个 PDF"
+        },
+        {
+          "id": "d",
+          "label": "一个病毒"
+        }
+      ],
+      "answer": "b",
+      "explanation": "xlsx、docx 都是 ZIP 格式的压缩包，开头就是 PK（50 4B）。"
+    },
+    {
+      "id": "f2",
+      "prompt": "PNG 文件头里的宽度字段是 00 00 01 F4，图片宽多少像素？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "500"
+        },
+        {
+          "id": "b",
+          "label": "244"
+        },
+        {
+          "id": "c",
+          "label": "62465"
+        },
+        {
+          "id": "d",
+          "label": "1244"
+        }
+      ],
+      "answer": "a",
+      "explanation": "宽度是 4 字节大端整数：0x000001F4 = 500。"
+    },
+    {
+      "id": "f3",
+      "prompt": "CSV 用某个软件打开后，第一列标题前多了“ï»¿”。原因是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "文件损坏"
+        },
+        {
+          "id": "b",
+          "label": "文件开头有 UTF-8 BOM（EF BB BF），软件把它当成了字符"
+        },
+        {
+          "id": "c",
+          "label": "CSV 不支持中文"
+        },
+        {
+          "id": "d",
+          "label": "文件是 GBK 编码"
+        }
+      ],
+      "answer": "b",
+      "explanation": "EF BB BF 按 Latin-1 读就是“ï»¿”。认识 BOM 的软件会跳过它。"
+    },
+    {
+      "id": "f4",
+      "prompt": "把 .exe 文件改名为 .pdf，它就变成了安全的文档。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "改名不会改变文件内容，开头仍是 4D 5A，双击后依然可能作为程序运行。"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "b1",
+      "prompt": "一个文件大小显示为 2 MB，它大约有多少个比特？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "约 200 万"
+        },
+        {
+          "id": "b",
+          "label": "约 1600 万"
+        },
+        {
+          "id": "c",
+          "label": "约 25 万"
+        },
+        {
+          "id": "d",
+          "label": "约 2000 万"
+        }
+      ],
+      "answer": "b",
+      "explanation": "1 字节 = 8 比特，2 MB ≈ 200 万字节 ≈ 1600 万比特。"
+    },
+    {
+      "id": "b2",
+      "prompt": "300 Mbps 的宽带，理想情况下下载一个 375 MB 的文件需要多久？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "约 1.25 秒"
+        },
+        {
+          "id": "b",
+          "label": "约 10 秒"
+        },
+        {
+          "id": "c",
+          "label": "约 80 秒"
+        },
+        {
+          "id": "d",
+          "label": "约 0.8 秒"
+        }
+      ],
+      "answer": "b",
+      "explanation": "300 Mbps ÷ 8 = 37.5 MB/s，375 ÷ 37.5 = 10 秒。"
+    },
+    {
+      "id": "b3",
+      "prompt": "两个字节 00 FF，按大端序读成一个 16 位无符号整数是多少？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "255"
+        },
+        {
+          "id": "b",
+          "label": "65280"
+        },
+        {
+          "id": "c",
+          "label": "65535"
+        },
+        {
+          "id": "d",
+          "label": "15"
+        }
+      ],
+      "answer": "a",
+      "explanation": "大端序高位在前：0x00FF = 255。按小端读则是 0xFF00 = 65280。"
+    },
+    {
+      "id": "b4",
+      "prompt": "单个字节（比如 0x41）也存在大端、小端的区别。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "字节序只影响由多个字节组成的数，一个字节内部的位顺序是固定的。"
+    }
+  ]
+}

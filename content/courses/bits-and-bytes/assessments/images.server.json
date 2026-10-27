@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "m1",
+      "prompt": "一张 1000×1000、不带透明通道的图片，未压缩大约多大？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "约 1 MB"
+        },
+        {
+          "id": "b",
+          "label": "约 3 MB"
+        },
+        {
+          "id": "c",
+          "label": "约 4 MB"
+        },
+        {
+          "id": "d",
+          "label": "约 300 KB"
+        }
+      ],
+      "answer": "b",
+      "explanation": "1000 × 1000 × 3 字节 = 300 万字节 ≈ 3 MB。"
+    },
+    {
+      "id": "m2",
+      "prompt": "公司 Logo 需要放在各种颜色的背景上，最合适的格式是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "JPEG"
+        },
+        {
+          "id": "b",
+          "label": "带透明通道的 PNG"
+        },
+        {
+          "id": "c",
+          "label": "GIF，质量调到最高"
+        },
+        {
+          "id": "d",
+          "label": "BMP"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Logo 是纯色块和文字，需要透明背景，PNG 无损且支持完整的透明度。"
+    },
+    {
+      "id": "m3",
+      "prompt": "一张照片在页面上只显示 600 像素宽，原图 2400 像素宽。最有效的减小体积的办法是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "改成 PNG"
+        },
+        {
+          "id": "b",
+          "label": "缩小到约 600～1200 像素宽"
+        },
+        {
+          "id": "c",
+          "label": "改成 GIF"
+        },
+        {
+          "id": "d",
+          "label": "什么都不做"
+        }
+      ],
+      "answer": "b",
+      "explanation": "宽高各缩小到 1/2，像素数就只剩 1/4；照片继续用 JPEG。"
+    },
+    {
+      "id": "m4",
+      "prompt": "把 JPEG 另存为 PNG，就能找回 JPEG 压缩时丢掉的细节。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "有损压缩丢掉的信息无法找回。另存为 PNG 只会无损地保存已经受损的图像，体积还会变大。"
+    }
+  ]
+}

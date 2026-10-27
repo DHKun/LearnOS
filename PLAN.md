@@ -616,3 +616,10 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 左侧目录每章一行，单元默认折叠并跟随当前章节，手动展开按课程记忆（D51）。
 - [x] 本章大纲并入目录、随滚动高亮；移除右侧大纲栏与正文上方折叠大纲。
 - [x] E2E：新增 `tests/e2e/learning-nav.spec.ts`；`learning-responsive`、`learning-flow`、`native-state` 适配；不含 FloatCTF 的 E2E 22 个通过。
+
+## 24. 第二门课程：`bits-and-bytes`（2026-10-27）
+
+- [x] 13 章、11 个概念动画、11 个服务端验证实验、40 道服务端题；`pnpm courses:validate` 通过。
+- [x] `tests/unit/bits-and-bytes.test.ts`（字节机与 11 个校验器，15 项）；`tests/e2e/bits-and-bytes.spec.ts`（13 章真实界面闭环，结课 180 分）。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正奇偶校验方阵直接圈出答案、十六进制转储受 prose 表格样式影响、图片实验超限仍显示“没有问题”三处问题。
+- [x] 本地验证（临时 PostgreSQL）：`pnpm test` 160 通过；E2E（不含 FloatCTF）23 通过；`pnpm build`、`pnpm typecheck`、`pnpm security:scan` 通过；`pnpm lint` 仅有原有的 3 个问题。
