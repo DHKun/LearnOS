@@ -37,6 +37,14 @@ const eslintConfig = [
       "@typescript-eslint/no-require-imports": "off",
     },
   },
+  {
+    // 保留作参考的 Supabase 时代 RLS 套件：整组 describe.skip，且早于当前
+    // pg 类型；文件级 @ts-nocheck 是有意保留的，不参与类型门禁。
+    files: ["tests/integration/rls.test.ts"],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
