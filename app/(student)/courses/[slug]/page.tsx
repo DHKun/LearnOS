@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CheckCircle2, Circle, FileText } from "lucide-react";
+import { ArrowRight, CheckCircle2, Circle, FileText, Route } from "lucide-react";
 
 import { AbandonCourseButton, JoinCourseButton } from "@/components/learning/actions";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { requireStudent } from "@/lib/auth/session";
 import { getCourseDetailBySlug } from "@/lib/services/courses";
+import { getCoursePathContext } from "@/lib/services/paths";
 export const metadata: Metadata = { title: "课程详情" };
 
 export default async function CourseDetailPage({
@@ -19,8 +20,12 @@ export default async function CourseDetailPage({
 }) {
   const student = await requireStudent();
   const { slug } = await params;
-  const detail = await getCourseDetailBySlug(slug, student.id);
+  const [detail, pathContext] = await Promise.all([
+    getCourseDetailBySlug(slug, student.id),
+    getCoursePathContext(student.id, slug),
+  ]);
   if (!detail) notFound();
+  const nextOnPath = pathContext.find((context) => context.next)?.next ?? null;
 
   const { course, lessons, myEnrollment, myLessonProgress } = detail;
   const isActive = myEnrollment?.status === "active";
@@ -48,6 +53,30 @@ export default async function CourseDetailPage({
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
             {course.description}
           </p>
+          {pathContext.map((context) => (
+            <p
+              key={context.path.slug}
+              data-testid="course-path-context"
+              className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
+            >
+              <Route className="size-4 text-primary" aria-hidden />
+              <span>
+                学习路线
+                <Link href={`/courses#path-${context.path.slug}`} className="mx-1 font-medium text-primary hover:underline">
+                  《{context.path.title}》
+                </Link>
+                第 {context.position} / {context.total} 门
+              </span>
+              {context.next && (
+                <span className="text-muted-foreground">
+                  · 下一门：
+                  <Link href={`/courses/${context.next.slug}`} className="text-foreground hover:underline">
+                    {context.next.title}
+                  </Link>
+                </span>
+              )}
+            </p>
+          ))}
           <p className="mt-6 text-xs text-muted-foreground">
             内容版本 <span className="font-mono">{course.contentVersion}</span>
           </p>
@@ -68,6 +97,13 @@ export default async function CourseDetailPage({
                   <Button asChild className="w-full">
                     <Link href={`/learn/${course.id}`}>
                       继续学习 <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                )}
+                {isCompleted && nextOnPath && (
+                  <Button asChild className="w-full">
+                    <Link href={`/courses/${nextOnPath.slug}`}>
+                      路线下一门：{nextOnPath.title} <ArrowRight className="size-4" />
                     </Link>
                   </Button>
                 )}

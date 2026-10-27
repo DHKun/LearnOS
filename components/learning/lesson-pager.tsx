@@ -10,12 +10,15 @@ export function LessonPager({
   lessons,
   currentLessonId,
   courseCompleted,
+  nextOnPath = null,
 }: {
   courseId: string;
   courseSlug: string;
   lessons: LessonSummary[];
   currentLessonId: string;
   courseCompleted: boolean;
+  /** The next course on the learning path, shown once this course is done. */
+  nextOnPath?: { slug: string; title: string } | null;
 }) {
   const index = lessons.findIndex((lesson) => lesson.id === currentLessonId);
   const previous = index > 0 ? lessons[index - 1] : null;
@@ -48,6 +51,13 @@ export function LessonPager({
             <Button asChild variant="outline" size="sm">
               <Link href={`/courses/${courseSlug}`}>返回课程</Link>
             </Button>
+            {nextOnPath && (
+              <Button asChild size="sm">
+                <Link href={`/courses/${nextOnPath.slug}`}>
+                  路线下一门：{nextOnPath.title} <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            )}
           </div>
         ) : (
           <Button asChild variant="outline" size="sm">

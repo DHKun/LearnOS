@@ -326,3 +326,27 @@ pnpm courses:sync --publish  # 显式发布（演示/种子）
 - 概念动画基础组件：`components/education/scene-kit.tsx`（`Node`、`Lane`、`MessageLines`、`Chip`、`Segmented`），只用主题 token，支持暗色与 reduced-motion。
 - 只属于某门课的组件（如 HTTP 课的请求工作台）留在该课程目录内，不要让一门课去 import 另一门课的文件。
 - 从设计到验证的完整流程、实验类型与已知的坑见 `.claude/skills/learnos-course-authoring/SKILL.md`；`content/courses/http-hands-on/` 是按该流程制作的完整样例。
+
+## 学习路线
+
+学习路线把几门课程按推荐顺序串起来，定义在 `content/paths/<slug>/path.json`：
+
+```json
+{
+  "schemaVersion": 1,
+  "slug": "computer-foundations",
+  "title": "计算机基础入门",
+  "description": "……",
+  "level": "入门",
+  "courses": [
+    { "course": "bits-and-bytes", "summary": "这一站解决什么问题，一句话。" },
+    { "course": "networking-basics", "title": "网络基础：数据包怎么到达", "summary": "……" }
+  ]
+}
+```
+
+- `courses` 的顺序就是推荐顺序。学生可以跳着学，平台不锁定，“同时只学一门课”的规则不变。
+- 还没有课程目录的条目必须写 `title`，页面上显示为“即将上线”；课程上线后可以删掉 `title`，以课程自己的标题为准。已存在但未发布的课程同样显示为“即将上线”。
+- 路线不存数据：学生在路线上的进度由报名记录推出（已完成几门、推荐下一门）。
+- `pnpm courses:validate` 同时校验路线：目录名与 slug 一致、课程不重复、未上线的条目有标题。
+- 新课程做好后，记得把它加进合适的路线，或者把路线里对应的“即将上线”条目换成正式课程。

@@ -54,7 +54,7 @@ description: 在 LearnOS 仓库里设计、编写、重做或评审一门课程�
 
 ## 3. 制作流程
 
-按顺序做，每一步都有可执行的检查。
+按顺序做，每一步都有可执行的检查。开工前先看 `content/paths/` 里这门课属于哪条路线、前后是哪几门课：前面讲过的不必重讲，可以直接引用。
 
 1. **章节表**（见 2），先给用户确认。
 2. **模拟引擎**：`simulation/` 下写纯函数，不做任何网络 I/O、不依赖 DOM，前端和校验器共用。输入一律严格解析，并设长度和数量上限。
@@ -65,7 +65,8 @@ description: 在 LearnOS 仓库里设计、编写、重做或评审一门课程�
 7. **`pnpm courses:validate`**，然后 `pnpm typecheck` 和 `pnpm lint`。
 8. **E2E 全课走通**：`tests/e2e/<slug>.spec.ts` 通过真实界面完成每一章，最后核对结课状态和积分（章节数 × 10 + 结业 50）。
 9. **截图人工检查**：用 `scripts/review-shots.ts` 截出每章在 1440px 和 390px、亮色和暗色下的样子，逐张看。清单见 `references/verification.md`。很多问题测试发现不了，只有看图才能发现。
-10. **文档**：课程目录下的 `README.md`（设计思路、章节表、判分说明）、`docs/decisions.md` 的决策记录、`PLAN.md`。
+10. **放进学习路线**：在 `content/paths/<slug>/path.json` 里加入这门课，或者把对应的“即将上线”条目换成正式课程（删掉 `title`）。课程在路线中的位置决定了学生学它之前已经会什么，设计章节时要以此为前提。
+11. **文档**：课程目录下的 `README.md`（设计思路、章节表、判分说明）、`docs/decisions.md` 的决策记录、`PLAN.md`。
 
 ## 4. 已知的坑
 

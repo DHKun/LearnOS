@@ -14,7 +14,8 @@
 8. 积分与完成
 9. 冻结规则与发布
 10. 主题与样式
-11. 常用命令
+11. 学习路线
+12. 常用命令
 
 ## 1. 课程目录结构
 
@@ -225,7 +226,11 @@ export function validateMyLab(input: unknown): Verdict {
 - 过渡动画加 `motion-safe:` 前缀。
 - 窄屏：多栏布局用 `grid-cols-1 sm:grid-cols-[…]`，宽表格包在 `overflow-x-auto` 里。
 
-## 11. 常用命令
+## 11. 学习路线
+
+路线定义在 `content/paths/<slug>/path.json`，字段和规则见 `docs/course-authoring.md` 的“学习路线”一节。要点：顺序即推荐顺序、不锁定；未上线的条目必须有 `title`；进度由报名记录推出，路线本身不存数据；`courses:validate` 会校验路线。
+
+## 12. 常用命令
 
 ```bash
 pnpm courses:validate        # manifest、MDX、Block、题库、插件注册
