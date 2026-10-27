@@ -2,3 +2,8 @@ allowBuilds:
   unrs-resolver: true
   # tsx depends on esbuild; pnpm 12 refuses installs with ignored build scripts.
   esbuild: true
+  # Optional drivers pulled in by drizzle-kit. We never use them, so their
+  # native build scripts are explicitly skipped; without this entry pnpm 12
+  # aborts installs with ERR_PNPM_IGNORED_BUILDS.
+  better-sqlite3: false
+  "@prisma/client": false
