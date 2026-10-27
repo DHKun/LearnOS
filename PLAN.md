@@ -645,3 +645,4 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 生产部署 0.1.5：部署前备份（`backup-20261027-release-015/`：数据库 dump、compose/env/Caddyfile、两个容器的 inspect、镜像清单）；`learnos-tools:0.1.5` 预检（`http-hands-on` 2 条记录结构兼容、两门新课程可安装）；`learnos-web:prod120-015` 与 `learnos-web:dev10-015` 构建完成后切换，`pnpm courses:sync --publish-new`。
 - [x] 部署后证据：`/api/health` 两侧 `version=0.1.5`、容器 `healthy`、无错误日志；数据库 3 门课程均为 `published`；Caddy 入口 `https://120.95.81.151:8080` 与 `https://10.66.66.7:8080` 返回 200；临时账号登录后 `/courses` 渲染《计算机基础入门》路线与三门课程，报名并打开 `bits-and-bytes` 学习页正常；验证账号与报名记录已删除（用户 4、enrollment 2 恢复原值）。
 - 未验证：真实 FloatCTF SSO 登录（生产无可用测试账号）；全量 E2E 套件未在生产环境运行（本地/CI 覆盖）。
+- [x] 生产管理员身份统一为 `sysadmin@learnos.local`（原 `admin@learnos.local` 改名并重置密码，旧会话全部失效；密码不入库明文、不写文档）。两个入口实测登录 200，`/admin/deployments`、`/admin/courses`、`/admin/students` 均 200。
