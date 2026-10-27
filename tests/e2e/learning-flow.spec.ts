@@ -54,6 +54,11 @@ test.describe("学生完整学习闭环（HTTP 实战）", () => {
       // 请求报文：真实浏览器内实验 + 服务端验证。
       const lessons = await getLessons(course.id);
       const requestLesson = lessons.find((lesson) => lesson.slug === "request")!;
+      // 第 3 章所在的「报文」单元默认收起，先展开。
+      await page
+        .getByRole("navigation", { name: "课程章节" })
+        .locator('li[data-unit="报文"] > button')
+        .click();
       await page.getByRole("link", { name: /请求：把要什么说清楚/ }).first().click();
       await expect(page.getByTestId("http-hands-on-request")).toBeVisible({
         timeout: 20_000,

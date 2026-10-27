@@ -610,3 +610,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 
 - 生产数据库仍有 `http-fundamentals` 课程行与学习记录。部署扫描会把它列为 `removed` 阻塞项。按 D44 流程：整库备份 → 删除该课程的 enrollments（级联进度、笔记、积分、Block）→ 删除 lessons 与 courses 行 → 以新快照重建部署基线。
 - 未验证：FloatCTF 真实 IdP 相关 E2E（需外部环境）。
+
+## 23. 学习页目录：单元折叠 + 内嵌本章大纲（2026-10-26）
+
+- [x] 左侧目录每章一行，单元默认折叠并跟随当前章节，手动展开按课程记忆（D51）。
+- [x] 本章大纲并入目录、随滚动高亮；移除右侧大纲栏与正文上方折叠大纲。
+- [x] E2E：新增 `tests/e2e/learning-nav.spec.ts`；`learning-responsive`、`learning-flow`、`native-state` 适配；不含 FloatCTF 的 E2E 22 个通过。

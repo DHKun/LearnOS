@@ -22,9 +22,7 @@ type Layout = {
   outer: Box | null;
   content: Box | null;
   nav: Box | null;
-  railAside: Box | null;
-  rail: Box | null;
-  inline: Box | null;
+  outline: Box | null;
   notes: Box | null;
 };
 
@@ -54,9 +52,7 @@ async function layout(page: Page): Promise<Layout> {
       outer: box("body main"),
       content: box("main main"),
       nav: box('aside[aria-label="课程目录"]'),
-      railAside: box('[data-testid="outline-rail-aside"]'),
-      rail: box('[data-testid="outline-rail"]'),
-      inline: box('[data-testid="outline-inline"]'),
+      outline: box('aside[aria-label="课程目录"] [data-testid="lesson-outline"]'),
       notes: box('[data-testid="notes-panel"]'),
     };
   });
@@ -88,7 +84,7 @@ async function closeNotes(page: Page): Promise<void> {
 }
 
 test.describe("学习页响应式宽度", () => {
-  test("390–1920px 宽度分配、按需三栏与抽屉", async ({ page }) => {
+  test("390–1920px 宽度分配、目录内嵌本章大纲与抽屉", async ({ page }) => {
     test.setTimeout(180_000);
     const student = await createTestStudent("responsive");
     const course = await getCourseBySlug("http-hands-on");
@@ -124,41 +120,26 @@ test.describe("学习页响应式宽度", () => {
       // <1024px: one column, directory only through the drawer.
       expect(mobile.nav?.display).toBe("none");
       expect(tablet.nav?.display).toBe("none");
-      expect(mobile.inline?.display).not.toBe("none");
-      expect(tablet.inline?.display).not.toBe("none");
       expect(mobile.content!.width).toBeGreaterThan(330);
       expect(tablet.content!.width).toBeGreaterThan(680);
 
-      // 1024–1535px: left directory + article, no right rail.
-      expect(desktop.nav?.display).not.toBe("none");
-      expect(desktop.nav!.width).toBeGreaterThanOrEqual(230);
-      expect(desktop.nav!.width).toBeLessThanOrEqual(250);
+      // ≥1024px: two columns. The chapter outline lives inside the directory,
+      // nested under the current chapter; there is no right rail.
+      for (const measuredAt of [desktop, wide, laptop, threeCol, fullHd]) {
+        expect(measuredAt.nav?.display).not.toBe("none");
+        expect(measuredAt.nav!.width).toBeGreaterThanOrEqual(262);
+        expect(measuredAt.nav!.width).toBeLessThanOrEqual(282);
+        expect(hidden(measuredAt.outline)).toBe(false);
+      }
       expect(desktop.content!.width).toBeGreaterThan(650);
-      expect(desktop.railAside?.display).toBe("none");
-      expect(desktop.inline?.display).not.toBe("none");
-
-      expect(laptop.railAside?.display).toBe("none");
-      expect(laptop.inline?.display).not.toBe("none");
-      expect(laptop.content!.width).toBeGreaterThan(1000);
+      expect(laptop.content!.width).toBeGreaterThan(1050);
 
       // Article grows with the window while the page stays two-column.
       expect(wide.content!.width).toBeGreaterThan(desktop.content!.width + 100);
       expect(laptop.content!.width).toBeGreaterThan(wide.content!.width + 100);
 
-      // ≥1536px: three columns, 200px outline rail, article still grows.
-      expect(threeCol.nav?.display).not.toBe("none");
-      expect(threeCol.railAside?.display).not.toBe("none");
-      expect(threeCol.rail!.width).toBeGreaterThanOrEqual(190);
-      expect(threeCol.rail!.width).toBeLessThanOrEqual(210);
-      expect(threeCol.inline?.display).toBe("none");
-      expect(threeCol.content!.width).toBeGreaterThan(950);
-
-      expect(fullHd.nav?.display).not.toBe("none");
-      expect(fullHd.railAside?.display).not.toBe("none");
-      expect(fullHd.rail!.width).toBeGreaterThanOrEqual(190);
-      expect(fullHd.rail!.width).toBeLessThanOrEqual(210);
-      expect(fullHd.inline?.display).toBe("none");
-      expect(fullHd.content!.width).toBeGreaterThan(1000);
+      expect(threeCol.content!.width).toBeGreaterThan(1150);
+      expect(fullHd.content!.width).toBeGreaterThan(1200);
       expect(fullHd.content!.width).toBeGreaterThan(threeCol.content!.width + 20);
 
       // Learning page has its own 1600px canvas; other pages keep max-w-7xl.
@@ -173,48 +154,43 @@ test.describe("学习页响应式宽度", () => {
       await page.waitForTimeout(200);
       const focus = await layout(page);
       expect(hidden(focus.nav)).toBe(true);
-      expect(hidden(focus.inline)).toBe(true);
-      expect(hidden(focus.railAside)).toBe(true);
+      expect(hidden(focus.outline)).toBe(true);
       expect(focus.content!.width).toBeGreaterThan(beforeFocus.content!.width + 150);
       expectNoPageOverflow(focus, "focus mode");
       await page.getByRole("button", { name: "退出专注" }).click();
       await expect(page.getByRole("button", { name: "专注模式" })).toBeVisible();
 
-      // Notes at 1024px: outline disappears and the left directory yields.
+      // Notes at 1024px: the left directory (and its outline) yields.
       await setViewport(page, 1024);
       await page.getByTestId("notes-toggle").click();
       await expect(page.getByTestId("notes-panel")).toBeVisible();
       await page.waitForTimeout(200);
       const notes1024 = await layout(page);
       expect(notes1024.notes!.width).toBeGreaterThan(330);
-      expect(hidden(notes1024.railAside)).toBe(true);
-      expect(hidden(notes1024.inline)).toBe(true);
       expect(hidden(notes1024.nav)).toBe(true);
       expect(notes1024.content!.width).toBeGreaterThan(520);
       expectNoPageOverflow(notes1024, "notes 1024");
       await closeNotes(page);
 
-      // Notes at 1440px: outline yields first; the directory keeps its place.
+      // Notes at 1440px: the directory and its outline keep their place.
       await setViewport(page, 1440);
       await page.getByTestId("notes-toggle").click();
       await expect(page.getByTestId("notes-panel")).toBeVisible();
       await page.waitForTimeout(200);
       const notes1440 = await layout(page);
       expect(hidden(notes1440.nav)).toBe(false);
-      expect(hidden(notes1440.railAside)).toBe(true);
-      expect(hidden(notes1440.inline)).toBe(true);
-      expect(notes1440.content!.width).toBeGreaterThan(700);
+      expect(hidden(notes1440.outline)).toBe(false);
+      expect(notes1440.content!.width).toBeGreaterThan(650);
       expectNoPageOverflow(notes1440, "notes 1440");
       await closeNotes(page);
 
-      // Notes at 1920px: rail is gone; article still has a healthy width.
+      // Notes at 1920px: article still has a healthy width.
       await setViewport(page, 1920);
       await page.getByTestId("notes-toggle").click();
       await expect(page.getByTestId("notes-panel")).toBeVisible();
       await page.waitForTimeout(200);
       const notes1920 = await layout(page);
       expect(hidden(notes1920.nav)).toBe(false);
-      expect(hidden(notes1920.railAside)).toBe(true);
       expect(notes1920.content!.width).toBeGreaterThan(850);
       expectNoPageOverflow(notes1920, "notes 1920");
       await closeNotes(page);

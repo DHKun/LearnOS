@@ -126,7 +126,6 @@ export default async function LearnPage({
   return (
     <LearningWorkspace
       lessonLabel={`${course.title} · 第 ${current.position + 1} / ${lessons.length} 章`}
-      outline={outline}
       nav={
         <LessonNav
           courseId={course.id}
@@ -135,6 +134,7 @@ export default async function LearnPage({
           currentLessonId={current.id}
           progress={enrollment.progress}
           lessonProgress={myLessonProgress}
+          outline={outline}
         />
       }
       notes={
