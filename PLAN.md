@@ -636,3 +636,12 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 11 章、9 个概念动画、9 个服务端验证实验、36 道服务端题；`pnpm courses:validate` 通过；加入《计算机基础入门》路线第 2 站。
 - [x] `tests/unit/networking-basics.test.ts`（网络模型与 9 个校验器，12 项）；`tests/e2e/networking-basics.spec.ts`（11 章真实界面闭环，结课 160 分）。
 - [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正重复提示、规则编辑器缺表头、综合任务实时对错提示三处问题。
+
+## 27. 0.1.5 合并与生产部署（2026-10-27）
+
+- [x] CI 修复：pnpm 12 的 `ERR_PNPM_IGNORED_BUILDS`（drizzle-kit 的可选驱动）在 `pnpm-workspace.yaml` 的 `allowBuilds` 中显式关闭；保留的 `tests/integration/rls.test.ts` 按文件豁免 `@typescript-eslint/ban-ts-comment`。两项修复各自在 main 上 CI 转绿。
+- [x] PR #4 / #5 / #6 / #7 / #8 全部合并：每个 PR 的 `verify` 为 pass 且 `mergeStateStatus=CLEAN` 后才合入；合并后 main CI 通过。
+- [x] 本地门禁（0.1.5 提交）：`pnpm lint`、`pnpm typecheck`、`pnpm test:unit`（146 通过）、`pnpm courses:validate`（3 门课程 + 1 条路线）、`pnpm build` 全部通过。
+- [x] 生产部署 0.1.5：部署前备份（`backup-20261027-release-015/`：数据库 dump、compose/env/Caddyfile、两个容器的 inspect、镜像清单）；`learnos-tools:0.1.5` 预检（`http-hands-on` 2 条记录结构兼容、两门新课程可安装）；`learnos-web:prod120-015` 与 `learnos-web:dev10-015` 构建完成后切换，`pnpm courses:sync --publish-new`。
+- [x] 部署后证据：`/api/health` 两侧 `version=0.1.5`、容器 `healthy`、无错误日志；数据库 3 门课程均为 `published`；Caddy 入口 `https://120.95.81.151:8080` 与 `https://10.66.66.7:8080` 返回 200；临时账号登录后 `/courses` 渲染《计算机基础入门》路线与三门课程，报名并打开 `bits-and-bytes` 学习页正常；验证账号与报名记录已删除（用户 4、enrollment 2 恢复原值）。
+- 未验证：真实 FloatCTF SSO 登录（生产无可用测试账号）；全量 E2E 套件未在生产环境运行（本地/CI 覆盖）。
