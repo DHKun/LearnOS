@@ -19,6 +19,15 @@ import { validateMethodLab as validator16 } from "../../content/courses/http-han
 import { validateRequestLab as validator17 } from "../../content/courses/http-hands-on/validators";
 import { validateResponseLab as validator18 } from "../../content/courses/http-hands-on/validators";
 import { validateUrlLab as validator19 } from "../../content/courses/http-hands-on/validators";
+import { validateArpLab as validator20 } from "../../content/courses/networking-basics/validators";
+import { validateDnsLab as validator21 } from "../../content/courses/networking-basics/validators";
+import { validateFirewallLab as validator22 } from "../../content/courses/networking-basics/validators";
+import { validateLaptopLab as validator23 } from "../../content/courses/networking-basics/validators";
+import { validateNatLab as validator24 } from "../../content/courses/networking-basics/validators";
+import { validateRouteLab as validator25 } from "../../content/courses/networking-basics/validators";
+import { validateSubnetLab as validator26 } from "../../content/courses/networking-basics/validators";
+import { validateTcpLab as validator27 } from "../../content/courses/networking-basics/validators";
+import { validateTraceLab as validator28 } from "../../content/courses/networking-basics/validators";
 
 export type ValidatorResult = { passed: boolean; feedback: Record<string, unknown> };
 export type LabValidator = (submission: unknown) => ValidatorResult;
@@ -44,6 +53,15 @@ const VALIDATORS: Record<string, LabValidator> = {
   "http-hands-on/request-lab": (submission) => validator17(submission),
   "http-hands-on/response-lab": (submission) => validator18(submission),
   "http-hands-on/url-lab": (submission) => validator19(submission),
+  "networking-basics/arp-lab": (submission) => validator20(submission),
+  "networking-basics/dns-lab": (submission) => validator21(submission),
+  "networking-basics/firewall-lab": (submission) => validator22(submission),
+  "networking-basics/laptop-lab": (submission) => validator23(submission),
+  "networking-basics/nat-lab": (submission) => validator24(submission),
+  "networking-basics/route-lab": (submission) => validator25(submission),
+  "networking-basics/subnet-lab": (submission) => validator26(submission),
+  "networking-basics/tcp-lab": (submission) => validator27(submission),
+  "networking-basics/trace-lab": (submission) => validator28(submission),
 };
 
 export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
@@ -67,6 +85,15 @@ export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
   "http-hands-on/request-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
   "http-hands-on/response-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
   "http-hands-on/url-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
+  "networking-basics/arp-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/dns-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/firewall-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/laptop-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/nat-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/route-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/subnet-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/tcp-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "networking-basics/trace-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
 };
 
 export function getValidator(id: string): LabValidator | undefined {

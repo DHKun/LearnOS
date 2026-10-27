@@ -1,0 +1,79 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "d1",
+      "prompt": "网站改了 A 记录，TTL 是 3600 秒。改完后最晚大约多久，所有人都能拿到新地址？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "立刻"
+        },
+        {
+          "id": "b",
+          "label": "约 1 小时"
+        },
+        {
+          "id": "c",
+          "label": "约 1 天"
+        },
+        {
+          "id": "d",
+          "label": "永远不会"
+        }
+      ],
+      "answer": "b",
+      "explanation": "缓存最多保存 TTL 规定的时间，3600 秒约 1 小时。"
+    },
+    {
+      "id": "d2",
+      "prompt": "只有一台电脑访问网站总是旧地址，nslookup 查到的却是新地址。最可能的原因？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "DNS 记录填错了"
+        },
+        {
+          "id": "b",
+          "label": "这台电脑的 hosts 文件写死了旧地址"
+        },
+        {
+          "id": "c",
+          "label": "网站服务器宕机"
+        }
+      ],
+      "answer": "b",
+      "explanation": "ping 和浏览器会先查 hosts 文件；nslookup 直接问 DNS 服务器，所以两者结果不同。"
+    },
+    {
+      "id": "d3",
+      "prompt": "nslookup 返回“Non-existent domain”，最先该检查什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "网线"
+        },
+        {
+          "id": "b",
+          "label": "域名有没有拼错"
+        },
+        {
+          "id": "c",
+          "label": "防火墙"
+        }
+      ],
+      "answer": "b",
+      "explanation": "权威服务器明确回答“没有这个名字”，最常见的原因是拼错。"
+    },
+    {
+      "id": "d4",
+      "prompt": "DNS 解析出了正确的地址，网页仍打不开，问题就一定还在 DNS。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "名字已经换成了正确的地址，后面的连接、端口、服务本身都可能出问题。"
+    }
+  ]
+}

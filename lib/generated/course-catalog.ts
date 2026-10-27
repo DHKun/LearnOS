@@ -21,6 +21,15 @@ export const CONCEPT_META = {
   "http-hands-on/retry": { title: "重试与幂等", analogy: "「再借一本」说两遍就是两本" },
   "http-hands-on/tls": { title: "HTTPS 与网络旁观者", analogy: "明信片与带防伪印章的保险袋" },
   "http-hands-on/url": { title: "URL 的哪些部分会到达服务器", analogy: "借阅单与夹在自己本子里的书签" },
+  "networking-basics/arp": { title: "ARP：从 IP 找到 MAC", analogy: "在小区群里问一声" },
+  "networking-basics/dns": { title: "DNS 解析", analogy: "打查号台" },
+  "networking-basics/nat": { title: "NAT 与端口转发", analogy: "公司前台的登记本" },
+  "networking-basics/packets": { title: "一张图片怎么来到你电脑上", analogy: "拆成包裹分别寄" },
+  "networking-basics/ports": { title: "端口与防火墙", analogy: "写字楼的门卫与房间号" },
+  "networking-basics/routing": { title: "最长前缀匹配", analogy: "分拣站的规则表" },
+  "networking-basics/subnet": { title: "子网掩码与网段", analogy: "同一个小区直接送" },
+  "networking-basics/tcp": { title: "TCP 的可靠传输", analogy: "“下一本请寄第几号”" },
+  "networking-basics/traceroute": { title: "traceroute 探路", analogy: "限定最多经过几站" },
 } as const;
 
 export type ConceptId = keyof typeof CONCEPT_META;
@@ -47,6 +56,15 @@ export const ACTIVITY_DEFINITIONS = {
   "http-hands-on/request-lab": { title: "找不到的图书详情", validatorId: "http-hands-on/request-lab" },
   "http-hands-on/response-lab": { title: "读懂五份响应", validatorId: "http-hands-on/response-lab" },
   "http-hands-on/url-lab": { title: "修好两条分享链接", validatorId: "http-hands-on/url-lab" },
+  "networking-basics/arp-lab": { title: "时好时坏的扫描仪", validatorId: "networking-basics/arp-lab" },
+  "networking-basics/dns-lab": { title: "搬家之后的 DNS", validatorId: "networking-basics/dns-lab" },
+  "networking-basics/firewall-lab": { title: "服务器的防火墙", validatorId: "networking-basics/firewall-lab" },
+  "networking-basics/laptop-lab": { title: "上不了网的新笔记本", validatorId: "networking-basics/laptop-lab" },
+  "networking-basics/nat-lab": { title: "重启后失效的端口转发", validatorId: "networking-basics/nat-lab" },
+  "networking-basics/route-lab": { title: "打不开的外网", validatorId: "networking-basics/route-lab" },
+  "networking-basics/subnet-lab": { title: "找不到的打印机", validatorId: "networking-basics/subnet-lab" },
+  "networking-basics/tcp-lab": { title: "丢了一个包的上传", validatorId: "networking-basics/tcp-lab" },
+  "networking-basics/trace-lab": { title: "断在哪一跳", validatorId: "networking-basics/trace-lab" },
 } as const;
 
 export type ActivityId = keyof typeof ACTIVITY_DEFINITIONS;

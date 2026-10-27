@@ -630,3 +630,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 课程目录页的路线卡片（已完成 / 进行中 / 已暂停 / 可参加 / 即将上线）、课程详情页的路线位置与下一门、结课后的“路线下一门”按钮。
 - [x] 第一条路线《计算机基础入门》，5 门课中 2 门已上线。
 - [x] 单元测试 `tests/unit/learning-paths.test.ts`；E2E `tests/e2e/learning-paths.spec.ts`（展示 → 学完第一门 → 推荐下一门）。
+
+## 26. 第三门课程：`networking-basics`（2026-10-27）
+
+- [x] 11 章、9 个概念动画、9 个服务端验证实验、36 道服务端题；`pnpm courses:validate` 通过；加入《计算机基础入门》路线第 2 站。
+- [x] `tests/unit/networking-basics.test.ts`（网络模型与 9 个校验器，12 项）；`tests/e2e/networking-basics.spec.ts`（11 章真实界面闭环，结课 160 分）。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正重复提示、规则编辑器缺表头、综合任务实时对错提示三处问题。

@@ -1,0 +1,75 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "n1",
+      "prompt": "家里的设备访问网站时，网站看到的来源地址是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "设备自己的 192.168.x.x"
+        },
+        {
+          "id": "b",
+          "label": "家里路由器的公网地址"
+        },
+        {
+          "id": "c",
+          "label": "运营商 DNS 的地址"
+        }
+      ],
+      "answer": "b",
+      "explanation": "NAT 把来源换成了路由器的公网地址。"
+    },
+    {
+      "id": "n2",
+      "prompt": "没配任何端口转发时，朋友从外面连你家公网地址的 8443 端口会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "连到路由器管理页面"
+        },
+        {
+          "id": "b",
+          "label": "被路由器丢弃，因为 NAT 表里没有对应记录"
+        },
+        {
+          "id": "c",
+          "label": "自动连到 NAS"
+        }
+      ],
+      "answer": "b",
+      "explanation": "外面主动发起的连接，路由器不知道该转给谁。"
+    },
+    {
+      "id": "n3",
+      "prompt": "端口转发昨天还好好的，路由器重启后就失效了。最可能的原因？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "公网地址变成了私有地址"
+        },
+        {
+          "id": "b",
+          "label": "目标设备通过 DHCP 拿到了新地址，转发规则指向了别处"
+        },
+        {
+          "id": "c",
+          "label": "端口转发只能用一天"
+        }
+      ],
+      "answer": "b",
+      "explanation": "给目标设备做 DHCP 地址保留，地址就不会变。"
+    },
+    {
+      "id": "n4",
+      "prompt": "DHCP 地址保留是按设备的 MAC 地址来认的。",
+      "type": "boolean",
+      "answer": true,
+      "explanation": "路由器根据 MAC 地址识别设备，每次都分给它同一个 IP。"
+    }
+  ]
+}

@@ -31,15 +31,16 @@ test.describe("学习路线", () => {
       await expect(pathCard.getByRole("heading", { name: "计算机基础入门" })).toBeVisible();
       await expect(pathCard.locator("[data-step]")).toHaveCount(5);
       await expect(pathCard.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "available");
-      await expect(pathCard.locator('[data-step="networking-basics"]')).toHaveAttribute("data-state", "upcoming");
-      await expect(pathCard.locator('[data-step="networking-basics"] a')).toHaveCount(0);
+      await expect(pathCard.locator('[data-step="networking-basics"]')).toHaveAttribute("data-state", "available");
+      await expect(pathCard.locator('[data-step="command-line"]')).toHaveAttribute("data-state", "upcoming");
+      await expect(pathCard.locator('[data-step="command-line"] a')).toHaveCount(0);
       await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 0 / 5 门");
       await expect(pathCard.getByRole("link", { name: /开始：0 和 1 的世界/ })).toBeVisible();
 
       // The course page knows where it sits on the path.
       await pathCard.getByRole("link", { name: /开始：0 和 1 的世界/ }).click();
       await expect(page.getByTestId("course-path-context")).toContainText("第 1 / 5 门");
-      await expect(page.getByTestId("course-path-context")).toContainText("下一门：HTTP 实战");
+      await expect(page.getByTestId("course-path-context")).toContainText("下一门：网络基础");
 
       // Finish the course: chapters through the service transaction, the final exam through the real API.
       await page.getByRole("button", { name: "参加课程" }).click();
@@ -63,15 +64,15 @@ test.describe("学习路线", () => {
 
       // The last chapter points to the next course on the path.
       await page.goto(`/learn/${first.id}?lesson=${finalLesson.id}`);
-      await page.getByRole("link", { name: /路线下一门：HTTP 实战/ }).click();
-      await expect(page).toHaveURL(/\/courses\/http-hands-on/);
-      await expect(page.getByTestId("course-path-context")).toContainText("第 3 / 5 门");
+      await page.getByRole("link", { name: /路线下一门：网络基础/ }).click();
+      await expect(page).toHaveURL(/\/courses\/networking-basics/);
+      await expect(page.getByTestId("course-path-context")).toContainText("第 2 / 5 门");
 
       // The catalog reflects the progress and recommends the next stop.
       await page.goto("/courses");
       await expect(pathCard.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "completed");
       await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 1 / 5 门");
-      await expect(pathCard.getByRole("link", { name: /开始：HTTP 实战/ })).toBeVisible();
+      await expect(pathCard.getByRole("link", { name: /开始：网络基础/ })).toBeVisible();
     } finally {
       await deleteTestStudent(student.id);
     }

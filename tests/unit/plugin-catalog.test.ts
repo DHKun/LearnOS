@@ -29,6 +29,15 @@ describe("课程插件自动注册", () => {
       "http-hands-on/retry",
       "http-hands-on/tls",
       "http-hands-on/url",
+      "networking-basics/arp",
+      "networking-basics/dns",
+      "networking-basics/nat",
+      "networking-basics/packets",
+      "networking-basics/ports",
+      "networking-basics/routing",
+      "networking-basics/subnet",
+      "networking-basics/tcp",
+      "networking-basics/traceroute",
     ]);
     expect([...ACTIVITY_IDS].sort()).toEqual([
       "bits-and-bytes/color-lab",
@@ -51,6 +60,15 @@ describe("课程插件自动注册", () => {
       "http-hands-on/request-lab",
       "http-hands-on/response-lab",
       "http-hands-on/url-lab",
+      "networking-basics/arp-lab",
+      "networking-basics/dns-lab",
+      "networking-basics/firewall-lab",
+      "networking-basics/laptop-lab",
+      "networking-basics/nat-lab",
+      "networking-basics/route-lab",
+      "networking-basics/subnet-lab",
+      "networking-basics/tcp-lab",
+      "networking-basics/trace-lab",
     ]);
   });
 
@@ -61,6 +79,7 @@ describe("课程插件自动注册", () => {
     );
     expect(generated).toContain("content/courses/http-hands-on/");
     expect(generated).toContain("content/courses/bits-and-bytes/");
+    expect(generated).toContain("content/courses/networking-basics/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });
