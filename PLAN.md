@@ -673,3 +673,10 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 生产部署：备份 `backup-20261028-release-016/`（数据库 dump、compose/env/Caddyfile、两个容器 inspect、镜像清单）→ `learnos-tools:0.1.6` 预检（两门已有学习记录的课程结构兼容、两门新课程可安装）→ 构建 `prod120-016` / `dev10-016` → 切换两侧 → `pnpm courses:sync --publish-new`。
 - [x] 部署后证据：两侧 `/api/health` 为 `version=0.1.6`、容器 `healthy`、无错误日志；数据库 5 门课程均 `published`；临时账号在公网入口实测 `/courses` 列出 5 门课与路线摘要、`/paths` 与 `/paths/computer-foundations` 均 200、未知路线 404；验证账号已删除（用户 5、enrollment 4 恢复原值）。
 - 未验证：真实 FloatCTF SSO 登录（生产无可用测试账号）；全量 E2E 套件未在生产环境运行。
+
+## 33. 通识课 `how-programs-run`（2026-10-29）
+
+- [x] 8 章、7 个概念动画、6 个服务端验证实验、36 道服务端题；插入《计算机基础入门》第 2 站（路线 6 门）；`pnpm courses:validate` 通过。
+- [x] `tests/unit/how-programs-run.test.ts`（格子机与 6 个校验器，10 项）；`tests/e2e/how-programs-run.spec.ts`（8 章真实界面闭环，结课 130 分）；路线、网络基础、命令行、Git 的 E2E 更新路线位置。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正第 3 章示例与实验答案过于接近、内存格子相邻区域同色两处问题。
+

@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "o1",
+      "prompt": "“进程”是什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "一个正在运行的程序"
+        },
+        {
+          "id": "b",
+          "label": "一个文件"
+        },
+        {
+          "id": "c",
+          "label": "CPU 的一个部件"
+        },
+        {
+          "id": "d",
+          "label": "一条指令"
+        }
+      ],
+      "answer": "a",
+      "explanation": "程序是文件，进程是它运行起来之后的样子。"
+    },
+    {
+      "id": "o2",
+      "prompt": "先来先服务调度下，一个长任务先到，后来的键盘输入会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "立刻被处理"
+        },
+        {
+          "id": "b",
+          "label": "要等长任务跑完才被处理"
+        },
+        {
+          "id": "c",
+          "label": "被丢弃"
+        },
+        {
+          "id": "d",
+          "label": "打断长任务"
+        }
+      ],
+      "answer": "b",
+      "explanation": "先来先服务不打断正在跑的任务。"
+    },
+    {
+      "id": "o3",
+      "prompt": "时间片设得太小，主要的问题是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "交互程序响应慢"
+        },
+        {
+          "id": "b",
+          "label": "上下文切换太多，开销占比变大"
+        },
+        {
+          "id": "c",
+          "label": "长任务永远不运行"
+        },
+        {
+          "id": "d",
+          "label": "CPU 过热"
+        }
+      ],
+      "answer": "b",
+      "explanation": "每次切换都有固定开销。"
+    },
+    {
+      "id": "o4",
+      "prompt": "上下文切换时，操作系统要保存什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "整块硬盘"
+        },
+        {
+          "id": "b",
+          "label": "被换下的进程的寄存器和 PC 等状态"
+        },
+        {
+          "id": "c",
+          "label": "所有进程的源代码"
+        },
+        {
+          "id": "d",
+          "label": "屏幕上的内容"
+        }
+      ],
+      "answer": "b",
+      "explanation": "下次轮到它时才能接着执行。"
+    }
+  ]
+}

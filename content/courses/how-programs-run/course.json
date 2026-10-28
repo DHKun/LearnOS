@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 3,
+  "slug": "how-programs-run",
+  "title": "程序是怎么跑起来的：CPU、内存与操作系统",
+  "description": "零基础的计算机组成课。整门课都在一台模拟的小计算机“格子机”上：你会单步跟踪一段结账程序，修好少加一个数的循环、写坏旁边数据的数组、跑飞了的函数，再让一段程序借缓存提速，最后替操作系统安排三个程序共用一个 CPU。格子机在浏览器里模拟，只认识自己的十几条指令，不执行任何真实代码。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "parts",
+        "component": "concepts/concepts.tsx",
+        "export": "PartsConcept",
+        "title": "CPU、内存与硬盘",
+        "analogy": "厨房"
+      },
+      {
+        "id": "cycle",
+        "component": "concepts/concepts.tsx",
+        "export": "CycleConcept",
+        "title": "取指、译码、执行",
+        "analogy": "照着菜谱做"
+      },
+      {
+        "id": "jump",
+        "component": "concepts/concepts.tsx",
+        "export": "JumpConcept",
+        "title": "比较、跳转与循环",
+        "analogy": "尝一下再决定"
+      },
+      {
+        "id": "memory",
+        "component": "concepts/concepts.tsx",
+        "export": "MemoryConcept",
+        "title": "地址、数组与越界",
+        "analogy": "储物架上的格子"
+      },
+      {
+        "id": "stack",
+        "component": "concepts/concepts.tsx",
+        "export": "StackConcept",
+        "title": "函数调用与栈",
+        "analogy": "一摞盘子"
+      },
+      {
+        "id": "cache",
+        "component": "concepts/concepts.tsx",
+        "export": "CacheConcept",
+        "title": "缓存",
+        "analogy": "手边的小台面"
+      },
+      {
+        "id": "schedule",
+        "component": "concepts/concepts.tsx",
+        "export": "ScheduleConcept",
+        "title": "调度",
+        "analogy": "一个厨师几桌客人"
+      }
+    ],
+    "activities": [
+      {
+        "id": "trace-lab",
+        "component": "activities/labs.tsx",
+        "export": "TraceLab",
+        "title": "算错的一笔账",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateTraceLab"
+        }
+      },
+      {
+        "id": "loop-lab",
+        "component": "activities/labs.tsx",
+        "export": "LoopLab",
+        "title": "少加了一个数的循环",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateLoopLab"
+        }
+      },
+      {
+        "id": "array-lab",
+        "component": "activities/labs.tsx",
+        "export": "ArrayLab",
+        "title": "多打了 10 行的成绩单",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateArrayLab"
+        }
+      },
+      {
+        "id": "stack-lab",
+        "component": "activities/labs.tsx",
+        "export": "StackLab",
+        "title": "跑飞了的函数",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateStackLab"
+        }
+      },
+      {
+        "id": "cache-lab",
+        "component": "activities/labs.tsx",
+        "export": "CacheLab",
+        "title": "结果对、但是太慢",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateCacheLab"
+        }
+      },
+      {
+        "id": "schedule-lab",
+        "component": "activities/labs.tsx",
+        "export": "ScheduleLab",
+        "title": "三个程序抢一个 CPU",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateScheduleLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "parts",
+      "title": "CPU、内存与硬盘",
+      "source": "lessons/01-parts.mdx",
+      "required": true,
+      "unit": "硬件"
+    },
+    {
+      "slug": "instructions",
+      "title": "一条指令怎么执行",
+      "source": "lessons/02-instructions.mdx",
+      "required": true,
+      "unit": "硬件",
+      "blocks": [
+        {
+          "id": "trace-lab",
+          "kind": "simulation",
+          "activityId": "how-programs-run/trace-lab",
+          "title": "算错的一笔账"
+        },
+        {
+          "id": "instruction-check",
+          "kind": "question",
+          "source": "assessments/instructions.server.json",
+          "title": "指令检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "trace-lab",
+          "instruction-check"
+        ]
+      }
+    },
+    {
+      "slug": "loops",
+      "title": "条件与循环",
+      "source": "lessons/03-loops.mdx",
+      "required": true,
+      "unit": "程序",
+      "blocks": [
+        {
+          "id": "loop-lab",
+          "kind": "simulation",
+          "activityId": "how-programs-run/loop-lab",
+          "title": "少加了一个数的循环"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "loop-lab"
+        ]
+      }
+    },
+    {
+      "slug": "memory",
+      "title": "内存与地址",
+      "source": "lessons/04-memory.mdx",
+      "required": true,
+      "unit": "程序",
+      "blocks": [
+        {
+          "id": "array-lab",
+          "kind": "simulation",
+          "activityId": "how-programs-run/array-lab",
+          "title": "多打了 10 行的成绩单"
+        },
+        {
+          "id": "memory-check",
+          "kind": "question",
+          "source": "assessments/memory.server.json",
+          "title": "内存检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "array-lab",
+          "memory-check"
+        ]
+      }
+    },
+    {
+      "slug": "stack",
+      "title": "栈与函数调用",
+      "source": "lessons/05-stack.mdx",
+      "required": true,
+      "unit": "程序",
+      "blocks": [
+        {
+          "id": "stack-lab",
+          "kind": "simulation",
+          "activityId": "how-programs-run/stack-lab",
+          "title": "跑飞了的函数"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "stack-lab"
+        ]
+      }
+    },
+    {
+      "slug": "cache",
+      "title": "缓存为什么重要",
+      "source": "lessons/06-cache.mdx",
+      "required": true,
+      "unit": "系统",
+      "blocks": [
+        {
+          "id": "cache-lab",
+          "kind": "simulation",
+          "activityId": "how-programs-run/cache-lab",
+          "title": "结果对、但是太慢"
+        },
+        {
+          "id": "cache-check",
+          "kind": "question",
+          "source": "assessments/cache.server.json",
+          "title": "缓存检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "cache-lab",
+          "cache-check"
+        ]
+      }
+    },
+    {
+      "slug": "os",
+      "title": "操作系统与调度",
+      "source": "lessons/07-os.mdx",
+      "required": true,
+      "unit": "系统",
+      "blocks": [
+        {
+          "id": "schedule-lab",
+          "kind": "simulation",
+          "activityId": "how-programs-run/schedule-lab",
+          "title": "三个程序抢一个 CPU"
+        },
+        {
+          "id": "os-check",
+          "kind": "question",
+          "source": "assessments/os.server.json",
+          "title": "操作系统检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "schedule-lab",
+          "os-check"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/08-final.mdx",
+      "required": true,
+      "unit": "系统",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}

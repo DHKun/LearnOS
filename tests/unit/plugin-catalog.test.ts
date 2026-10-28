@@ -36,6 +36,13 @@ describe("课程插件自动注册", () => {
       "git-basics/revert",
       "git-basics/snapshot",
       "git-basics/undo",
+      "how-programs-run/cache",
+      "how-programs-run/cycle",
+      "how-programs-run/jump",
+      "how-programs-run/memory",
+      "how-programs-run/parts",
+      "how-programs-run/schedule",
+      "how-programs-run/stack",
       "http-hands-on/auth",
       "http-hands-on/cache",
       "http-hands-on/cookie",
@@ -83,6 +90,12 @@ describe("课程插件自动注册", () => {
       "git-basics/merge-lab",
       "git-basics/remote-lab",
       "git-basics/undo-lab",
+      "how-programs-run/array-lab",
+      "how-programs-run/cache-lab",
+      "how-programs-run/loop-lab",
+      "how-programs-run/schedule-lab",
+      "how-programs-run/stack-lab",
+      "how-programs-run/trace-lab",
       "http-hands-on/cache-lab",
       "http-hands-on/cookie-lab",
       "http-hands-on/diagnosis-lab",
@@ -114,6 +127,7 @@ describe("课程插件自动注册", () => {
     expect(generated).toContain("content/courses/networking-basics/");
     expect(generated).toContain("content/courses/command-line/");
     expect(generated).toContain("content/courses/git-basics/");
+    expect(generated).toContain("content/courses/how-programs-run/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

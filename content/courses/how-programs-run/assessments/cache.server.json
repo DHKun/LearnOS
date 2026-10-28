@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "c1",
+      "prompt": "下面哪个访问最快？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "寄存器"
+        },
+        {
+          "id": "b",
+          "label": "缓存"
+        },
+        {
+          "id": "c",
+          "label": "内存"
+        },
+        {
+          "id": "d",
+          "label": "SSD"
+        }
+      ],
+      "answer": "a",
+      "explanation": "越靠近 CPU 越快。"
+    },
+    {
+      "id": "c2",
+      "prompt": "缓存未命中时会发生什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "程序出错"
+        },
+        {
+          "id": "b",
+          "label": "从内存搬回包含这个数据的一整行"
+        },
+        {
+          "id": "c",
+          "label": "跳过这次读取"
+        },
+        {
+          "id": "d",
+          "label": "从硬盘重新加载程序"
+        }
+      ],
+      "answer": "b",
+      "explanation": "一次搬一整行挨着的数据。"
+    },
+    {
+      "id": "c3",
+      "prompt": "一张按行存放的表格，为什么按列遍历更慢？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "按列遍历要做更多加法"
+        },
+        {
+          "id": "b",
+          "label": "按列访问的地址不挨着，搬来的缓存行大多用不上"
+        },
+        {
+          "id": "c",
+          "label": "按列遍历会越界"
+        },
+        {
+          "id": "d",
+          "label": "其实一样快"
+        }
+      ],
+      "answer": "b",
+      "explanation": "空间局部性差，未命中多。"
+    },
+    {
+      "id": "c4",
+      "prompt": "只需要求所有人的罚金之和，哪种存法更快？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "每个人的各项信息挨着放"
+        },
+        {
+          "id": "b",
+          "label": "所有人的罚金挨着放在一起"
+        },
+        {
+          "id": "c",
+          "label": "随便放"
+        },
+        {
+          "id": "d",
+          "label": "放在硬盘上"
+        }
+      ],
+      "answer": "b",
+      "explanation": "要一起用的数据挨在一起，缓存行里的数据都用得上。"
+    }
+  ]
+}

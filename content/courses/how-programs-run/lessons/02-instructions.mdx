@@ -1,0 +1,49 @@
+## 算错的一笔账
+
+书店收银台的程序算错了钱。要找出问题，先得会“看着程序一步一步走”：每执行一条指令，寄存器和内存里分别是什么。
+
+## 取指、译码、执行
+
+CPU 一直在重复同一件事：
+
+1. **取指**：按**程序计数器 PC** 指的位置，从内存里取出下一条指令；
+2. **译码**：弄清是哪种指令、要用哪些寄存器和地址；
+3. **执行**：做加法、读写内存，或者改变 PC 跳到别处；
+4. PC 指向下一条，回到第 1 步。
+
+## 格子机的指令
+
+| 指令 | 作用 |
+| --- | --- |
+| `SET R0, 5` | R0 = 5 |
+| `MOV R0, R1` | R0 = R1 |
+| `LOAD R0, [10]` | R0 = 内存 [10] 里的数 |
+| `STORE R0, [20]` | 内存 [20] = R0 |
+| `ADD R0, R1` / `ADD R0, 5` | R0 = R0 + R1 / R0 + 5（还有 `SUB`、`MUL`） |
+| `OUT R0` | 把 R0 打印出来 |
+| `HALT` | 停下 |
+
+**寄存器和内存是两回事。** 寄存器的值变了，内存里不会跟着变，要用 `STORE` 才会写进去；反过来也一样，要用 `LOAD` 读。
+
+<ConceptPlayer conceptId="how-programs-run/cycle" blockId="cycle" />
+
+<MiniCheck
+  id="store-later"
+  question="SET R0, 3 → STORE R0, [20] → ADD R0, 1。执行完后 [20] 是多少？"
+  options={["3", "4", "0"]}
+  answer={0}
+  explanation="STORE 写进去的是当时 R0 的值 3。之后 R0 变成 4，内存里的 [20] 不受影响。"
+/>
+
+## 动手：算错的一笔账
+
+<SimulationBlock blockId="trace-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+用“下一步”一条一条地走，盯着每一步绿框标出的那一格。`JZ` 会看上一次算出来的结果是不是 0：是 0 就跳，不是就接着往下走。
+
+</details>
+
+<KnowledgeCheck blockId="instruction-check" />

@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "i1",
+      "prompt": "程序计数器 PC 里存的是什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "CPU 的速度"
+        },
+        {
+          "id": "b",
+          "label": "下一条要执行的指令的位置"
+        },
+        {
+          "id": "c",
+          "label": "程序运行了多久"
+        },
+        {
+          "id": "d",
+          "label": "寄存器的个数"
+        }
+      ],
+      "answer": "b",
+      "explanation": "CPU 按 PC 取下一条指令。"
+    },
+    {
+      "id": "i2",
+      "prompt": "SET R0, 7 → STORE R0, [20] → SET R0, 9 之后，[20] 和 R0 分别是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "7 和 9"
+        },
+        {
+          "id": "b",
+          "label": "9 和 9"
+        },
+        {
+          "id": "c",
+          "label": "7 和 7"
+        },
+        {
+          "id": "d",
+          "label": "0 和 9"
+        }
+      ],
+      "answer": "a",
+      "explanation": "STORE 写的是当时的 7；之后只改了寄存器。"
+    },
+    {
+      "id": "i3",
+      "prompt": "LOAD R1, [12] 做了什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把 12 这个数放进 R1"
+        },
+        {
+          "id": "b",
+          "label": "把内存地址 12 里的数放进 R1"
+        },
+        {
+          "id": "c",
+          "label": "把 R1 写到地址 12"
+        },
+        {
+          "id": "d",
+          "label": "跳到第 12 行"
+        }
+      ],
+      "answer": "b",
+      "explanation": "方括号表示内存地址。"
+    },
+    {
+      "id": "i4",
+      "prompt": "CPU 可以不经过寄存器，直接把两个内存格子相加（在格子机里）。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "格子机的 ADD 只能在寄存器上算：先 LOAD 进寄存器，算完再 STORE。"
+    }
+  ]
+}

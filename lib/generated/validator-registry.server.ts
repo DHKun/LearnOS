@@ -25,24 +25,30 @@ import { validateIncidentLab as validator22 } from "../../content/courses/git-ba
 import { validateMergeLab as validator23 } from "../../content/courses/git-basics/validators";
 import { validateRemoteLab as validator24 } from "../../content/courses/git-basics/validators";
 import { validateUndoLab as validator25 } from "../../content/courses/git-basics/validators";
-import { validateCacheLab as validator26 } from "../../content/courses/http-hands-on/validators";
-import { validateCookieLab as validator27 } from "../../content/courses/http-hands-on/validators";
-import { validateDiagnosisLab as validator28 } from "../../content/courses/http-hands-on/validators";
-import { validateFinalMission as validator29 } from "../../content/courses/http-hands-on/validators";
-import { validateJsonLab as validator30 } from "../../content/courses/http-hands-on/validators";
-import { validateMethodLab as validator31 } from "../../content/courses/http-hands-on/validators";
-import { validateRequestLab as validator32 } from "../../content/courses/http-hands-on/validators";
-import { validateResponseLab as validator33 } from "../../content/courses/http-hands-on/validators";
-import { validateUrlLab as validator34 } from "../../content/courses/http-hands-on/validators";
-import { validateArpLab as validator35 } from "../../content/courses/networking-basics/validators";
-import { validateDnsLab as validator36 } from "../../content/courses/networking-basics/validators";
-import { validateFirewallLab as validator37 } from "../../content/courses/networking-basics/validators";
-import { validateLaptopLab as validator38 } from "../../content/courses/networking-basics/validators";
-import { validateNatLab as validator39 } from "../../content/courses/networking-basics/validators";
-import { validateRouteLab as validator40 } from "../../content/courses/networking-basics/validators";
-import { validateSubnetLab as validator41 } from "../../content/courses/networking-basics/validators";
-import { validateTcpLab as validator42 } from "../../content/courses/networking-basics/validators";
-import { validateTraceLab as validator43 } from "../../content/courses/networking-basics/validators";
+import { validateArrayLab as validator26 } from "../../content/courses/how-programs-run/validators";
+import { validateCacheLab as validator27 } from "../../content/courses/how-programs-run/validators";
+import { validateLoopLab as validator28 } from "../../content/courses/how-programs-run/validators";
+import { validateScheduleLab as validator29 } from "../../content/courses/how-programs-run/validators";
+import { validateStackLab as validator30 } from "../../content/courses/how-programs-run/validators";
+import { validateTraceLab as validator31 } from "../../content/courses/how-programs-run/validators";
+import { validateCacheLab as validator32 } from "../../content/courses/http-hands-on/validators";
+import { validateCookieLab as validator33 } from "../../content/courses/http-hands-on/validators";
+import { validateDiagnosisLab as validator34 } from "../../content/courses/http-hands-on/validators";
+import { validateFinalMission as validator35 } from "../../content/courses/http-hands-on/validators";
+import { validateJsonLab as validator36 } from "../../content/courses/http-hands-on/validators";
+import { validateMethodLab as validator37 } from "../../content/courses/http-hands-on/validators";
+import { validateRequestLab as validator38 } from "../../content/courses/http-hands-on/validators";
+import { validateResponseLab as validator39 } from "../../content/courses/http-hands-on/validators";
+import { validateUrlLab as validator40 } from "../../content/courses/http-hands-on/validators";
+import { validateArpLab as validator41 } from "../../content/courses/networking-basics/validators";
+import { validateDnsLab as validator42 } from "../../content/courses/networking-basics/validators";
+import { validateFirewallLab as validator43 } from "../../content/courses/networking-basics/validators";
+import { validateLaptopLab as validator44 } from "../../content/courses/networking-basics/validators";
+import { validateNatLab as validator45 } from "../../content/courses/networking-basics/validators";
+import { validateRouteLab as validator46 } from "../../content/courses/networking-basics/validators";
+import { validateSubnetLab as validator47 } from "../../content/courses/networking-basics/validators";
+import { validateTcpLab as validator48 } from "../../content/courses/networking-basics/validators";
+import { validateTraceLab as validator49 } from "../../content/courses/networking-basics/validators";
 
 export type ValidatorResult = { passed: boolean; feedback: Record<string, unknown> };
 export type LabValidator = (submission: unknown) => ValidatorResult;
@@ -74,24 +80,30 @@ const VALIDATORS: Record<string, LabValidator> = {
   "git-basics/merge-lab": (submission) => validator23(submission),
   "git-basics/remote-lab": (submission) => validator24(submission),
   "git-basics/undo-lab": (submission) => validator25(submission),
-  "http-hands-on/cache-lab": (submission) => validator26(submission),
-  "http-hands-on/cookie-lab": (submission) => validator27(submission),
-  "http-hands-on/diagnosis-lab": (submission) => validator28(submission),
-  "http-hands-on/final-mission": (submission) => validator29(submission),
-  "http-hands-on/json-lab": (submission) => validator30(submission),
-  "http-hands-on/method-lab": (submission) => validator31(submission),
-  "http-hands-on/request-lab": (submission) => validator32(submission),
-  "http-hands-on/response-lab": (submission) => validator33(submission),
-  "http-hands-on/url-lab": (submission) => validator34(submission),
-  "networking-basics/arp-lab": (submission) => validator35(submission),
-  "networking-basics/dns-lab": (submission) => validator36(submission),
-  "networking-basics/firewall-lab": (submission) => validator37(submission),
-  "networking-basics/laptop-lab": (submission) => validator38(submission),
-  "networking-basics/nat-lab": (submission) => validator39(submission),
-  "networking-basics/route-lab": (submission) => validator40(submission),
-  "networking-basics/subnet-lab": (submission) => validator41(submission),
-  "networking-basics/tcp-lab": (submission) => validator42(submission),
-  "networking-basics/trace-lab": (submission) => validator43(submission),
+  "how-programs-run/array-lab": (submission) => validator26(submission),
+  "how-programs-run/cache-lab": (submission) => validator27(submission),
+  "how-programs-run/loop-lab": (submission) => validator28(submission),
+  "how-programs-run/schedule-lab": (submission) => validator29(submission),
+  "how-programs-run/stack-lab": (submission) => validator30(submission),
+  "how-programs-run/trace-lab": (submission) => validator31(submission),
+  "http-hands-on/cache-lab": (submission) => validator32(submission),
+  "http-hands-on/cookie-lab": (submission) => validator33(submission),
+  "http-hands-on/diagnosis-lab": (submission) => validator34(submission),
+  "http-hands-on/final-mission": (submission) => validator35(submission),
+  "http-hands-on/json-lab": (submission) => validator36(submission),
+  "http-hands-on/method-lab": (submission) => validator37(submission),
+  "http-hands-on/request-lab": (submission) => validator38(submission),
+  "http-hands-on/response-lab": (submission) => validator39(submission),
+  "http-hands-on/url-lab": (submission) => validator40(submission),
+  "networking-basics/arp-lab": (submission) => validator41(submission),
+  "networking-basics/dns-lab": (submission) => validator42(submission),
+  "networking-basics/firewall-lab": (submission) => validator43(submission),
+  "networking-basics/laptop-lab": (submission) => validator44(submission),
+  "networking-basics/nat-lab": (submission) => validator45(submission),
+  "networking-basics/route-lab": (submission) => validator46(submission),
+  "networking-basics/subnet-lab": (submission) => validator47(submission),
+  "networking-basics/tcp-lab": (submission) => validator48(submission),
+  "networking-basics/trace-lab": (submission) => validator49(submission),
 };
 
 export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
@@ -121,6 +133,12 @@ export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
   "git-basics/merge-lab": "ca4db77506f235fcf0c93347977963f38b0eb2281764eb8f742bef710af90bfb",
   "git-basics/remote-lab": "ca4db77506f235fcf0c93347977963f38b0eb2281764eb8f742bef710af90bfb",
   "git-basics/undo-lab": "ca4db77506f235fcf0c93347977963f38b0eb2281764eb8f742bef710af90bfb",
+  "how-programs-run/array-lab": "b3f78796b3b41640151a0914ad1e6c88375d942e356282d99b9d995c14b6828e",
+  "how-programs-run/cache-lab": "b3f78796b3b41640151a0914ad1e6c88375d942e356282d99b9d995c14b6828e",
+  "how-programs-run/loop-lab": "b3f78796b3b41640151a0914ad1e6c88375d942e356282d99b9d995c14b6828e",
+  "how-programs-run/schedule-lab": "b3f78796b3b41640151a0914ad1e6c88375d942e356282d99b9d995c14b6828e",
+  "how-programs-run/stack-lab": "b3f78796b3b41640151a0914ad1e6c88375d942e356282d99b9d995c14b6828e",
+  "how-programs-run/trace-lab": "b3f78796b3b41640151a0914ad1e6c88375d942e356282d99b9d995c14b6828e",
   "http-hands-on/cache-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
   "http-hands-on/cookie-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
   "http-hands-on/diagnosis-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
