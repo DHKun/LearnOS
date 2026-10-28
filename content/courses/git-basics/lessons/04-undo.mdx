@@ -1,0 +1,48 @@
+## 手忙脚乱的一次提交
+
+刚提交完就发现：说明写错了字，还漏了一个文件。收拾的时候又误删了一行，还把调了一半的样式放进了暂存区。这一章把这几种情况各自对应的“撤销”理一遍。
+
+## 先看要撤哪一层
+
+| 想撤销的 | 命令 | 后果 |
+| --- | --- | --- |
+| 工作区里对某个文件的修改 | `git restore 文件` | 文件回到暂存区里的样子，**修改直接丢掉** |
+| 已经 `git add` 的改动 | `git restore --staged 文件` | 移出暂存区，改动还在工作区 |
+| 上一次提交（说明写错、漏了文件） | `git commit --amend -m "新说明"` | 用暂存区的内容**替换**上一次提交 |
+| 最近几次提交 | `git reset HEAD~1` | 撤掉提交，改动回到工作区 |
+| 所有没提交的东西 | `git reset --hard` | 工作区和暂存区全部回到上次提交，**无法恢复** |
+
+`HEAD~1` 是“当前提交的上一个”，`HEAD~2` 是再往前一个。
+
+<ConceptPlayer conceptId="git-basics/undo" blockId="undo" />
+
+## amend：重拍最后一张
+
+`git commit --amend` 不会在后面多加一个提交，而是把最后一次提交**换掉**：新的那个包含暂存区里的所有内容，说明用你新写的。
+
+所以 amend 之前先看一眼 `git status`：暂存区里有不想放进去的东西，先用 `git restore --staged` 拿出来。
+
+<Callout type="warning" title="只改还没推送的提交">
+amend 和 reset 都会改写历史：换掉的提交会有新的提交号。提交还在你自己电脑上时随便改；已经推送给别人的，用第 8 章的 revert。
+</Callout>
+
+<MiniCheck
+  id="amend-index"
+  question="暂存区里有 style.css 的改动，你运行 git commit --amend -m 添加搜索框。style.css 会怎样？"
+  options={["不受影响，amend 只改说明", "被放进了这次提交", "被丢掉"]}
+  answer={1}
+  explanation="amend 用暂存区的全部内容重新做最后一次提交。"
+/>
+
+## 动手：手忙脚乱的一次提交
+
+<SimulationBlock blockId="undo-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+一件一件来，每做一步就 `git status` 看一眼。顺序很重要：先把不该进提交的东西移出暂存区，再 amend。
+
+</details>
+
+<KnowledgeCheck blockId="undo-check" />

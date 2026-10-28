@@ -1,0 +1,49 @@
+## 被拒绝的推送
+
+你在本地做好了提交，`git push` 却报了一屏红字：`! [rejected]`。不是你做错了什么，而是有人比你先推送了。
+
+## 远程仓库
+
+团队把仓库放在一个大家都能访问的地方（GitHub、GitLab、公司自己的服务器），叫**远程仓库**，默认名字是 `origin`。每个人电脑上都有一份完整的克隆。
+
+| 命令 | 作用 |
+| --- | --- |
+| `git push` | 把本地的新提交推送到远程 |
+| `git fetch` | 把远程的新提交取下来，更新 `origin/main`，**不动**你的分支和文件 |
+| `git pull` | `fetch` 之后，把 `origin/main` 合并进当前分支 |
+| `git remote -v` | 看远程仓库的地址 |
+
+`origin/main` 是“上次和远程打交道时，远程的 main 在哪里”。`git status` 会告诉你本地比它领先或落后几个提交。
+
+## 为什么被拒绝
+
+推送只能**接在**远程最新提交的后面。小王先推了一个你没见过的提交，你的提交接在旧的位置上，直接推上去就会把他的挤掉，所以 Git 拒绝了。
+
+正确的做法：先 `git pull`，把他的提交合并进来（有冲突就按上一章解决），再 `git push`。
+
+<ConceptPlayer conceptId="git-basics/remote" blockId="remote" />
+
+<Callout type="warning" title="git push --force">
+强制推送会用你的历史覆盖远程，远程上别人的提交会消失。在多人共用的分支上，别用它解决“推送被拒绝”。
+</Callout>
+
+## 和别人协作的日常
+
+1. 开始干活前 `git pull`，拿到最新的代码；
+2. 在自己的分支上提交；
+3. `git push -u origin 分支名`，第一次推送新分支时加 `-u`，以后直接 `git push`；
+4. 在代码托管网站上发起合并请求（Pull Request），同事审过再合进 main。
+
+<MiniCheck
+  id="fetch-pull"
+  question="git fetch 和 git pull 的区别是？"
+  options={["没区别", "fetch 只把远程的提交取下来；pull 取下来之后还会合并进当前分支", "fetch 会推送，pull 会拉取"]}
+  answer={1}
+  explanation="pull = fetch + merge。想先看看远程有什么再决定，就先 fetch，再 git log origin/main。"
+/>
+
+## 动手：被拒绝的推送
+
+<SimulationBlock blockId="remote-lab" />
+
+<KnowledgeCheck blockId="remote-check" />

@@ -282,7 +282,7 @@ pnpm exec playwright install chromium
 # 无 root 的 Linux 沙箱可参考“故障排查”
 ```
 
-E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、`bits-and-bytes`、`networking-basics`、`http-hands-on`、`command-line` 四门课的完整闭环（图文/动画/模拟/知识检查/结业测验/刷新恢复，全部实验经服务端验证，结课并核对积分）、学习路线的展示与推荐、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
+E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、`bits-and-bytes`、`networking-basics`、`http-hands-on`、`command-line`、`git-basics` 五门课的完整闭环（图文/动画/模拟/知识检查/结业测验/刷新恢复，全部实验经服务端验证，结课并核对积分）、学习路线的展示与推荐、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
 
 ## 目录结构
 
@@ -303,7 +303,7 @@ lib/
   activities/           # 互动模拟纯函数与 activityId 目录
   services/             # 报名/进度/互动/测验/笔记/积分/报表/部署
   lib/db/               # Drizzle 客户端与 Better Auth schema
-content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器；含 bits-and-bytes、networking-basics、http-hands-on、command-line 四门课程
+content/courses/        # 课程插件：course.json、MDX、题库、服务端验证器；含 bits-and-bytes、networking-basics、http-hands-on、command-line、git-basics 五门课程
 db/                     # 独立 PostgreSQL schema、Drizzle 迁移
 tests/                  # unit、integration（RLS/事务）、e2e（Playwright）
 scripts/                # 课程同步/校验/快照、种子、性能脚本、安全扫描

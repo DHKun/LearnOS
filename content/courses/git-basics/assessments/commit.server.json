@@ -1,0 +1,101 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "c1",
+      "prompt": "git status 显示 config.js 在 “Changes not staged for commit” 下。此时运行 git commit -m “修复”，config.js 的改动会被提交吗？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "会"
+        },
+        {
+          "id": "b",
+          "label": "不会，它还没放进暂存区"
+        },
+        {
+          "id": "c",
+          "label": "会报错"
+        }
+      ],
+      "answer": "b",
+      "explanation": "提交只包含暂存区里的内容；没有 git add 的改动留在工作区。"
+    },
+    {
+      "id": "c2",
+      "prompt": "想看“这次将要提交的内容”具体改了哪些行，用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git diff"
+        },
+        {
+          "id": "b",
+          "label": "git diff --staged"
+        },
+        {
+          "id": "c",
+          "label": "git log"
+        },
+        {
+          "id": "d",
+          "label": "git status"
+        }
+      ],
+      "answer": "b",
+      "explanation": "git diff 比较工作区和暂存区；--staged 比较暂存区和上一次提交，也就是将要提交的东西。"
+    },
+    {
+      "id": "c3",
+      "prompt": "下面哪个文件最应该写进 .gitignore？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "README.md"
+        },
+        {
+          "id": "b",
+          "label": "index.html"
+        },
+        {
+          "id": "c",
+          "label": "存放数据库密码的 .env"
+        },
+        {
+          "id": "d",
+          "label": "loans.js"
+        }
+      ],
+      "answer": "c",
+      "explanation": "密码、本地配置不该进历史。"
+    },
+    {
+      "id": "c4",
+      "prompt": "下面哪个提交说明最好？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "update"
+        },
+        {
+          "id": "b",
+          "label": "修改"
+        },
+        {
+          "id": "c",
+          "label": "借阅页：禁用账号不能借书"
+        },
+        {
+          "id": "d",
+          "label": "asdf"
+        }
+      ],
+      "answer": "c",
+      "explanation": "说明要让别人不看代码也知道改了什么。"
+    }
+  ]
+}

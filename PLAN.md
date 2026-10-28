@@ -643,3 +643,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `tests/unit/command-line.test.ts`（模拟 shell 与 8 个校验器，14 项）；`tests/e2e/command-line.spec.ts`（10 章真实界面闭环，结课 150 分）。
 - [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正终端输出被文章样式套框、窄屏提示符挤占输入框、`mv -v` 双斜杠、动画根目录显示为 `//`、TERM 正常退出却显示红框等问题。
 
+## 28. 第五门课程：`git-basics`（2026-10-28）
+
+- [x] 9 章、8 个概念动画、7 个服务端验证实验（6 个为操作记录重放）、36 道服务端题；`pnpm courses:validate` 通过；《计算机基础入门》路线 5 门课全部上线。
+- [x] `tests/unit/git-basics.test.ts`（模拟 Git 与 7 个校验器，12 项）；`tests/e2e/git-basics.spec.ts`（9 章真实界面闭环，结课 140 分）；`learning-paths.spec.ts` 改为路线不再有“即将上线”。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正终端命令文字看不清、多个目标初始即为绿色、撤销动画提示重复、综合任务默认打开出问题的文件等问题。
+

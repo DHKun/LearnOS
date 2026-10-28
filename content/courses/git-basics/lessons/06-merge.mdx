@@ -1,0 +1,56 @@
+## 两边都改了开馆时间
+
+小王在自己的分支上加了周末开馆时间；同一时间，你在 main 上修正了工作日的时间。现在要把他的分支合进来，两个人都改了同一行。
+
+## 合并
+
+```bash
+git switch main
+git merge feature/weekend
+```
+
+- 如果 main 在分开之后没有新提交，Git 直接把 main 移到对方的最新提交上，叫**快进**（Fast-forward）。
+- 两边都有新提交时，Git 找到分开前的共同起点，比较两边各自改了什么，生成一个有**两个**上一提交的**合并提交**。
+
+## 冲突
+
+两边改了同一个地方，Git 不知道该听谁的，就会停下来：
+
+```text
+CONFLICT (content): Merge conflict in index.html
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+文件里会出现两个版本，用标记圈起来：
+
+```text
+<<<<<<< HEAD
+你这边（main）的版本
+=======
+对方分支的版本
+>>>>>>> feature/weekend
+```
+
+解决的步骤：
+
+1. 打开文件，把这一段改成**最终想要的**内容，删掉 `<<<<<<<`、`=======`、`>>>>>>>` 三行标记；
+2. `git add 文件`，告诉 Git 这个冲突解决了；
+3. `git commit`，完成合并。
+
+不想合了，`git merge --abort` 回到合并之前。
+
+<ConceptPlayer conceptId="git-basics/merge" blockId="merge" />
+
+<MiniCheck
+  id="markers"
+  question="解决冲突时，你删掉了对方的版本，只留下自己的，然后提交。会有什么问题？"
+  options={["没问题，Git 会自动补上对方的修改", "对方在这一处的修改就丢了", "Git 会拒绝提交"]}
+  answer={1}
+  explanation="Git 只要求你删掉标记，并不检查你是否保留了两边的意图。读懂两边各自想改什么，通常两边都要留下。"
+/>
+
+## 动手：两边都改了开馆时间
+
+<SimulationBlock blockId="merge-lab" />
+
+<KnowledgeCheck blockId="merge-check" />

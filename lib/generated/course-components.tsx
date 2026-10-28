@@ -28,25 +28,33 @@ const Concept16 = dynamic(() => import("../../content/courses/command-line/conce
 const Concept17 = dynamic(() => import("../../content/courses/command-line/concepts/concepts").then((m) => m.ShellConcept), { ssr: false, loading });
 const Concept18 = dynamic(() => import("../../content/courses/command-line/concepts/concepts").then((m) => m.SignalConcept), { ssr: false, loading });
 const Concept19 = dynamic(() => import("../../content/courses/command-line/concepts/concepts").then((m) => m.UnlinkConcept), { ssr: false, loading });
-const Concept20 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.AuthConcept), { ssr: false, loading });
-const Concept21 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.CacheConcept), { ssr: false, loading });
-const Concept22 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.CookieConcept), { ssr: false, loading });
-const Concept23 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.JourneyConcept), { ssr: false, loading });
-const Concept24 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.MessageConcept), { ssr: false, loading });
-const Concept25 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.NegotiationConcept), { ssr: false, loading });
-const Concept26 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.RedirectConcept), { ssr: false, loading });
-const Concept27 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.RetryConcept), { ssr: false, loading });
-const Concept28 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.TlsConcept), { ssr: false, loading });
-const Concept29 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.UrlConcept), { ssr: false, loading });
-const Concept30 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.ArpConcept), { ssr: false, loading });
-const Concept31 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.DnsConcept), { ssr: false, loading });
-const Concept32 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.NatConcept), { ssr: false, loading });
-const Concept33 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.PacketsConcept), { ssr: false, loading });
-const Concept34 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.PortsConcept), { ssr: false, loading });
-const Concept35 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.RoutingConcept), { ssr: false, loading });
-const Concept36 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.SubnetConcept), { ssr: false, loading });
-const Concept37 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TcpConcept), { ssr: false, loading });
-const Concept38 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TracerouteConcept), { ssr: false, loading });
+const Concept20 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.AreasConcept), { ssr: false, loading });
+const Concept21 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.BranchConcept), { ssr: false, loading });
+const Concept22 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.LogConcept), { ssr: false, loading });
+const Concept23 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.MergeConcept), { ssr: false, loading });
+const Concept24 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.RemoteConcept), { ssr: false, loading });
+const Concept25 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.RevertConcept), { ssr: false, loading });
+const Concept26 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.SnapshotConcept), { ssr: false, loading });
+const Concept27 = dynamic(() => import("../../content/courses/git-basics/concepts/concepts").then((m) => m.UndoConcept), { ssr: false, loading });
+const Concept28 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.AuthConcept), { ssr: false, loading });
+const Concept29 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.CacheConcept), { ssr: false, loading });
+const Concept30 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.CookieConcept), { ssr: false, loading });
+const Concept31 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.JourneyConcept), { ssr: false, loading });
+const Concept32 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.MessageConcept), { ssr: false, loading });
+const Concept33 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.NegotiationConcept), { ssr: false, loading });
+const Concept34 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.RedirectConcept), { ssr: false, loading });
+const Concept35 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.RetryConcept), { ssr: false, loading });
+const Concept36 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.TlsConcept), { ssr: false, loading });
+const Concept37 = dynamic(() => import("../../content/courses/http-hands-on/concepts/http-concepts").then((m) => m.UrlConcept), { ssr: false, loading });
+const Concept38 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.ArpConcept), { ssr: false, loading });
+const Concept39 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.DnsConcept), { ssr: false, loading });
+const Concept40 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.NatConcept), { ssr: false, loading });
+const Concept41 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.PacketsConcept), { ssr: false, loading });
+const Concept42 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.PortsConcept), { ssr: false, loading });
+const Concept43 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.RoutingConcept), { ssr: false, loading });
+const Concept44 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.SubnetConcept), { ssr: false, loading });
+const Concept45 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TcpConcept), { ssr: false, loading });
+const Concept46 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TracerouteConcept), { ssr: false, loading });
 const Activity0 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.ColorLab), { ssr: false, loading });
 const Activity1 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.HeaderLab), { ssr: false, loading });
 const Activity2 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.ImageLab), { ssr: false, loading });
@@ -66,24 +74,31 @@ const Activity15 = dynamic<ActivityComponentProps>(() => import("../../content/c
 const Activity16 = dynamic<ActivityComponentProps>(() => import("../../content/courses/command-line/activities/labs").then((m) => m.PermsLab), { ssr: false, loading });
 const Activity17 = dynamic<ActivityComponentProps>(() => import("../../content/courses/command-line/activities/labs").then((m) => m.PipesLab), { ssr: false, loading });
 const Activity18 = dynamic<ActivityComponentProps>(() => import("../../content/courses/command-line/activities/labs").then((m) => m.ProcessLab), { ssr: false, loading });
-const Activity19 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.CacheLab), { ssr: false, loading });
-const Activity20 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.CookieLab), { ssr: false, loading });
-const Activity21 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.DiagnosisLab), { ssr: false, loading });
-const Activity22 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.FinalMission), { ssr: false, loading });
-const Activity23 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.JsonLab), { ssr: false, loading });
-const Activity24 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.MethodLab), { ssr: false, loading });
-const Activity25 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.RequestLab), { ssr: false, loading });
-const Activity26 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.ResponseLab), { ssr: false, loading });
-const Activity27 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.UrlLab), { ssr: false, loading });
-const Activity28 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.ArpLab), { ssr: false, loading });
-const Activity29 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.DnsLab), { ssr: false, loading });
-const Activity30 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.FirewallLab), { ssr: false, loading });
-const Activity31 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.LaptopLab), { ssr: false, loading });
-const Activity32 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.NatLab), { ssr: false, loading });
-const Activity33 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.RouteLab), { ssr: false, loading });
-const Activity34 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.SubnetLab), { ssr: false, loading });
-const Activity35 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TcpLab), { ssr: false, loading });
-const Activity36 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TraceLab), { ssr: false, loading });
+const Activity19 = dynamic<ActivityComponentProps>(() => import("../../content/courses/git-basics/activities/labs").then((m) => m.BranchLab), { ssr: false, loading });
+const Activity20 = dynamic<ActivityComponentProps>(() => import("../../content/courses/git-basics/activities/labs").then((m) => m.CommitLab), { ssr: false, loading });
+const Activity21 = dynamic<ActivityComponentProps>(() => import("../../content/courses/git-basics/activities/labs").then((m) => m.HistoryLab), { ssr: false, loading });
+const Activity22 = dynamic<ActivityComponentProps>(() => import("../../content/courses/git-basics/activities/labs").then((m) => m.IncidentLab), { ssr: false, loading });
+const Activity23 = dynamic<ActivityComponentProps>(() => import("../../content/courses/git-basics/activities/labs").then((m) => m.MergeLab), { ssr: false, loading });
+const Activity24 = dynamic<ActivityComponentProps>(() => import("../../content/courses/git-basics/activities/labs").then((m) => m.RemoteLab), { ssr: false, loading });
+const Activity25 = dynamic<ActivityComponentProps>(() => import("../../content/courses/git-basics/activities/labs").then((m) => m.UndoLab), { ssr: false, loading });
+const Activity26 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.CacheLab), { ssr: false, loading });
+const Activity27 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.CookieLab), { ssr: false, loading });
+const Activity28 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.DiagnosisLab), { ssr: false, loading });
+const Activity29 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.FinalMission), { ssr: false, loading });
+const Activity30 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.JsonLab), { ssr: false, loading });
+const Activity31 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.MethodLab), { ssr: false, loading });
+const Activity32 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.RequestLab), { ssr: false, loading });
+const Activity33 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.ResponseLab), { ssr: false, loading });
+const Activity34 = dynamic<ActivityComponentProps>(() => import("../../content/courses/http-hands-on/activities/labs").then((m) => m.UrlLab), { ssr: false, loading });
+const Activity35 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.ArpLab), { ssr: false, loading });
+const Activity36 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.DnsLab), { ssr: false, loading });
+const Activity37 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.FirewallLab), { ssr: false, loading });
+const Activity38 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.LaptopLab), { ssr: false, loading });
+const Activity39 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.NatLab), { ssr: false, loading });
+const Activity40 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.RouteLab), { ssr: false, loading });
+const Activity41 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.SubnetLab), { ssr: false, loading });
+const Activity42 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TcpLab), { ssr: false, loading });
+const Activity43 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TraceLab), { ssr: false, loading });
 
 export const CONCEPT_COMPONENTS: Record<ConceptId, ComponentType> = {
   "bits-and-bytes/codebook": Concept0,
@@ -106,25 +121,33 @@ export const CONCEPT_COMPONENTS: Record<ConceptId, ComponentType> = {
   "command-line/shell": Concept17,
   "command-line/signal": Concept18,
   "command-line/unlink": Concept19,
-  "http-hands-on/auth": Concept20,
-  "http-hands-on/cache": Concept21,
-  "http-hands-on/cookie": Concept22,
-  "http-hands-on/journey": Concept23,
-  "http-hands-on/message": Concept24,
-  "http-hands-on/negotiation": Concept25,
-  "http-hands-on/redirect": Concept26,
-  "http-hands-on/retry": Concept27,
-  "http-hands-on/tls": Concept28,
-  "http-hands-on/url": Concept29,
-  "networking-basics/arp": Concept30,
-  "networking-basics/dns": Concept31,
-  "networking-basics/nat": Concept32,
-  "networking-basics/packets": Concept33,
-  "networking-basics/ports": Concept34,
-  "networking-basics/routing": Concept35,
-  "networking-basics/subnet": Concept36,
-  "networking-basics/tcp": Concept37,
-  "networking-basics/traceroute": Concept38,
+  "git-basics/areas": Concept20,
+  "git-basics/branch": Concept21,
+  "git-basics/log": Concept22,
+  "git-basics/merge": Concept23,
+  "git-basics/remote": Concept24,
+  "git-basics/revert": Concept25,
+  "git-basics/snapshot": Concept26,
+  "git-basics/undo": Concept27,
+  "http-hands-on/auth": Concept28,
+  "http-hands-on/cache": Concept29,
+  "http-hands-on/cookie": Concept30,
+  "http-hands-on/journey": Concept31,
+  "http-hands-on/message": Concept32,
+  "http-hands-on/negotiation": Concept33,
+  "http-hands-on/redirect": Concept34,
+  "http-hands-on/retry": Concept35,
+  "http-hands-on/tls": Concept36,
+  "http-hands-on/url": Concept37,
+  "networking-basics/arp": Concept38,
+  "networking-basics/dns": Concept39,
+  "networking-basics/nat": Concept40,
+  "networking-basics/packets": Concept41,
+  "networking-basics/ports": Concept42,
+  "networking-basics/routing": Concept43,
+  "networking-basics/subnet": Concept44,
+  "networking-basics/tcp": Concept45,
+  "networking-basics/traceroute": Concept46,
 };
 
 export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityComponentProps>> = {
@@ -147,22 +170,29 @@ export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityCompo
   "command-line/perms-lab": Activity16,
   "command-line/pipes-lab": Activity17,
   "command-line/process-lab": Activity18,
-  "http-hands-on/cache-lab": Activity19,
-  "http-hands-on/cookie-lab": Activity20,
-  "http-hands-on/diagnosis-lab": Activity21,
-  "http-hands-on/final-mission": Activity22,
-  "http-hands-on/json-lab": Activity23,
-  "http-hands-on/method-lab": Activity24,
-  "http-hands-on/request-lab": Activity25,
-  "http-hands-on/response-lab": Activity26,
-  "http-hands-on/url-lab": Activity27,
-  "networking-basics/arp-lab": Activity28,
-  "networking-basics/dns-lab": Activity29,
-  "networking-basics/firewall-lab": Activity30,
-  "networking-basics/laptop-lab": Activity31,
-  "networking-basics/nat-lab": Activity32,
-  "networking-basics/route-lab": Activity33,
-  "networking-basics/subnet-lab": Activity34,
-  "networking-basics/tcp-lab": Activity35,
-  "networking-basics/trace-lab": Activity36,
+  "git-basics/branch-lab": Activity19,
+  "git-basics/commit-lab": Activity20,
+  "git-basics/history-lab": Activity21,
+  "git-basics/incident-lab": Activity22,
+  "git-basics/merge-lab": Activity23,
+  "git-basics/remote-lab": Activity24,
+  "git-basics/undo-lab": Activity25,
+  "http-hands-on/cache-lab": Activity26,
+  "http-hands-on/cookie-lab": Activity27,
+  "http-hands-on/diagnosis-lab": Activity28,
+  "http-hands-on/final-mission": Activity29,
+  "http-hands-on/json-lab": Activity30,
+  "http-hands-on/method-lab": Activity31,
+  "http-hands-on/request-lab": Activity32,
+  "http-hands-on/response-lab": Activity33,
+  "http-hands-on/url-lab": Activity34,
+  "networking-basics/arp-lab": Activity35,
+  "networking-basics/dns-lab": Activity36,
+  "networking-basics/firewall-lab": Activity37,
+  "networking-basics/laptop-lab": Activity38,
+  "networking-basics/nat-lab": Activity39,
+  "networking-basics/route-lab": Activity40,
+  "networking-basics/subnet-lab": Activity41,
+  "networking-basics/tcp-lab": Activity42,
+  "networking-basics/trace-lab": Activity43,
 };

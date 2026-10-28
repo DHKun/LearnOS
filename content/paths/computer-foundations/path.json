@@ -23,7 +23,6 @@
     },
     {
       "course": "git-basics",
-      "title": "Git 版本控制",
       "summary": "记录每一次修改，和别人协作而不互相覆盖。"
     }
   ]

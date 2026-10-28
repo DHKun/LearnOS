@@ -1,0 +1,67 @@
+## 只提交该提交的
+
+你修好了借阅页的两个问题，顺手还打开了一个调试开关，新建了一个放数据库密码的 `.env`。现在要提交：只提交两处修复，调试开关和密码一个都不能进去。
+
+## 三个区域
+
+| 区域 | 是什么 | 常用命令 |
+| --- | --- | --- |
+| 工作区 | 你在编辑器里看到、修改的文件 | `git status`、`git diff` |
+| 暂存区 | 下一次提交要包含的内容 | `git add 文件`、`git restore --staged 文件` |
+| 仓库 | 已经做过的所有提交 | `git commit -m "说明"`、`git log` |
+
+改完文件，先用 `git add` 把要提交的改动放进暂存区，再用 `git commit` 把暂存区拍成一次提交。没放进暂存区的改动，留在工作区里不受影响。
+
+<ConceptPlayer conceptId="git-basics/areas" blockId="areas" />
+
+## 看清楚再提交
+
+```bash
+git status            # 哪些文件改了、哪些已暂存、哪些还没被跟踪
+git diff              # 工作区相对暂存区改了哪些行
+git diff --staged     # 暂存区相对上一次提交改了哪些行，也就是“这次要提交的东西”
+```
+
+`git add .` 会把当前目录下**所有**改动和新文件都放进暂存区，方便，但也最容易把不该提交的东西带进去。
+
+## .gitignore
+
+有些文件永远不该提交：密码、本地配置、日志、编译出来的文件。把它们的名字写进项目根目录的 `.gitignore`，Git 就会当它们不存在：`git status` 不再提醒，`git add .` 也会跳过。
+
+```text
+# .gitignore
+.env
+*.log
+node_modules/
+```
+
+`.gitignore` 本身要提交，这样所有人都用同一份规则。
+
+<Callout type="warning" title="密码进了提交历史就很难收回">
+后一次提交删掉 `.env` 没有用：以前那次提交里还有它，任何拿到仓库的人都能翻出来。还没推送时可以撤掉那次提交（第 4 章）；已经推送了，就只能立刻去改密码。
+</Callout>
+
+## 提交说明
+
+说明写给三个月后的自己和同事看：一句话说清楚**改了什么**，比如“借阅页：禁用账号不能借书”。`update`、`fix`、`修改` 这种说明等于没写。
+
+<MiniCheck
+  id="add-dot"
+  question="工作区里有 loans.js 的修复和新建的 .env，还没有 .gitignore。运行 git add . 再 git commit，会发生什么？"
+  options={["只提交 loans.js，Git 知道 .env 是密码", "loans.js 和 .env 都被提交", "报错，要求先写 .gitignore"]}
+  answer={1}
+  explanation="git add . 会把所有新文件都放进暂存区。Git 不知道哪个是密码，只看 .gitignore。"
+/>
+
+## 动手：只提交该提交的
+
+<SimulationBlock blockId="commit-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+先 `git status` 和 `git diff` 看清楚每个文件改了什么。可以用 `echo .env >> .gitignore` 往 `.gitignore` 里加一行。不小心提交错了，可以先看看第 4 章，或者直接清空记录重来。
+
+</details>
+
+<KnowledgeCheck blockId="commit-check" />

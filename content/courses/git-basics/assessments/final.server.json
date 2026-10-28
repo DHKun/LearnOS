@@ -1,0 +1,487 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "一次提交保存的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "只保存改动的那几行"
+        },
+        {
+          "id": "b",
+          "label": "这一刻所有文件的样子，加上说明、作者、时间和上一次提交"
+        },
+        {
+          "id": "c",
+          "label": "只保存说明"
+        },
+        {
+          "id": "d",
+          "label": "只保存文件名"
+        }
+      ],
+      "answer": "b",
+      "explanation": "提交是整个项目的快照。"
+    },
+    {
+      "id": "f2",
+      "prompt": "git add 的作用是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把改动放进暂存区，准备下一次提交"
+        },
+        {
+          "id": "b",
+          "label": "把改动推送到远程"
+        },
+        {
+          "id": "c",
+          "label": "新建一个分支"
+        },
+        {
+          "id": "d",
+          "label": "撤销修改"
+        }
+      ],
+      "answer": "a",
+      "explanation": "git commit 只提交暂存区里的内容。"
+    },
+    {
+      "id": "f3",
+      "prompt": "工作区有很多改动，你只想提交其中两个文件。应该怎么做？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git add ."
+        },
+        {
+          "id": "b",
+          "label": "git add 这两个文件，再 git commit"
+        },
+        {
+          "id": "c",
+          "label": "git commit -a"
+        },
+        {
+          "id": "d",
+          "label": "git push"
+        }
+      ],
+      "answer": "b",
+      "explanation": "按文件 git add，只把要的改动放进暂存区。"
+    },
+    {
+      "id": "f4",
+      "prompt": "新建了 .env 存放密码。怎样保证它永远不会被提交？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "每次提交前记得别 add 它"
+        },
+        {
+          "id": "b",
+          "label": "把 .env 写进 .gitignore，并提交 .gitignore"
+        },
+        {
+          "id": "c",
+          "label": "把它改名为 env.txt"
+        },
+        {
+          "id": "d",
+          "label": "提交之后再删掉"
+        }
+      ],
+      "answer": "b",
+      "explanation": ".gitignore 让 git add . 也跳过它；提交之后再删，历史里还是有。"
+    },
+    {
+      "id": "f5",
+      "prompt": "git status 里 “Untracked files” 下列出的文件是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "已经提交过的文件"
+        },
+        {
+          "id": "b",
+          "label": "Git 还没开始跟踪的新文件"
+        },
+        {
+          "id": "c",
+          "label": "已经暂存的文件"
+        },
+        {
+          "id": "d",
+          "label": "被删除的文件"
+        }
+      ],
+      "answer": "b",
+      "explanation": "新文件第一次 git add 之后才会被跟踪。"
+    },
+    {
+      "id": "f6",
+      "prompt": "想找出谁、在哪次提交里改了 config.js 的某个值，最直接的命令是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git status"
+        },
+        {
+          "id": "b",
+          "label": "git log -p -- config.js"
+        },
+        {
+          "id": "c",
+          "label": "git diff"
+        },
+        {
+          "id": "d",
+          "label": "git branch"
+        }
+      ],
+      "answer": "b",
+      "explanation": "只看改过这个文件的提交，并显示改动。"
+    },
+    {
+      "id": "f7",
+      "prompt": "git blame index.html 能告诉你什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "index.html 的每一行最后是被哪次提交、谁改的"
+        },
+        {
+          "id": "b",
+          "label": "index.html 有没有冲突"
+        },
+        {
+          "id": "c",
+          "label": "谁删除了 index.html"
+        },
+        {
+          "id": "d",
+          "label": "index.html 的大小"
+        }
+      ],
+      "answer": "a",
+      "explanation": "blame 逐行标出来源。"
+    },
+    {
+      "id": "f8",
+      "prompt": "diff 里以 - 开头的行表示？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "新增的行"
+        },
+        {
+          "id": "b",
+          "label": "删掉的行"
+        },
+        {
+          "id": "c",
+          "label": "冲突的行"
+        },
+        {
+          "id": "d",
+          "label": "注释"
+        }
+      ],
+      "answer": "b",
+      "explanation": "- 是删掉的，+ 是加上的。"
+    },
+    {
+      "id": "f9",
+      "prompt": "git restore 文件 会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把文件移出暂存区，改动保留"
+        },
+        {
+          "id": "b",
+          "label": "丢掉工作区里对这个文件的修改"
+        },
+        {
+          "id": "c",
+          "label": "删除这个文件的所有历史"
+        },
+        {
+          "id": "d",
+          "label": "推送这个文件"
+        }
+      ],
+      "answer": "b",
+      "explanation": "它用暂存区的内容覆盖工作区；修改直接丢掉。"
+    },
+    {
+      "id": "f10",
+      "prompt": "git commit --amend 之前，暂存区里还放着不相关的改动。结果是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "这些改动也会被放进修改后的提交"
+        },
+        {
+          "id": "b",
+          "label": "amend 只改说明，不受影响"
+        },
+        {
+          "id": "c",
+          "label": "Git 会提示并跳过它们"
+        },
+        {
+          "id": "d",
+          "label": "这些改动会被丢掉"
+        }
+      ],
+      "answer": "a",
+      "explanation": "amend 用暂存区的全部内容重新做最后一次提交。"
+    },
+    {
+      "id": "f11",
+      "prompt": "哪种情况可以放心地用 amend 或 reset 改写提交？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "提交还没有推送"
+        },
+        {
+          "id": "b",
+          "label": "提交已经推送，但只有你在用这个分支"
+        },
+        {
+          "id": "c",
+          "label": "提交已经推送，main 上有别人的新提交"
+        },
+        {
+          "id": "d",
+          "label": "任何时候都可以"
+        }
+      ],
+      "answer": "a",
+      "explanation": "改写已经推送的提交会让别人的历史和远程对不上。"
+    },
+    {
+      "id": "f12",
+      "prompt": "分支在 Git 里本质上是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "整个项目的一份拷贝"
+        },
+        {
+          "id": "b",
+          "label": "一张指向某个提交、会随新提交移动的标签"
+        },
+        {
+          "id": "c",
+          "label": "一个文件夹"
+        },
+        {
+          "id": "d",
+          "label": "一个远程仓库"
+        }
+      ],
+      "answer": "b",
+      "explanation": "分支几乎不占空间。"
+    },
+    {
+      "id": "f13",
+      "prompt": "你在 feature 分支上做了一次提交，main 会？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "跟着前进"
+        },
+        {
+          "id": "b",
+          "label": "原地不动"
+        },
+        {
+          "id": "c",
+          "label": "被合并"
+        },
+        {
+          "id": "d",
+          "label": "被删除"
+        }
+      ],
+      "answer": "b",
+      "explanation": "只有 HEAD 指着的分支会前进。"
+    },
+    {
+      "id": "f14",
+      "prompt": "你在开发功能到一半时要紧急修 main 上的问题。最合适的做法是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "直接在功能分支上修"
+        },
+        {
+          "id": "b",
+          "label": "把功能代码先提交到功能分支，切回 main 修复并提交"
+        },
+        {
+          "id": "c",
+          "label": "删掉功能代码"
+        },
+        {
+          "id": "d",
+          "label": "等功能做完再修"
+        }
+      ],
+      "answer": "b",
+      "explanation": "功能分支和 main 各走各的，修复可以单独上线。"
+    },
+    {
+      "id": "f15",
+      "prompt": "合并时出现 CONFLICT，文件里多了 <<<<<<< HEAD … ======= … >>>>>>>。正确的处理是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "直接 git commit"
+        },
+        {
+          "id": "b",
+          "label": "把内容改成最终想要的、删掉标记，git add 后 git commit"
+        },
+        {
+          "id": "c",
+          "label": "git push --force"
+        },
+        {
+          "id": "d",
+          "label": "删掉这个文件"
+        }
+      ],
+      "answer": "b",
+      "explanation": "Git 等你决定最终内容。"
+    },
+    {
+      "id": "f16",
+      "prompt": "两边都改了开馆时间这一行：一边改了工作日时间，一边加了周末时间。解决冲突时一般应该？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "保留自己的"
+        },
+        {
+          "id": "b",
+          "label": "保留对方的"
+        },
+        {
+          "id": "c",
+          "label": "把两边的意图合在一起"
+        },
+        {
+          "id": "d",
+          "label": "两行都删掉"
+        }
+      ],
+      "answer": "c",
+      "explanation": "读懂两边各自想改什么，通常两边都要保留。"
+    },
+    {
+      "id": "f17",
+      "prompt": "git pull 等于？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git fetch + git merge"
+        },
+        {
+          "id": "b",
+          "label": "git push + git fetch"
+        },
+        {
+          "id": "c",
+          "label": "git add + git commit"
+        },
+        {
+          "id": "d",
+          "label": "git clone"
+        }
+      ],
+      "answer": "a",
+      "explanation": "先取回远程的提交，再合并进当前分支。"
+    },
+    {
+      "id": "f18",
+      "prompt": "推送被拒绝，提示远程有你没有的提交。应该？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git push --force"
+        },
+        {
+          "id": "b",
+          "label": "git pull，再 git push"
+        },
+        {
+          "id": "c",
+          "label": "重新克隆"
+        },
+        {
+          "id": "d",
+          "label": "改分支名"
+        }
+      ],
+      "answer": "b",
+      "explanation": "先合并别人的提交再推送。"
+    },
+    {
+      "id": "f19",
+      "prompt": "一个有 bug 的提交已经推送，后面还有同事的提交。怎样撤销它？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git reset --hard 到它之前，再强推"
+        },
+        {
+          "id": "b",
+          "label": "git revert 这次提交，再 git push"
+        },
+        {
+          "id": "c",
+          "label": "git commit --amend"
+        },
+        {
+          "id": "d",
+          "label": "删除远程仓库"
+        }
+      ],
+      "answer": "b",
+      "explanation": "revert 新增反向提交，不改历史，不影响别人。"
+    },
+    {
+      "id": "f20",
+      "prompt": "git revert 会把那次提交从历史里删掉。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "revert 不删除任何提交，而是新增一次提交把改动撤回。"
+    }
+  ]
+}

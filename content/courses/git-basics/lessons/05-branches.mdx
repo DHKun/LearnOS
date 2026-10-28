@@ -1,0 +1,43 @@
+## 开发到一半的紧急修复
+
+你要做一个好几天才能完成的搜索功能。第一天刚开工，首页就发现一个要马上修的错误。如果搜索做了一半的代码已经混在 main 里，修复就没法单独上线。
+
+## 分支
+
+**分支**是一张会移动的标签，贴在某个提交上。`main` 通常是可以随时发布的那条线。新功能在自己的分支上做，做完再合回 main。
+
+```bash
+git branch                     # 列出分支，* 是当前所在的
+git switch -c feature/search   # 新建分支并切过去
+git switch main                # 切回 main
+git branch -d feature/search   # 删除已经合并的分支
+```
+
+旧教程里常见的 `git checkout -b 名字` 和 `git checkout 名字`，作用和 `switch` 一样。
+
+## 切换分支时发生了什么
+
+`git switch main` 会把工作区换成 main 最新提交的样子：只在别的分支上提交过的文件会从工作区里“消失”，切回去又会出现。
+
+还没提交的改动会跟着你一起切换；如果它会被目标分支的内容覆盖，Git 会拒绝切换，提示你先提交。
+
+<ConceptPlayer conceptId="git-basics/branch" blockId="branch" />
+
+<MiniCheck
+  id="branch-move"
+  question="你在 feature/search 上做了一次提交。main 会怎样？"
+  options={["main 也跟着指向这次提交", "main 不动，只有当前分支 feature/search 往前走", "main 被删掉"]}
+  answer={1}
+  explanation="新提交只会移动 HEAD 指着的那个分支。"
+/>
+
+## 动手：开发到一半的紧急修复
+
+<SimulationBlock blockId="branch-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+提交之前先看 `git status` 第一行：On branch 什么？`search.js` 可以用编辑器的“新建”，也可以 `echo '// 搜索' > search.js`。改开馆时间用编辑器，`git commit -am "说明"` 可以一步暂存已跟踪文件的修改并提交。
+
+</details>

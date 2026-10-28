@@ -1,0 +1,109 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "m1",
+      "prompt": "main 在你建 feature 分支之后没有任何新提交。此时在 main 上 git merge feature，会发生什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "产生冲突"
+        },
+        {
+          "id": "b",
+          "label": "快进（Fast-forward）：main 直接移到 feature 的最新提交"
+        },
+        {
+          "id": "c",
+          "label": "什么都不会发生"
+        },
+        {
+          "id": "d",
+          "label": "feature 被删掉"
+        }
+      ],
+      "answer": "b",
+      "explanation": "main 这边没有新东西，不需要合并提交，直接快进。"
+    },
+    {
+      "id": "m2",
+      "prompt": "什么情况下合并会产生冲突？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "两个分支改了不同的文件"
+        },
+        {
+          "id": "b",
+          "label": "两个分支改了同一个文件的同一处"
+        },
+        {
+          "id": "c",
+          "label": "分支名不同"
+        },
+        {
+          "id": "d",
+          "label": "有人删了分支"
+        }
+      ],
+      "answer": "b",
+      "explanation": "只有两边改了同一个地方，Git 才需要你来决定。"
+    },
+    {
+      "id": "m3",
+      "prompt": "解决冲突时必须做的是？（多选）",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "删掉 <<<<<<<、=======、>>>>>>> 这三行标记"
+        },
+        {
+          "id": "b",
+          "label": "把内容改成最终想要的样子"
+        },
+        {
+          "id": "c",
+          "label": "git add 这个文件"
+        },
+        {
+          "id": "d",
+          "label": "git push --force"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": "改好文件、删掉标记、git add，再 git commit 完成合并。"
+    },
+    {
+      "id": "m4",
+      "prompt": "合并到一半想放弃，回到合并之前，用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git merge --abort"
+        },
+        {
+          "id": "b",
+          "label": "git reset --soft"
+        },
+        {
+          "id": "c",
+          "label": "git switch main"
+        },
+        {
+          "id": "d",
+          "label": "git revert"
+        }
+      ],
+      "answer": "a",
+      "explanation": "merge --abort 撤销这次还没完成的合并。"
+    }
+  ]
+}

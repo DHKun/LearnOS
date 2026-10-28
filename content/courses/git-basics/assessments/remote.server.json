@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "r1",
+      "prompt": "git push 返回 “! [rejected] main -> main (fetch first)”。这说明什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "网络断了"
+        },
+        {
+          "id": "b",
+          "label": "远程有你本地没有的提交（有人先推了）"
+        },
+        {
+          "id": "c",
+          "label": "你没有权限"
+        },
+        {
+          "id": "d",
+          "label": "你的提交有错误"
+        }
+      ],
+      "answer": "b",
+      "explanation": "推送只能接在远程最新提交的后面。"
+    },
+    {
+      "id": "r2",
+      "prompt": "推送被拒绝后，正确的下一步是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git push --force"
+        },
+        {
+          "id": "b",
+          "label": "git pull，必要时解决冲突，再 git push"
+        },
+        {
+          "id": "c",
+          "label": "删掉本地仓库重新克隆"
+        },
+        {
+          "id": "d",
+          "label": "等一会儿再推"
+        }
+      ],
+      "answer": "b",
+      "explanation": "先把别人的提交合并进来。"
+    },
+    {
+      "id": "r3",
+      "prompt": "git fetch 做了什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把远程的新提交取下来，更新 origin/main，不改动你的分支和文件"
+        },
+        {
+          "id": "b",
+          "label": "把你的提交推送到远程"
+        },
+        {
+          "id": "c",
+          "label": "合并远程分支到当前分支"
+        },
+        {
+          "id": "d",
+          "label": "删除远程分支"
+        }
+      ],
+      "answer": "a",
+      "explanation": "fetch 只下载；pull = fetch + merge。"
+    },
+    {
+      "id": "r4",
+      "prompt": "在多人共用的 main 分支上，git push --force 是解决推送被拒绝的常规做法。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "强推会覆盖远程，抹掉别人的提交。"
+    }
+  ]
+}

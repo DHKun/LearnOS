@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "u1",
+      "prompt": "你改坏了 index.html 但还没 git add，想让它回到上一次提交的样子。用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git restore index.html"
+        },
+        {
+          "id": "b",
+          "label": "git restore --staged index.html"
+        },
+        {
+          "id": "c",
+          "label": "git commit --amend"
+        },
+        {
+          "id": "d",
+          "label": "git revert index.html"
+        }
+      ],
+      "answer": "a",
+      "explanation": "git restore 用暂存区（这里等于上一次提交）的内容覆盖工作区的文件。"
+    },
+    {
+      "id": "u2",
+      "prompt": "你误把 style.css 放进了暂存区，想把它拿出来、但保留改动。用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git restore style.css"
+        },
+        {
+          "id": "b",
+          "label": "git restore --staged style.css"
+        },
+        {
+          "id": "c",
+          "label": "git reset --hard"
+        },
+        {
+          "id": "d",
+          "label": "rm style.css"
+        }
+      ],
+      "answer": "b",
+      "explanation": "--staged 只动暂存区，工作区的改动不变。"
+    },
+    {
+      "id": "u3",
+      "prompt": "刚提交完发现漏了一个文件，提交还没推送。想让历史里只留一次完整的提交，应该怎么做？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "git add 漏掉的文件，再 git commit --amend"
+        },
+        {
+          "id": "b",
+          "label": "再做一次新提交，说明写“补上漏掉的文件”"
+        },
+        {
+          "id": "c",
+          "label": "git reset --hard"
+        },
+        {
+          "id": "d",
+          "label": "删掉仓库重来"
+        }
+      ],
+      "answer": "a",
+      "explanation": "amend 把漏掉的文件补进最后一次提交；新做一次提交也能补上，但历史里会多一次不完整的提交。"
+    },
+    {
+      "id": "u4",
+      "prompt": "git reset --hard 之后，还可以用 git restore 找回工作区里没提交的改动。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "没提交的改动从没进过 Git，reset --hard 覆盖掉就找不回来了。"
+    }
+  ]
+}
