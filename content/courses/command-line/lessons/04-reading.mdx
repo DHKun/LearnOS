@@ -1,0 +1,63 @@
+## 借书一直失败
+
+九点多，有读者说借书一直失败。图形界面里打开日志看，几千行字一屏一屏地翻，不知道要翻到什么时候。命令行可以只取出你要的那几行。
+
+## 看文件的几种方式
+
+| 命令 | 作用 |
+| --- | --- |
+| `cat 文件` | 把整个文件打印出来，适合短文件 |
+| `head -n 20 文件` | 只看开头 20 行（不写 `-n` 默认 10 行） |
+| `tail -n 20 文件` | 只看最后 20 行，日志里最新的内容在最后 |
+| `wc -l 文件` | 数一数有多少行 |
+
+真实的服务器上还有 `less`，可以上下翻页、搜索；`tail -f` 可以盯着日志看新写进来的行。这里的练习终端不支持这两个交互式的用法。
+
+## 访问日志的一行
+
+```text
+203.0.113.7 - - [27/Oct/2026:07:42:13 +0800] "POST /api/loans HTTP/1.1" 500 187
+```
+
+从左到右：访问者的 IP、时间、请求行（方法、地址、协议）、**状态码**、响应大小（字节）。每一次请求一行，按时间先后排列。错误日志 `error.log` 则记录出错时程序写下的原因，同样带着时间。
+
+## 用 grep 筛选
+
+`grep 文字 文件` 只输出包含这段文字的行：
+
+```bash
+grep loans access.log          # 包含 loans 的行
+grep -c loans access.log       # 只数有几行
+grep -n loans access.log       # 带上行号
+grep -v ping access.log        # 反过来：不包含 ping 的行
+grep -i error error.log        # 不区分大小写
+```
+
+要找的文字里有空格或引号时，整个用单引号括起来：`grep '" 404 ' access.log`。
+
+<ConceptPlayer conceptId="command-line/grep" blockId="grep" />
+
+<MiniCheck
+  id="grep-what"
+  question="grep 404 access.log 的结果里，有一行的状态码是 200。最可能的原因是？"
+  options={["grep 有 bug", "这一行的别的地方（地址、响应大小）也含有 404", "日志写错了"]}
+  answer={1}
+  explanation="grep 只看这一行里有没有这几个字，不知道哪一栏是状态码。把前后的空格和引号一起写进去，结果就准了。"
+/>
+
+## 动手：借书为什么失败
+
+<SimulationBlock blockId="logs-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+先 `head` 看几行，弄清楚状态码在每行的什么位置、前后挨着什么符号。查到第一次出错的时间后，去 `error.log` 里找同一时间写了什么。
+
+</details>
+
+## 小结
+
+先用 `wc -l`、`head`、`tail` 摸清文件有多大、长什么样，再用 `grep` 缩小范围。查原因要两份日志对照着看：访问日志告诉你**什么时候、哪个地址**出了错，错误日志告诉你**为什么**。
+
+<KnowledgeCheck blockId="logs-check" />

@@ -1,0 +1,60 @@
+## 乱成一团的上传目录
+
+读者上传的封面图和 PDF 全堆在一个目录里，混着上传失败留下的临时文件。这一章你要用命令把它们分门别类放好，而且一个该留的文件都不能丢。
+
+## 看清楚再动手
+
+```bash
+ls -l        # 长格式：权限、主人、大小、修改时间
+ls -a        # 连以 . 开头的隐藏文件一起列出
+ls -la old   # 看某个子目录
+cat a.txt    # 看文件内容
+```
+
+名字以 `.` 开头的文件是**隐藏文件**，普通的 `ls` 不显示它们。配置文件常常是隐藏的，比如家目录里的 `.bashrc`。
+
+## 新建、复制、移动、删除
+
+| 命令 | 作用 |
+| --- | --- |
+| `mkdir images` | 新建目录；`mkdir -p a/b/c` 连中间的目录一起建 |
+| `cp a.txt b.txt` | 复制文件；复制目录要加 `-r` |
+| `mv a.txt docs/` | 移动到目录里；`mv a.txt b.txt` 是改名 |
+| `rm a.txt` | 删除文件；删除目录要加 `-r` |
+| `rmdir old` | 删除**空**目录，里面有东西会拒绝 |
+
+`mv` 和 `cp` 的最后一个参数是目标。目标是已有的目录时，文件会放进去、名字不变；不是目录时，就当作新名字。
+
+## 通配符
+
+`*` 匹配任意多个字符，`?` 匹配一个字符。`rm *.tmp` 删掉当前目录下所有 .tmp 文件。两点要注意：
+
+- `*` **不匹配隐藏文件**，`rm *` 不会删掉 `.htaccess`。
+- `*` **只看一层**，`*.tmp` 不包括子目录里的 .tmp。
+
+先用 `ls *.tmp` 看看会匹配到哪些文件，确认无误再把 `ls` 换成 `rm`。
+
+<ConceptPlayer conceptId="command-line/move" blockId="move" />
+
+<Callout type="warning" title="命令行没有回收站">
+`rm` 删掉的文件找不回来，`mv` 和 `cp` 覆盖掉的文件也一样。需要的话加 `-n`（遇到同名就跳过）或 `-v`（把做了什么打印出来）。
+</Callout>
+
+<MiniCheck
+  id="glob-hidden"
+  question="目录里有 a.tmp、b.tmp、.cache 和子目录 old/（里面有 c.tmp）。运行 rm *.tmp 之后还剩哪些？"
+  options={["只剩 old/", ".cache 和 old/（里面的 c.tmp 还在）", "什么都不剩"]}
+  answer={1}
+  explanation="* 不匹配隐藏文件，也不进入子目录。"
+/>
+
+## 动手：乱成一团的上传目录
+
+<SimulationBlock blockId="files-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+先 `ls -la inbox` 和 `ls -la inbox/old` 看清楚有哪些文件，再 `cat` 一下同名的文件，确认它们是不是同一份。弄乱了就点“清空记录并重置”，从头再来。
+
+</details>

@@ -1,0 +1,64 @@
+## 装好了却找不到
+
+同事把新版 Node.js 和运维工具 libctl 装到了 `/opt` 下面。可是 `node --version` 还是旧的 v12，敲 `libctl` 说 `command not found`。程序明明就在硬盘上，shell 为什么找不到？
+
+## 环境变量
+
+shell 里有一组**环境变量**，保存着“当前环境”的各种设置。名字一般大写，用 `$名字` 取值：
+
+```bash
+echo $HOME        # /home/ops
+echo $USER        # ops
+env               # 列出全部
+export EDITOR=vim # 设置（或修改）一个
+```
+
+单引号里的 `$` 不会被替换，双引号里的会：`echo '$HOME'` 打印 `$HOME` 这几个字，`echo "$HOME"` 打印 `/home/ops`。
+
+## PATH：去哪些目录找命令
+
+你敲 `node` 时，shell 按环境变量 `PATH` 里列出的目录，从左往右依次找名叫 node 的程序，找到第一个就运行它。
+
+```bash
+echo $PATH        # /usr/local/bin:/usr/bin:/bin
+which node        # 实际会运行的是哪一个
+which -a node     # PATH 里所有叫 node 的
+```
+
+当前目录**不在** PATH 里，所以运行当前目录下的程序要写 `./程序名`。
+
+<ConceptPlayer conceptId="command-line/path-lookup" blockId="path-lookup" />
+
+## 修改 PATH
+
+```bash
+export PATH=/opt/新目录/bin:$PATH     # 加在最前面：优先用它
+export PATH=$PATH:/opt/新目录/bin     # 加在最后面：别处都没有才用它
+```
+
+`$PATH` 会被替换成原来的值，所以原来的目录都还在。千万别写成 `export PATH=/opt/新目录/bin`，那样 `/usr/bin`、`/bin` 就都没了，连 `ls` 都找不到。
+
+## 下次登录还在吗
+
+`export` 只对**这一次登录**有效，退出就没了。每次登录时，bash 会自动运行家目录里的 `~/.bashrc`，把设置写进去才能一直生效：
+
+```bash
+echo 'export PATH=/opt/新目录/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc      # 让这次登录也立刻生效
+```
+
+这里用单引号，写进文件的是 `$PATH` 这几个字，每次登录时再替换。`.bashrc` 里已经有别的设置，一定用 `>>`。
+
+<MiniCheck
+  id="path-order"
+  question="/usr/bin 和 /opt/node20/bin 里都有 node。PATH 是 /usr/local/bin:/usr/bin:/bin:/opt/node20/bin，运行的是哪个？"
+  options={["/opt/node20/bin/node，因为它最新", "/usr/bin/node，因为在 PATH 里排在前面", "两个都会运行"]}
+  answer={1}
+  explanation="shell 只看 PATH 里的先后，找到第一个就停，不管版本新旧。"
+/>
+
+## 动手：装好了却找不到的命令
+
+<SimulationBlock blockId="env-lab" />
+
+<KnowledgeCheck blockId="env-check" />

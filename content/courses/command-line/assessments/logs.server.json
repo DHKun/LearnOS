@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "l1",
+      "prompt": "想看 access.log 里最新的 20 条记录，用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "head -n 20 access.log"
+        },
+        {
+          "id": "b",
+          "label": "tail -n 20 access.log"
+        },
+        {
+          "id": "c",
+          "label": "cat -n 20 access.log"
+        },
+        {
+          "id": "d",
+          "label": "grep 20 access.log"
+        }
+      ],
+      "answer": "b",
+      "explanation": "日志按时间追加，最新的在末尾，tail 取最后几行。"
+    },
+    {
+      "id": "l2",
+      "prompt": "统计 access.log 里有多少行包含 /api/loans，用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "grep -n /api/loans access.log"
+        },
+        {
+          "id": "b",
+          "label": "wc -l /api/loans"
+        },
+        {
+          "id": "c",
+          "label": "grep -c /api/loans access.log"
+        },
+        {
+          "id": "d",
+          "label": "cat access.log /api/loans"
+        }
+      ],
+      "answer": "c",
+      "explanation": "grep -c 只输出匹配的行数。"
+    },
+    {
+      "id": "l3",
+      "prompt": "grep 404 access.log 的结果里混进了状态码 200 的行。怎么改最好？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "grep -v 404 access.log"
+        },
+        {
+          "id": "b",
+          "label": "grep -i 404 access.log"
+        },
+        {
+          "id": "c",
+          "label": "grep '\" 404 ' access.log"
+        },
+        {
+          "id": "d",
+          "label": "head 404 access.log"
+        }
+      ],
+      "answer": "c",
+      "explanation": "把状态码前后的引号和空格一起写进去，就只匹配状态码那一栏。"
+    },
+    {
+      "id": "l4",
+      "prompt": "访问日志显示 08:10 起大量请求返回 500。下一步最该看什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "error.log 里 08:10 前后写了什么"
+        },
+        {
+          "id": "b",
+          "label": "access.log 的第一行"
+        },
+        {
+          "id": "c",
+          "label": "重启服务器再说"
+        },
+        {
+          "id": "d",
+          "label": "把 access.log 删掉腾地方"
+        }
+      ],
+      "answer": "a",
+      "explanation": "访问日志告诉你什么时候、哪个地址出错，错误日志告诉你为什么。按时间去对照。"
+    }
+  ]
+}

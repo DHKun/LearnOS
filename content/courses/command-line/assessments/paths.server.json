@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "p1",
+      "prompt": "当前目录是 /srv/library/static，运行 cd ../../shared 之后在哪里？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "/srv/shared"
+        },
+        {
+          "id": "b",
+          "label": "/srv/library/shared"
+        },
+        {
+          "id": "c",
+          "label": "/shared"
+        },
+        {
+          "id": "d",
+          "label": "/srv/library/static/shared"
+        }
+      ],
+      "answer": "a",
+      "explanation": "第一个 .. 到 /srv/library，第二个 .. 到 /srv，再进入 shared。"
+    },
+    {
+      "id": "p2",
+      "prompt": "下面哪个路径，不管从哪个目录、由哪个用户运行，指向的都是同一个地方？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "./logs"
+        },
+        {
+          "id": "b",
+          "label": "../logs"
+        },
+        {
+          "id": "c",
+          "label": "~/logs"
+        },
+        {
+          "id": "d",
+          "label": "/var/log/library"
+        }
+      ],
+      "answer": "d",
+      "explanation": "以 / 开头的绝对路径不依赖当前目录和当前用户。"
+    },
+    {
+      "id": "p3",
+      "prompt": "用户 deploy 登录后运行 ls ~，列出的是哪个目录？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "/home/deploy"
+        },
+        {
+          "id": "b",
+          "label": "/home/ops"
+        },
+        {
+          "id": "c",
+          "label": "/root"
+        },
+        {
+          "id": "d",
+          "label": "当前目录"
+        }
+      ],
+      "answer": "a",
+      "explanation": "~ 是当前用户的家目录。"
+    },
+    {
+      "id": "p4",
+      "prompt": "cd 后面什么都不写，会回到根目录 /。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "cd 不带参数回到的是家目录 ~，不是根目录。"
+    }
+  ]
+}

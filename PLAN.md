@@ -646,3 +646,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 部署后证据：`/api/health` 两侧 `version=0.1.5`、容器 `healthy`、无错误日志；数据库 3 门课程均为 `published`；Caddy 入口 `https://120.95.81.151:8080` 与 `https://10.66.66.7:8080` 返回 200；临时账号登录后 `/courses` 渲染《计算机基础入门》路线与三门课程，报名并打开 `bits-and-bytes` 学习页正常；验证账号与报名记录已删除（用户 4、enrollment 2 恢复原值）。
 - 未验证：真实 FloatCTF SSO 登录（生产无可用测试账号）；全量 E2E 套件未在生产环境运行（本地/CI 覆盖）。
 - [x] 生产管理员身份统一为 `sysadmin@learnos.local`（原 `admin@learnos.local` 改名并重置密码，旧会话全部失效；密码不入库明文、不写文档）。两个入口实测登录 200，`/admin/deployments`、`/admin/courses`、`/admin/students` 均 200。
+
+## 28. 第四门课程：`command-line`（2026-10-28）
+
+- [x] 10 章、9 个概念动画、8 个服务端验证实验（6 个为命令记录重放）、36 道服务端题；`pnpm courses:validate` 通过；加入《计算机基础入门》路线第 4 站。
+- [x] `tests/unit/command-line.test.ts`（模拟 shell 与 8 个校验器，14 项）；`tests/e2e/command-line.spec.ts`（10 章真实界面闭环，结课 150 分）。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正终端输出被文章样式套框、窄屏提示符挤占输入框、`mv -v` 双斜杠、动画根目录显示为 `//`、TERM 正常退出却显示红框等问题。

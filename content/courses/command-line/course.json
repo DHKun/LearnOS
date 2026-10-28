@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 3,
+  "slug": "command-line",
+  "title": "命令行与文件系统：在服务器上动手",
+  "description": "零基础的命令行课。整门课都在 library.test 网站所在的那台服务器上：你登录进去当值班管理员，找对路径、整理文件、从日志里查原因、用管道统计、改权限、处理占着端口的进程、修好 PATH，最后在凌晨三点把写满的磁盘救回来。终端是浏览器里的模拟环境，不执行任何真实命令。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "shell",
+        "component": "concepts/concepts.tsx",
+        "export": "ShellConcept",
+        "title": "一行命令是怎么被执行的",
+        "analogy": "大楼前台"
+      },
+      {
+        "id": "paths",
+        "component": "concepts/concepts.tsx",
+        "export": "PathsConcept",
+        "title": "相对路径与绝对路径",
+        "analogy": "在楼里问路"
+      },
+      {
+        "id": "move",
+        "component": "concepts/concepts.tsx",
+        "export": "MoveConcept",
+        "title": "mv 和 cp 遇到同名文件",
+        "analogy": "放进同事的文件盒"
+      },
+      {
+        "id": "grep",
+        "component": "concepts/concepts.tsx",
+        "export": "GrepConcept",
+        "title": "grep 是怎么筛选的",
+        "analogy": "翻登记单"
+      },
+      {
+        "id": "pipe",
+        "component": "concepts/concepts.tsx",
+        "export": "PipeConcept",
+        "title": "一条管道，一段一段看",
+        "analogy": "流水线"
+      },
+      {
+        "id": "perms",
+        "component": "concepts/concepts.tsx",
+        "export": "PermsConcept",
+        "title": "系统怎么判断权限",
+        "analogy": "门禁卡"
+      },
+      {
+        "id": "signal",
+        "component": "concepts/concepts.tsx",
+        "export": "SignalConcept",
+        "title": "kill 发出的两种信号",
+        "analogy": "请同事下班"
+      },
+      {
+        "id": "path-lookup",
+        "component": "concepts/concepts.tsx",
+        "export": "PathLookupConcept",
+        "title": "shell 按 PATH 找程序",
+        "analogy": "楼层索引"
+      },
+      {
+        "id": "unlink",
+        "component": "concepts/concepts.tsx",
+        "export": "UnlinkConcept",
+        "title": "删掉一个还开着的文件",
+        "analogy": "档案室的抽屉"
+      }
+    ],
+    "activities": [
+      {
+        "id": "paths-lab",
+        "component": "activities/labs.tsx",
+        "export": "PathsLab",
+        "title": "换了地方就找不到的目录",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validatePathsLab"
+        }
+      },
+      {
+        "id": "files-lab",
+        "component": "activities/labs.tsx",
+        "export": "FilesLab",
+        "title": "乱成一团的上传目录",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateFilesLab"
+        }
+      },
+      {
+        "id": "logs-lab",
+        "component": "activities/labs.tsx",
+        "export": "LogsLab",
+        "title": "借书为什么失败",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateLogsLab"
+        }
+      },
+      {
+        "id": "pipes-lab",
+        "component": "activities/labs.tsx",
+        "export": "PipesLab",
+        "title": "周报里的访问排行",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validatePipesLab"
+        }
+      },
+      {
+        "id": "perms-lab",
+        "component": "activities/labs.tsx",
+        "export": "PermsLab",
+        "title": "上线前的权限检查",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validatePermsLab"
+        }
+      },
+      {
+        "id": "process-lab",
+        "component": "activities/labs.tsx",
+        "export": "ProcessLab",
+        "title": "被占住的 80 端口",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateProcessLab"
+        }
+      },
+      {
+        "id": "env-lab",
+        "component": "activities/labs.tsx",
+        "export": "EnvLab",
+        "title": "装好了却找不到的命令",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateEnvLab"
+        }
+      },
+      {
+        "id": "disk-lab",
+        "component": "activities/labs.tsx",
+        "export": "DiskLab",
+        "title": "凌晨三点的告警",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateDiskLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "what-is-shell",
+      "title": "命令行是什么",
+      "source": "lessons/01-what-is-shell.mdx",
+      "required": true,
+      "unit": "文件"
+    },
+    {
+      "slug": "paths",
+      "title": "路径：你在哪里",
+      "source": "lessons/02-paths.mdx",
+      "required": true,
+      "unit": "文件",
+      "blocks": [
+        {
+          "id": "paths-lab",
+          "kind": "simulation",
+          "activityId": "command-line/paths-lab",
+          "title": "换了地方就找不到的目录"
+        },
+        {
+          "id": "paths-check",
+          "kind": "question",
+          "source": "assessments/paths.server.json",
+          "title": "路径检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "paths-lab",
+          "paths-check"
+        ]
+      }
+    },
+    {
+      "slug": "files",
+      "title": "管理文件",
+      "source": "lessons/03-files.mdx",
+      "required": true,
+      "unit": "文件",
+      "blocks": [
+        {
+          "id": "files-lab",
+          "kind": "simulation",
+          "activityId": "command-line/files-lab",
+          "title": "乱成一团的上传目录"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "files-lab"
+        ]
+      }
+    },
+    {
+      "slug": "reading",
+      "title": "读文件和日志",
+      "source": "lessons/04-reading.mdx",
+      "required": true,
+      "unit": "文本",
+      "blocks": [
+        {
+          "id": "logs-lab",
+          "kind": "simulation",
+          "activityId": "command-line/logs-lab",
+          "title": "借书为什么失败"
+        },
+        {
+          "id": "logs-check",
+          "kind": "question",
+          "source": "assessments/logs.server.json",
+          "title": "日志检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "logs-lab",
+          "logs-check"
+        ]
+      }
+    },
+    {
+      "slug": "pipes",
+      "title": "管道和重定向",
+      "source": "lessons/05-pipes.mdx",
+      "required": true,
+      "unit": "文本",
+      "blocks": [
+        {
+          "id": "pipes-lab",
+          "kind": "simulation",
+          "activityId": "command-line/pipes-lab",
+          "title": "周报里的访问排行"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "pipes-lab"
+        ]
+      }
+    },
+    {
+      "slug": "permissions",
+      "title": "权限",
+      "source": "lessons/06-permissions.mdx",
+      "required": true,
+      "unit": "系统",
+      "blocks": [
+        {
+          "id": "perms-lab",
+          "kind": "simulation",
+          "activityId": "command-line/perms-lab",
+          "title": "上线前的权限检查"
+        },
+        {
+          "id": "perms-check",
+          "kind": "question",
+          "source": "assessments/perms.server.json",
+          "title": "权限检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "perms-lab",
+          "perms-check"
+        ]
+      }
+    },
+    {
+      "slug": "processes",
+      "title": "进程与端口",
+      "source": "lessons/07-processes.mdx",
+      "required": true,
+      "unit": "系统",
+      "blocks": [
+        {
+          "id": "process-lab",
+          "kind": "simulation",
+          "activityId": "command-line/process-lab",
+          "title": "被占住的 80 端口"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "process-lab"
+        ]
+      }
+    },
+    {
+      "slug": "environment",
+      "title": "环境变量和 PATH",
+      "source": "lessons/08-environment.mdx",
+      "required": true,
+      "unit": "系统",
+      "blocks": [
+        {
+          "id": "env-lab",
+          "kind": "simulation",
+          "activityId": "command-line/env-lab",
+          "title": "装好了却找不到的命令"
+        },
+        {
+          "id": "env-check",
+          "kind": "question",
+          "source": "assessments/env.server.json",
+          "title": "环境变量检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "env-lab",
+          "env-check"
+        ]
+      }
+    },
+    {
+      "slug": "disk-full",
+      "title": "综合：凌晨的告警",
+      "source": "lessons/09-disk-full.mdx",
+      "required": true,
+      "unit": "综合",
+      "blocks": [
+        {
+          "id": "disk-lab",
+          "kind": "simulation",
+          "activityId": "command-line/disk-lab",
+          "title": "凌晨三点的告警"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "disk-lab"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/10-final.mdx",
+      "required": true,
+      "unit": "综合",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}
