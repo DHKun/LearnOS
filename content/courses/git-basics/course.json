@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 3,
+  "slug": "git-basics",
+  "title": "Git 版本控制：和别人一起改代码",
+  "description": "零基础的 Git 课。整门课都在 library.test 网站的代码仓库里：你是开发林可，和同事小王、陈静一起改网站。你会做出一次干净的提交、从历史里查出是谁改了借阅期限、收拾一次手忙脚乱的提交、在分支上开发、解决合并冲突、处理被拒绝的推送，最后安全地撤回一个已经上线的 bug。Git 和终端都是浏览器里的模拟环境，不执行任何真实命令。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "snapshot",
+        "component": "concepts/concepts.tsx",
+        "export": "SnapshotConcept",
+        "title": "提交是一张张快照",
+        "analogy": "照片档案"
+      },
+      {
+        "id": "areas",
+        "component": "concepts/concepts.tsx",
+        "export": "AreasConcept",
+        "title": "工作区、暂存区、仓库",
+        "analogy": "取景框"
+      },
+      {
+        "id": "log",
+        "component": "concepts/concepts.tsx",
+        "export": "LogConcept",
+        "title": "说明不等于改动",
+        "analogy": "照片背面的字"
+      },
+      {
+        "id": "undo",
+        "component": "concepts/concepts.tsx",
+        "export": "UndoConcept",
+        "title": "四种撤销",
+        "analogy": "后悔药"
+      },
+      {
+        "id": "branch",
+        "component": "concepts/concepts.tsx",
+        "export": "BranchConcept",
+        "title": "分支是会移动的书签",
+        "analogy": "书签"
+      },
+      {
+        "id": "merge",
+        "component": "concepts/concepts.tsx",
+        "export": "MergeConcept",
+        "title": "合并与冲突",
+        "analogy": "改同一张底稿"
+      },
+      {
+        "id": "remote",
+        "component": "concepts/concepts.tsx",
+        "export": "RemoteConcept",
+        "title": "推送被拒绝之后",
+        "analogy": "共享相册"
+      },
+      {
+        "id": "revert",
+        "component": "concepts/concepts.tsx",
+        "export": "RevertConcept",
+        "title": "撤销已经推送的提交",
+        "analogy": "更正照片"
+      }
+    ],
+    "activities": [
+      {
+        "id": "commit-lab",
+        "component": "activities/labs.tsx",
+        "export": "CommitLab",
+        "title": "只提交该提交的",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateCommitLab"
+        }
+      },
+      {
+        "id": "history-lab",
+        "component": "activities/labs.tsx",
+        "export": "HistoryLab",
+        "title": "借阅期限是谁改的",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateHistoryLab"
+        }
+      },
+      {
+        "id": "undo-lab",
+        "component": "activities/labs.tsx",
+        "export": "UndoLab",
+        "title": "手忙脚乱的一次提交",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateUndoLab"
+        }
+      },
+      {
+        "id": "branch-lab",
+        "component": "activities/labs.tsx",
+        "export": "BranchLab",
+        "title": "开发到一半的紧急修复",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateBranchLab"
+        }
+      },
+      {
+        "id": "merge-lab",
+        "component": "activities/labs.tsx",
+        "export": "MergeLab",
+        "title": "两边都改了开馆时间",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateMergeLab"
+        }
+      },
+      {
+        "id": "remote-lab",
+        "component": "activities/labs.tsx",
+        "export": "RemoteLab",
+        "title": "被拒绝的推送",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateRemoteLab"
+        }
+      },
+      {
+        "id": "incident-lab",
+        "component": "activities/labs.tsx",
+        "export": "IncidentLab",
+        "title": "上线后的 bug",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateIncidentLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "why-git",
+      "title": "为什么要版本控制",
+      "source": "lessons/01-why-git.mdx",
+      "required": true,
+      "unit": "基础"
+    },
+    {
+      "slug": "first-commit",
+      "title": "第一次提交",
+      "source": "lessons/02-first-commit.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "commit-lab",
+          "kind": "simulation",
+          "activityId": "git-basics/commit-lab",
+          "title": "只提交该提交的"
+        },
+        {
+          "id": "commit-check",
+          "kind": "question",
+          "source": "assessments/commit.server.json",
+          "title": "提交检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "commit-lab",
+          "commit-check"
+        ]
+      }
+    },
+    {
+      "slug": "history",
+      "title": "读懂历史",
+      "source": "lessons/03-history.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "history-lab",
+          "kind": "simulation",
+          "activityId": "git-basics/history-lab",
+          "title": "借阅期限是谁改的"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "history-lab"
+        ]
+      }
+    },
+    {
+      "slug": "undo",
+      "title": "撤销",
+      "source": "lessons/04-undo.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "undo-lab",
+          "kind": "simulation",
+          "activityId": "git-basics/undo-lab",
+          "title": "手忙脚乱的一次提交"
+        },
+        {
+          "id": "undo-check",
+          "kind": "question",
+          "source": "assessments/undo.server.json",
+          "title": "撤销检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "undo-lab",
+          "undo-check"
+        ]
+      }
+    },
+    {
+      "slug": "branches",
+      "title": "分支",
+      "source": "lessons/05-branches.mdx",
+      "required": true,
+      "unit": "分支",
+      "blocks": [
+        {
+          "id": "branch-lab",
+          "kind": "simulation",
+          "activityId": "git-basics/branch-lab",
+          "title": "开发到一半的紧急修复"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "branch-lab"
+        ]
+      }
+    },
+    {
+      "slug": "merge",
+      "title": "合并与冲突",
+      "source": "lessons/06-merge.mdx",
+      "required": true,
+      "unit": "分支",
+      "blocks": [
+        {
+          "id": "merge-lab",
+          "kind": "simulation",
+          "activityId": "git-basics/merge-lab",
+          "title": "两边都改了开馆时间"
+        },
+        {
+          "id": "merge-check",
+          "kind": "question",
+          "source": "assessments/merge.server.json",
+          "title": "合并检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "merge-lab",
+          "merge-check"
+        ]
+      }
+    },
+    {
+      "slug": "remote",
+      "title": "远程仓库",
+      "source": "lessons/07-remote.mdx",
+      "required": true,
+      "unit": "协作",
+      "blocks": [
+        {
+          "id": "remote-lab",
+          "kind": "simulation",
+          "activityId": "git-basics/remote-lab",
+          "title": "被拒绝的推送"
+        },
+        {
+          "id": "remote-check",
+          "kind": "question",
+          "source": "assessments/remote.server.json",
+          "title": "远程检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "remote-lab",
+          "remote-check"
+        ]
+      }
+    },
+    {
+      "slug": "incident",
+      "title": "综合：上线后的 bug",
+      "source": "lessons/08-incident.mdx",
+      "required": true,
+      "unit": "协作",
+      "blocks": [
+        {
+          "id": "incident-lab",
+          "kind": "simulation",
+          "activityId": "git-basics/incident-lab",
+          "title": "上线后的 bug"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "incident-lab"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/09-final.mdx",
+      "required": true,
+      "unit": "协作",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}

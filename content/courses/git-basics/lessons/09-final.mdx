@@ -1,0 +1,22 @@
+## 回顾：十个关键判断
+
+1. 提交是整个项目的一张快照，带着说明、作者、时间和上一次提交；说明要写清楚改了什么。
+2. 改动先 `git add` 进暂存区，`git commit` 只提交暂存区里的东西。
+3. `git add .` 会带上所有新文件；密码、本地配置写进 `.gitignore`。
+4. 查历史时说明只是线索，要看实际改动：`git log -p`、`git show`、`git blame`。
+5. `git restore` 丢掉工作区的修改，`git restore --staged` 只是移出暂存区。
+6. `git commit --amend` 替换最后一次提交，会把暂存区里的东西一起放进去。
+7. 分支是会移动的标签；没做完的功能放在自己的分支上。
+8. 冲突时 Git 把两个版本都写进文件，你要读懂两边的意图，删掉标记再提交。
+9. 推送被拒绝说明远程有你没见过的提交：先 `git pull`，再 `git push`；不要强推共享分支。
+10. 已经推送的提交用 `git revert` 撤销；`reset` 和 `amend` 只用于还没推送的提交。
+
+## 结业测验
+
+共 20 题，80 分及格，由服务端评分。
+
+<KnowledgeCheck blockId="final-check" />
+
+<Callout type="tip" title="学完之后">
+在自己的电脑上装好 Git，先运行 `git config --global user.name "你的名字"` 和 `git config --global user.email 你的邮箱`，再找个自己的小项目试试 `git init`、`git add`、`git commit`。《计算机基础入门》路线到这里就走完了。
+</Callout>

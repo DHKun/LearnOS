@@ -1,0 +1,58 @@
+## 借阅期限是谁改的
+
+读者问：以前能借 30 天，怎么变成 14 天了？没人记得。好在仓库里记着每一次修改，只要会查。
+
+## 看提交列表
+
+```bash
+git log                 # 完整信息：提交号、作者、时间、说明
+git log --oneline       # 一行一个
+git log -n 3            # 只看最近 3 个
+git log --author=王磊   # 只看某个人的
+```
+
+最新的提交在最上面。`HEAD -> main` 标出你现在在哪个分支、分支指着哪个提交。
+
+## 看实际改动
+
+```bash
+git show 2b25c82          # 某个提交的说明和改动
+git show 2b25c82 --stat   # 只看改了哪些文件
+git log -p                # 每个提交都带上改动
+git log -- config.js      # 只看改过 config.js 的提交
+git diff a1b2c3d 2b25c82  # 两个提交之间的区别
+```
+
+改动用 **diff** 表示：`-` 开头的行是删掉的，`+` 开头的行是加上的，其余是上下文。
+
+```diff
+-export const LOAN_DAYS = 30;
++export const LOAN_DAYS = 14;
+```
+
+提交号不用写全，前 7 位就够了。
+
+## 这一行是谁写的
+
+`git blame 文件` 逐行列出：每一行最后是被哪次提交、哪个人改过的。适合回答“这句是什么时候加上去的”。
+
+<ConceptPlayer conceptId="git-basics/log" blockId="log" />
+
+<MiniCheck
+  id="message-lies"
+  question="想找出是哪次提交改了 config.js 里的某个值，下面哪种办法最可靠？"
+  options={["在 git log --oneline 里找说明带“配置”的提交", "git log -p -- config.js，直接看改过这个文件的提交改了什么", "问同事"]}
+  answer={1}
+  explanation="说明可能写得不准，改动本身不会骗人。"
+/>
+
+## 动手：借阅期限是谁改的
+
+<SimulationBlock blockId="history-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+借阅期限写在 `config.js` 里。先只看改过这个文件的提交，再用 `git show` 看具体改了什么。最后一题用 `git blame index.html`。
+
+</details>

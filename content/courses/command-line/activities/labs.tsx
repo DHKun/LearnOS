@@ -128,7 +128,7 @@ function TerminalView({
         ) : (
           visible.map((entry, index) => (
             <div key={start + index} className="mb-2">
-              <p className="m-0 break-all">
+              <p className="m-0 break-all text-slate-100">
                 <span className="text-emerald-300">ops@library</span>
                 <span className="text-slate-400">:</span>
                 <span className="text-sky-300">{promptPath(home, entry.cwd)}</span>

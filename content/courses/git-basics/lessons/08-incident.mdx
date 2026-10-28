@@ -1,0 +1,42 @@
+## 上线后的 bug
+
+下午的版本上线后，读者截图说：到期日期比借书日期还早。这一章把前面所有内容都用上，而且没有实时提示。
+
+## 先找到是哪次提交
+
+```bash
+git log --oneline -n 5          # 最近都推了些什么
+git log -p -- loans.js          # 只看改过 loans.js 的提交改了什么
+git show a1b2c3d                # 怀疑哪个就看哪个
+```
+
+## 撤销已经推送的提交
+
+坏提交已经推送出去了，后面还有别人基于它的提交。这时不能用 reset 改写历史，而要用 **revert**：
+
+```bash
+git revert a1b2c3d      # 新增一次提交，把 a1b2c3d 的改动原样撤回
+git push
+```
+
+revert 不删除任何提交，只是在后面加一个“反向”的提交。别人 `git pull` 一下就同步了。
+
+<ConceptPlayer conceptId="git-basics/revert" blockId="revert" />
+
+<MiniCheck
+  id="revert-or-reset"
+  question="一个有 bug 的提交已经推送，后面又有两个同事的提交。最合适的处理是？"
+  options={["git reset --hard 回到 bug 之前，再 git push --force", "git revert 那次提交，再 git push", "删掉仓库重新克隆"]}
+  answer={1}
+  explanation="reset 加强推会抹掉后面两个同事的提交。revert 只撤销那一次改动，其余历史不变。"
+/>
+
+## 动手之前
+
+- **你手头没提交的改动**会被 `reset --hard`、`restore` 覆盖掉。动手前 `git status` 看一眼。
+- **先确认坏提交是哪一个**：撤错了，bug 还在，还多撤掉了一次正常的改动。
+- **做完要验证**：`git log --oneline` 看历史，`git status` 看是否已经推送。
+
+## 动手：上线后的 bug
+
+<SimulationBlock blockId="incident-lab" />

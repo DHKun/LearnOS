@@ -26,15 +26,15 @@ test.describe("学习路线", () => {
       await login(page, student.email, student.password);
       await page.goto("/courses");
 
-      // The path shows all five stops; unbuilt courses are marked as coming soon.
+      // The path shows all five stops, every one of them live.
       const pathCard = page.locator('[data-path="computer-foundations"]');
       await expect(pathCard.getByRole("heading", { name: "计算机基础入门" })).toBeVisible();
       await expect(pathCard.locator("[data-step]")).toHaveCount(5);
       await expect(pathCard.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-step="networking-basics"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-step="command-line"]')).toHaveAttribute("data-state", "available");
-      await expect(pathCard.locator('[data-step="git-basics"]')).toHaveAttribute("data-state", "upcoming");
-      await expect(pathCard.locator('[data-step="git-basics"] a')).toHaveCount(0);
+      await expect(pathCard.locator('[data-step="git-basics"]')).toHaveAttribute("data-state", "available");
+      await expect(pathCard.locator('[data-state="upcoming"]')).toHaveCount(0);
       await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 0 / 5 门");
       await expect(pathCard.getByRole("link", { name: /开始：0 和 1 的世界/ })).toBeVisible();
 
