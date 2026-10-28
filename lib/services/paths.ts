@@ -109,3 +109,8 @@ export async function getCoursePathContext(studentId: string, courseSlug: string
   const { paths } = await getStudentPaths(studentId);
   return pathContextFor(paths, courseSlug);
 }
+
+export async function getStudentPath(studentId: string, slug: string): Promise<PathView | null> {
+  const { paths } = await getStudentPaths(studentId);
+  return paths.find((path) => path.slug === slug) ?? null;
+}

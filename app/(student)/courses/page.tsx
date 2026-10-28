@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { requireStudent } from "@/lib/auth/session";
-import { PathCard } from "@/components/learning/path-card";
+import { PathSummaryCard } from "@/components/learning/path-map";
 import { getCurrentEnrollment } from "@/lib/services/courses";
 import { getStudentPaths } from "@/lib/services/paths";
 
@@ -62,10 +62,12 @@ export default async function CoursesPage() {
             <h2 id="paths-heading" className="font-serif text-xl font-semibold">
               学习路线
             </h2>
-            <p className="text-xs text-muted-foreground">按推荐顺序学习效果最好，也可以跳着学</p>
+            <Link href="/paths" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+              全部路线 →
+            </Link>
           </div>
           {paths.map((path) => (
-            <PathCard key={path.slug} path={path} />
+            <PathSummaryCard key={path.slug} path={path} compact />
           ))}
         </section>
       )}

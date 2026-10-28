@@ -17,7 +17,7 @@ import {
 const FINAL_QUIZ = path.join(process.cwd(), "content/courses/bits-and-bytes/assessments/final.server.json");
 
 test.describe("学习路线", () => {
-  test("课程目录按路线展示；学完第一门后推荐路线里的下一门", async ({ page }) => {
+  test("导航进入路线图，节点显示每门课的状态；学完第一门后路线图和推荐随之更新", async ({ page }) => {
     test.setTimeout(120_000);
     const student = await createTestStudent("paths");
     const first = await getCourseBySlug("bits-and-bytes");
@@ -38,10 +38,24 @@ test.describe("学习路线", () => {
       await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 0 / 5 门");
       await expect(pathCard.getByRole("link", { name: /开始：0 和 1 的世界/ })).toBeVisible();
 
-      // The course page knows where it sits on the path.
-      await pathCard.getByRole("link", { name: /开始：0 和 1 的世界/ }).click();
+      // The nav leads to the path list and then to the path's flow chart.
+      await page.getByRole("navigation").first().getByRole("link", { name: "路线", exact: true }).click();
+      await expect(page).toHaveURL(/\/paths$/);
+      await page.locator('[data-path="computer-foundations"]').getByRole("link", { name: /查看路线图/ }).click();
+      await expect(page).toHaveURL(/\/paths\/computer-foundations$/);
+      const map = page.getByTestId("path-map");
+      await expect(page.getByRole("heading", { level: 1, name: "计算机基础入门" })).toBeVisible();
+      await expect(map.locator("[data-step]")).toHaveCount(5);
+      await expect(map.locator('[data-step="bits-and-bytes"]')).toContainText("推荐下一门");
+      await expect(map.locator('[data-step="git-basics"]')).toHaveAttribute("data-state", "available");
+      await expect(page.getByTestId("path-finish")).toHaveAttribute("data-done", "false");
+
+      // The course page knows where it sits on the path, and links back to the map.
+      await map.locator('[data-step="bits-and-bytes"]').getByRole("link", { name: /查看课程/ }).click();
+      await expect(page).toHaveURL(/\/courses\/bits-and-bytes$/);
       await expect(page.getByTestId("course-path-context")).toContainText("第 1 / 5 门");
       await expect(page.getByTestId("course-path-context")).toContainText("下一门：网络基础");
+      await expect(page.getByTestId("course-path-context").getByRole("link", { name: /计算机基础入门/ })).toHaveAttribute("href", "/paths/computer-foundations");
 
       // Finish the course: chapters through the service transaction, the final exam through the real API.
       await page.getByRole("button", { name: "参加课程" }).click();
@@ -74,6 +88,17 @@ test.describe("学习路线", () => {
       await expect(pathCard.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "completed");
       await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 1 / 5 门");
       await expect(pathCard.getByRole("link", { name: /开始：网络基础/ })).toBeVisible();
+
+      // So does the flow chart: the first stop is done, the second is next.
+      await page.goto("/paths/computer-foundations");
+      await expect(map.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "completed");
+      await expect(map.locator('[data-step="bits-and-bytes"]')).toContainText("复习课程");
+      await expect(map.locator('[data-step="networking-basics"]')).toContainText("推荐下一门");
+      await expect(page.getByTestId("path-progress")).toContainText("已完成 1 / 5 门");
+
+      // Unknown paths are a 404, not an empty page.
+      const missing = await page.goto("/paths/no-such-path");
+      expect(missing?.status()).toBe(404);
     } finally {
       await deleteTestStudent(student.id);
     }
