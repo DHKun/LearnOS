@@ -9,6 +9,7 @@ import type { SessionProfile } from "@/lib/auth/session";
 
 const STUDENT_NAV: NavItem[] = [
   { href: "/courses", label: "课程" },
+  { href: "/paths", label: "路线" },
   { href: "/me", label: "我的学习" },
 ];
 

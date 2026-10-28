@@ -62,7 +62,7 @@ export default async function CourseDetailPage({
               <Route className="size-4 text-primary" aria-hidden />
               <span>
                 学习路线
-                <Link href={`/courses#path-${context.path.slug}`} className="mx-1 font-medium text-primary hover:underline">
+                <Link href={`/paths/${context.path.slug}`} className="mx-1 font-medium text-primary hover:underline">
                   《{context.path.title}》
                 </Link>
                 第 {context.position} / {context.total} 门
