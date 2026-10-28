@@ -665,3 +665,11 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `tests/e2e/learning-paths.spec.ts`：导航进入路线图、节点状态与推荐、学完第一门后路线图更新、未知路线 404。
 - [x] 截图检查：路线图、路线列表、课程目录在 1440 / 390px × 亮 / 暗下无横向溢出、无控制台错误（修正一处 `<p>` 内嵌 `<div>` 导致的水合错误）。
 
+
+## 31. 0.1.6 合并与生产部署（2026-10-28）
+
+- [x] PR #9（`command-line`）、#10（`git-basics`）、#11（学习路线独立成页）依次合并：每个 PR `verify=pass` 且 `mergeStateStatus=CLEAN` 后才合入，合并后 main CI 全绿。
+- [x] 本地门禁（0.1.6）：`pnpm lint`、`pnpm typecheck`、`pnpm test:unit`（172 通过）、`pnpm courses:validate`（5 门课程 + 1 条路线）、`pnpm build` 全部通过。
+- [x] 生产部署：备份 `backup-20261028-release-016/`（数据库 dump、compose/env/Caddyfile、两个容器 inspect、镜像清单）→ `learnos-tools:0.1.6` 预检（两门已有学习记录的课程结构兼容、两门新课程可安装）→ 构建 `prod120-016` / `dev10-016` → 切换两侧 → `pnpm courses:sync --publish-new`。
+- [x] 部署后证据：两侧 `/api/health` 为 `version=0.1.6`、容器 `healthy`、无错误日志；数据库 5 门课程均 `published`；临时账号在公网入口实测 `/courses` 列出 5 门课与路线摘要、`/paths` 与 `/paths/computer-foundations` 均 200、未知路线 404；验证账号已删除（用户 5、enrollment 4 恢复原值）。
+- 未验证：真实 FloatCTF SSO 登录（生产无可用测试账号）；全量 E2E 套件未在生产环境运行。
