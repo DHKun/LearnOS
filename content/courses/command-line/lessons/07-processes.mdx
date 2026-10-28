@@ -1,0 +1,66 @@
+## 被占住的 80 端口
+
+新版本发布了，重启网站却报 `address already in use`：80 端口已经有人在用了。上一门《网络基础》讲过，一个端口同一时间只能被一个程序监听。这一章要找出是谁，并且体面地请它让出来。
+
+## 进程
+
+每个正在运行的程序都是一个**进程**，有一个编号叫 **PID**。`ps aux` 列出机器上所有进程：
+
+```text
+USER       PID  %CPU  %MEM  START COMMAND
+postgres   402   1.2   6.4  Oct20 /usr/lib/postgresql/16/bin/postgres …
+ops        812   2.8   3.9  Oct26 /srv/library/…/library-web --port 80
+```
+
+进程多的时候配合 grep：`ps aux | grep library`。
+
+## 谁占着端口
+
+```bash
+ss -ltnp
+```
+
+`-l` 只看正在监听的，`-t` 只看 TCP，`-n` 端口显示成数字，`-p` 显示是哪个进程。普通用户只能看到**自己的**进程名和 PID，别人的那一栏是空的。
+
+## 结束一个进程
+
+```bash
+kill 812        # 发送 TERM：请它收尾后退出
+kill -9 812     # 发送 KILL：系统直接把它拿掉
+```
+
+只能结束自己的进程，结束别人的会得到 `Operation not permitted`。
+
+<ConceptPlayer conceptId="command-line/signal" blockId="signal" />
+
+<MiniCheck
+  id="term-first"
+  question="一个进程正在写文件，你想让它退出。应该先用哪个？"
+  options={["kill -9，最干脆", "kill（默认的 TERM），让它有机会把文件写完", "直接重启服务器"]}
+  answer={1}
+  explanation="TERM 允许进程收尾。只有它卡住不理 TERM 时，才用 kill -9。"
+/>
+
+## 交给 systemd 管
+
+服务器上的网站、数据库这类常驻程序，通常交给系统的服务管理器 **systemd** 管：开机自动启动，崩了自动拉起，日志集中保存。
+
+```bash
+systemctl status library-web          # 状态和最近几行日志
+sudo systemctl restart library-web    # 重启
+sudo systemctl start library-web      # 启动
+sudo systemctl stop library-web       # 停止
+```
+
+启停服务需要管理员权限，命令前面加 `sudo`。**手动**在终端里启动的进程不归 systemd 管，`systemctl restart` 也停不掉它。
+
+## 动手：被占住的 80 端口
+
+<SimulationBlock blockId="process-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+先 `systemctl status library-web` 看它为什么起不来，再查 80 端口在谁手里。动手前对照 `ps aux` 的完整命令行，弄清楚每个进程是干什么的。
+
+</details>

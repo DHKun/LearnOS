@@ -1,0 +1,101 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "m1",
+      "prompt": "db.env 是 -rw-r-----，主人 ops，组 web。不在 web 组里的 guest 能读它吗？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "能，文件有 r"
+        },
+        {
+          "id": "b",
+          "label": "不能，guest 只看第三组，是 ---"
+        },
+        {
+          "id": "c",
+          "label": "能读一部分"
+        }
+      ],
+      "answer": "b",
+      "explanation": "不是主人、也不在组里，就只看最后一组。"
+    },
+    {
+      "id": "m2",
+      "prompt": "deploy.sh 是 rw-r--r--。想让主人能运行它，改动最小的命令是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "chmod 777 deploy.sh"
+        },
+        {
+          "id": "b",
+          "label": "chmod u+x deploy.sh"
+        },
+        {
+          "id": "c",
+          "label": "chmod +r deploy.sh"
+        },
+        {
+          "id": "d",
+          "label": "chmod 600 deploy.sh"
+        }
+      ],
+      "answer": "b",
+      "explanation": "u+x 只给主人加上执行权限，别的不变。"
+    },
+    {
+      "id": "m3",
+      "prompt": "权限 640 写成字母是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "rw-r-----"
+        },
+        {
+          "id": "b",
+          "label": "rwxr-----"
+        },
+        {
+          "id": "c",
+          "label": "rw-rw----"
+        },
+        {
+          "id": "d",
+          "label": "r--r-----"
+        }
+      ],
+      "answer": "a",
+      "explanation": "6=4+2（rw-），4（r--），0（---）。"
+    },
+    {
+      "id": "m4",
+      "prompt": "uploads/ 的主人是 ops、组是 web。网站进程 www-data 在 web 组里，要往里存文件，其他人不该能写。最合适的权限是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "777"
+        },
+        {
+          "id": "b",
+          "label": "755"
+        },
+        {
+          "id": "c",
+          "label": "775"
+        },
+        {
+          "id": "d",
+          "label": "700"
+        }
+      ],
+      "answer": "c",
+      "explanation": "775：主人和组都能写、能进入，其他人只能看。"
+    }
+  ]
+}

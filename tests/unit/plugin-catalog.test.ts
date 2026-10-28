@@ -19,6 +19,15 @@ describe("课程插件自动注册", () => {
       "bits-and-bytes/signature",
       "bits-and-bytes/switches",
       "bits-and-bytes/utf8",
+      "command-line/grep",
+      "command-line/move",
+      "command-line/path-lookup",
+      "command-line/paths",
+      "command-line/perms",
+      "command-line/pipe",
+      "command-line/shell",
+      "command-line/signal",
+      "command-line/unlink",
       "http-hands-on/auth",
       "http-hands-on/cache",
       "http-hands-on/cookie",
@@ -51,6 +60,14 @@ describe("课程插件自动注册", () => {
       "bits-and-bytes/repair-lab",
       "bits-and-bytes/size-lab",
       "bits-and-bytes/utf8-lab",
+      "command-line/disk-lab",
+      "command-line/env-lab",
+      "command-line/files-lab",
+      "command-line/logs-lab",
+      "command-line/paths-lab",
+      "command-line/perms-lab",
+      "command-line/pipes-lab",
+      "command-line/process-lab",
       "http-hands-on/cache-lab",
       "http-hands-on/cookie-lab",
       "http-hands-on/diagnosis-lab",
@@ -80,6 +97,7 @@ describe("课程插件自动注册", () => {
     expect(generated).toContain("content/courses/http-hands-on/");
     expect(generated).toContain("content/courses/bits-and-bytes/");
     expect(generated).toContain("content/courses/networking-basics/");
+    expect(generated).toContain("content/courses/command-line/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

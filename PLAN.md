@@ -636,3 +636,10 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] 11 章、9 个概念动画、9 个服务端验证实验、36 道服务端题；`pnpm courses:validate` 通过；加入《计算机基础入门》路线第 2 站。
 - [x] `tests/unit/networking-basics.test.ts`（网络模型与 9 个校验器，12 项）；`tests/e2e/networking-basics.spec.ts`（11 章真实界面闭环，结课 160 分）。
 - [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正重复提示、规则编辑器缺表头、综合任务实时对错提示三处问题。
+
+## 27. 第四门课程：`command-line`（2026-10-28）
+
+- [x] 10 章、9 个概念动画、8 个服务端验证实验（6 个为命令记录重放）、36 道服务端题；`pnpm courses:validate` 通过；加入《计算机基础入门》路线第 4 站。
+- [x] `tests/unit/command-line.test.ts`（模拟 shell 与 8 个校验器，14 项）；`tests/e2e/command-line.spec.ts`（10 章真实界面闭环，结课 150 分）。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正终端输出被文章样式套框、窄屏提示符挤占输入框、`mv -v` 双斜杠、动画根目录显示为 `//`、TERM 正常退出却显示红框等问题。
+

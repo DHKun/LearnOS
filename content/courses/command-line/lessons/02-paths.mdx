@@ -1,0 +1,70 @@
+## 换了地方就找不到
+
+部署脚本一直好好的，改成定时任务运行之后，日志里冒出一串 `No such file or directory`。脚本没改，文件也没动，变的是**从哪里运行**和**谁在运行**。
+
+## 一棵文件树
+
+Linux 上所有文件都挂在一棵树上，树根写作 `/`。这台服务器上常用的几个分支：
+
+| 目录 | 放什么 |
+| --- | --- |
+| `/home/ops` | 用户 ops 的家目录，也写作 `~` |
+| `/srv/library` | 网站的程序、页面和配置 |
+| `/var/log` | 各种日志 |
+| `/etc` | 系统和软件的配置文件 |
+| `/bin`、`/usr/bin` | 命令对应的程序 |
+| `/tmp` | 临时文件，谁都能写 |
+
+## 你站在哪里
+
+终端随时都有一个**当前目录**。三个命令最常用：
+
+```bash
+pwd              # 我现在在哪
+ls               # 这里有什么
+cd /var/log      # 去另一个目录
+```
+
+`cd` 不带参数会回到家目录，`cd -` 回到上一个去过的目录。
+
+## 绝对路径和相对路径
+
+- **绝对路径**以 `/` 开头，从树根出发：`/srv/library/static`。在哪里用都指向同一个地方。
+- **相对路径**不以 `/` 开头，从当前目录出发：在 `/srv/library` 里，`static` 就是 `/srv/library/static`。
+
+相对路径里有两个特殊的名字：`.` 是当前目录，`..` 是上一层目录。`~` 是当前用户的家目录，`~deploy` 是用户 deploy 的家目录。
+
+<ConceptPlayer conceptId="command-line/paths" blockId="paths" />
+
+<MiniCheck
+  id="relative"
+  question="当前目录是 /home/deploy，cd ../ops 之后在哪里？"
+  options={["/home/deploy/ops", "/home/ops", "/ops"]}
+  answer={1}
+  explanation=".. 先回到 /home，再进入 ops。"
+/>
+
+<MiniCheck
+  id="tilde-user"
+  question="同一个脚本里写着 ~/logs。ops 运行和 deploy 运行时，它指向的是同一个目录吗？"
+  options={["是，~ 就是 /home", "不是，~ 是“正在运行的那个用户”的家目录", "不一定，看当前目录"]}
+  answer={1}
+  explanation="~ 跟着用户走，相对路径跟着当前目录走。两者都会因为“谁在、在哪运行”而变。"
+/>
+
+## 动手：换了地方就找不到
+
+<SimulationBlock blockId="paths-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+先算出每个路径在**原来那种运行方式**下指向哪里（表格里能看到），再用终端去确认那个目录确实存在：`ls /srv`、`ls /srv/library`。目录名拼错时，`ls` 一下就能看出来。
+
+</details>
+
+## 小结
+
+写给别人或者给机器运行的东西（脚本、配置、定时任务），路径一律写绝对路径。相对路径和 `~` 只在你自己敲命令时图个方便。
+
+<KnowledgeCheck blockId="paths-check" />

@@ -1,0 +1,61 @@
+## 服务器上没有桌面
+
+前两门课里，library.test 一直待在远处的机房。这门课你要登录到那台服务器上，当它的值班管理员。
+
+服务器没有显示器，也没有桌面和鼠标。你和它之间只有一个窗口：输入一行字，它回你几行字。这个窗口叫**终端**，在里面读你命令的程序叫 **shell**。这门课用的 shell 是服务器上最常见的 bash。
+
+命令行看着简陋，好处却实在：一行命令能做完图形界面里点几十下的事，还能写进脚本让机器每天自动做。出了故障，往往也只有它能用。
+
+## 一行命令的结构
+
+```bash
+ls -l /var/log
+```
+
+| 部分 | 例子 | 作用 |
+| --- | --- | --- |
+| 命令 | `ls` | 要运行哪个程序：列出目录里的文件 |
+| 选项 | `-l` | 怎么做：用长格式显示 |
+| 参数 | `/var/log` | 对谁做：哪个目录 |
+
+几个短选项可以合在一起写，`ls -l -a` 和 `ls -la` 是一回事。命令和每个参数之间用空格隔开，参数本身含空格时要加引号。
+
+<ConceptPlayer conceptId="command-line/shell" blockId="shell" />
+
+<MiniCheck
+  id="tilde"
+  question="你输入 ls ~/*.txt。ls 这个程序实际收到的参数是什么？"
+  options={["~/*.txt 这几个字符，由 ls 自己去展开", "家目录里所有 .txt 文件的完整路径，展开是 shell 做的", "什么也收不到，ls 不认识 ~"]}
+  answer={1}
+  explanation="~ 和 * 都是 shell 在运行程序之前替换掉的。所以无论什么命令，都能用 ~ 和通配符。"
+/>
+
+## 看懂终端在说什么
+
+终端每一行开头的 `ops@library:~$` 叫**提示符**：你是 ops，在名叫 library 的机器上，当前在 `~`（你的家目录），`$` 后面等着你输入。
+
+命令成功时多半什么也不说。出错时会给一句英文，记住最常见的三句就够用很久：
+
+| 报错 | 意思 |
+| --- | --- |
+| `No such file or directory` | 路径写错了，或者文件不在你以为的地方 |
+| `Permission denied` | 文件在，但你没有权限 |
+| `command not found` | shell 找不到这个命令：拼错了，或者程序不在 PATH 里 |
+
+另外：命令和文件名**区分大小写**，`Readme` 和 `readme` 是两个文件。按上箭头可以调出上一条命令。
+
+<MiniCheck
+  id="denied"
+  question="cat /etc/shadow 返回 Permission denied。这说明什么？"
+  options={["这个文件不存在", "文件存在，但当前用户没有读它的权限", "cat 命令坏了"]}
+  answer={1}
+  explanation="不存在会说 No such file or directory。Permission denied 说明路找到了，门没开。"
+/>
+
+## 这门课的练习机
+
+后面每一章的实验都在同一台模拟服务器上做。你的账号是 `ops`，网站文件在 `/srv/library`，日志在 `/var/log/library`。终端在浏览器里运行，不会碰到任何真实的机器。随时可以输入 `help` 查看支持哪些命令，也可以清空记录重来。
+
+<Callout type="note" title="Windows 和 macOS">
+macOS 的终端和 Linux 几乎一样。Windows 自带的 PowerShell 命令名不同（比如用 `Get-ChildItem` 列文件），但路径、管道、权限这些概念是相通的。Windows 上也可以装 WSL 来用 Linux 的命令行。
+</Callout>

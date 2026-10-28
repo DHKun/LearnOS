@@ -10,24 +10,32 @@ import { validateParityLab as validator7 } from "../../content/courses/bits-and-
 import { validateRepairLab as validator8 } from "../../content/courses/bits-and-bytes/validators";
 import { validateSizeLab as validator9 } from "../../content/courses/bits-and-bytes/validators";
 import { validateUtf8Lab as validator10 } from "../../content/courses/bits-and-bytes/validators";
-import { validateCacheLab as validator11 } from "../../content/courses/http-hands-on/validators";
-import { validateCookieLab as validator12 } from "../../content/courses/http-hands-on/validators";
-import { validateDiagnosisLab as validator13 } from "../../content/courses/http-hands-on/validators";
-import { validateFinalMission as validator14 } from "../../content/courses/http-hands-on/validators";
-import { validateJsonLab as validator15 } from "../../content/courses/http-hands-on/validators";
-import { validateMethodLab as validator16 } from "../../content/courses/http-hands-on/validators";
-import { validateRequestLab as validator17 } from "../../content/courses/http-hands-on/validators";
-import { validateResponseLab as validator18 } from "../../content/courses/http-hands-on/validators";
-import { validateUrlLab as validator19 } from "../../content/courses/http-hands-on/validators";
-import { validateArpLab as validator20 } from "../../content/courses/networking-basics/validators";
-import { validateDnsLab as validator21 } from "../../content/courses/networking-basics/validators";
-import { validateFirewallLab as validator22 } from "../../content/courses/networking-basics/validators";
-import { validateLaptopLab as validator23 } from "../../content/courses/networking-basics/validators";
-import { validateNatLab as validator24 } from "../../content/courses/networking-basics/validators";
-import { validateRouteLab as validator25 } from "../../content/courses/networking-basics/validators";
-import { validateSubnetLab as validator26 } from "../../content/courses/networking-basics/validators";
-import { validateTcpLab as validator27 } from "../../content/courses/networking-basics/validators";
-import { validateTraceLab as validator28 } from "../../content/courses/networking-basics/validators";
+import { validateDiskLab as validator11 } from "../../content/courses/command-line/validators";
+import { validateEnvLab as validator12 } from "../../content/courses/command-line/validators";
+import { validateFilesLab as validator13 } from "../../content/courses/command-line/validators";
+import { validateLogsLab as validator14 } from "../../content/courses/command-line/validators";
+import { validatePathsLab as validator15 } from "../../content/courses/command-line/validators";
+import { validatePermsLab as validator16 } from "../../content/courses/command-line/validators";
+import { validatePipesLab as validator17 } from "../../content/courses/command-line/validators";
+import { validateProcessLab as validator18 } from "../../content/courses/command-line/validators";
+import { validateCacheLab as validator19 } from "../../content/courses/http-hands-on/validators";
+import { validateCookieLab as validator20 } from "../../content/courses/http-hands-on/validators";
+import { validateDiagnosisLab as validator21 } from "../../content/courses/http-hands-on/validators";
+import { validateFinalMission as validator22 } from "../../content/courses/http-hands-on/validators";
+import { validateJsonLab as validator23 } from "../../content/courses/http-hands-on/validators";
+import { validateMethodLab as validator24 } from "../../content/courses/http-hands-on/validators";
+import { validateRequestLab as validator25 } from "../../content/courses/http-hands-on/validators";
+import { validateResponseLab as validator26 } from "../../content/courses/http-hands-on/validators";
+import { validateUrlLab as validator27 } from "../../content/courses/http-hands-on/validators";
+import { validateArpLab as validator28 } from "../../content/courses/networking-basics/validators";
+import { validateDnsLab as validator29 } from "../../content/courses/networking-basics/validators";
+import { validateFirewallLab as validator30 } from "../../content/courses/networking-basics/validators";
+import { validateLaptopLab as validator31 } from "../../content/courses/networking-basics/validators";
+import { validateNatLab as validator32 } from "../../content/courses/networking-basics/validators";
+import { validateRouteLab as validator33 } from "../../content/courses/networking-basics/validators";
+import { validateSubnetLab as validator34 } from "../../content/courses/networking-basics/validators";
+import { validateTcpLab as validator35 } from "../../content/courses/networking-basics/validators";
+import { validateTraceLab as validator36 } from "../../content/courses/networking-basics/validators";
 
 export type ValidatorResult = { passed: boolean; feedback: Record<string, unknown> };
 export type LabValidator = (submission: unknown) => ValidatorResult;
@@ -44,24 +52,32 @@ const VALIDATORS: Record<string, LabValidator> = {
   "bits-and-bytes/repair-lab": (submission) => validator8(submission),
   "bits-and-bytes/size-lab": (submission) => validator9(submission),
   "bits-and-bytes/utf8-lab": (submission) => validator10(submission),
-  "http-hands-on/cache-lab": (submission) => validator11(submission),
-  "http-hands-on/cookie-lab": (submission) => validator12(submission),
-  "http-hands-on/diagnosis-lab": (submission) => validator13(submission),
-  "http-hands-on/final-mission": (submission) => validator14(submission),
-  "http-hands-on/json-lab": (submission) => validator15(submission),
-  "http-hands-on/method-lab": (submission) => validator16(submission),
-  "http-hands-on/request-lab": (submission) => validator17(submission),
-  "http-hands-on/response-lab": (submission) => validator18(submission),
-  "http-hands-on/url-lab": (submission) => validator19(submission),
-  "networking-basics/arp-lab": (submission) => validator20(submission),
-  "networking-basics/dns-lab": (submission) => validator21(submission),
-  "networking-basics/firewall-lab": (submission) => validator22(submission),
-  "networking-basics/laptop-lab": (submission) => validator23(submission),
-  "networking-basics/nat-lab": (submission) => validator24(submission),
-  "networking-basics/route-lab": (submission) => validator25(submission),
-  "networking-basics/subnet-lab": (submission) => validator26(submission),
-  "networking-basics/tcp-lab": (submission) => validator27(submission),
-  "networking-basics/trace-lab": (submission) => validator28(submission),
+  "command-line/disk-lab": (submission) => validator11(submission),
+  "command-line/env-lab": (submission) => validator12(submission),
+  "command-line/files-lab": (submission) => validator13(submission),
+  "command-line/logs-lab": (submission) => validator14(submission),
+  "command-line/paths-lab": (submission) => validator15(submission),
+  "command-line/perms-lab": (submission) => validator16(submission),
+  "command-line/pipes-lab": (submission) => validator17(submission),
+  "command-line/process-lab": (submission) => validator18(submission),
+  "http-hands-on/cache-lab": (submission) => validator19(submission),
+  "http-hands-on/cookie-lab": (submission) => validator20(submission),
+  "http-hands-on/diagnosis-lab": (submission) => validator21(submission),
+  "http-hands-on/final-mission": (submission) => validator22(submission),
+  "http-hands-on/json-lab": (submission) => validator23(submission),
+  "http-hands-on/method-lab": (submission) => validator24(submission),
+  "http-hands-on/request-lab": (submission) => validator25(submission),
+  "http-hands-on/response-lab": (submission) => validator26(submission),
+  "http-hands-on/url-lab": (submission) => validator27(submission),
+  "networking-basics/arp-lab": (submission) => validator28(submission),
+  "networking-basics/dns-lab": (submission) => validator29(submission),
+  "networking-basics/firewall-lab": (submission) => validator30(submission),
+  "networking-basics/laptop-lab": (submission) => validator31(submission),
+  "networking-basics/nat-lab": (submission) => validator32(submission),
+  "networking-basics/route-lab": (submission) => validator33(submission),
+  "networking-basics/subnet-lab": (submission) => validator34(submission),
+  "networking-basics/tcp-lab": (submission) => validator35(submission),
+  "networking-basics/trace-lab": (submission) => validator36(submission),
 };
 
 export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
@@ -76,6 +92,14 @@ export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
   "bits-and-bytes/repair-lab": "9bf004f68e35ea847cab40dbb1cbc50c6d7d33656ae024d7c0dbfcc7ab1541df",
   "bits-and-bytes/size-lab": "9bf004f68e35ea847cab40dbb1cbc50c6d7d33656ae024d7c0dbfcc7ab1541df",
   "bits-and-bytes/utf8-lab": "9bf004f68e35ea847cab40dbb1cbc50c6d7d33656ae024d7c0dbfcc7ab1541df",
+  "command-line/disk-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
+  "command-line/env-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
+  "command-line/files-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
+  "command-line/logs-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
+  "command-line/paths-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
+  "command-line/perms-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
+  "command-line/pipes-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
+  "command-line/process-lab": "499592562c0784b3cddabcc31e160a3c3c4a49f8a4eda66c275fb1e8a7239ed9",
   "http-hands-on/cache-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
   "http-hands-on/cookie-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",
   "http-hands-on/diagnosis-lab": "1aae6e0c3a764bc86226ceeb1470783b6a98e6d7d24bd1ee5e720619413e7e3e",

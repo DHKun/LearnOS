@@ -1,0 +1,40 @@
+## 凌晨三点
+
+凌晨 3:20 告警响了：library.test 打开就是 500。值班的是你，手边只有一个终端。这一章把前面学过的东西全部用上，而且没有实时的对错提示。
+
+## 看磁盘的三个命令
+
+```bash
+df -h                          # 每块磁盘用了多少、还剩多少
+du -sh /var/*                  # 每个目录一共占多大
+find / -size +1G 2>/dev/null   # 找出大于 1 GB 的文件
+```
+
+`-h` 是“给人看的”单位（K、M、G）。`du` 和 `find` 遇到没权限的目录会报 `Permission denied`，用 `2>/dev/null` 把这些报错扔掉，结果更清楚。
+
+`du` 适合一层一层往下找：先看 `/var/*`，哪个大就进哪个继续看。
+
+## 删除之前
+
+<ConceptPlayer conceptId="command-line/unlink" blockId="unlink" />
+
+<MiniCheck
+  id="unlinked"
+  question="你 rm 掉了一个 10 GB 的日志，ls 看不到它了，可 df 显示磁盘还是满的。最可能的原因是？"
+  options={["df 有延迟，过一会儿就好", "还有进程开着这个文件，空间要等它关掉才释放", "rm 没有成功"]}
+  answer={1}
+  explanation="rm 删的是名字。进程手里还握着内容时，空间不会回收；重启那个进程，或者一开始就清空内容而不是删除。"
+/>
+
+## 处理故障的顺序
+
+1. **看症状**：网站怎么了？`curl -I localhost` 返回什么？
+2. **找原因**：`df -h` 满了没有？是谁占的？`systemctl status` 里写了什么？
+3. **想后果**：要删的东西还有没有用？还有没有程序在用它？
+4. **动手**，然后**验证**：再看一次 `df -h` 和 `curl`。
+
+先查清楚再动手。凌晨三点手一抖删错了东西，比磁盘满更难收拾。
+
+## 动手：凌晨三点的告警
+
+<SimulationBlock blockId="disk-lab" />

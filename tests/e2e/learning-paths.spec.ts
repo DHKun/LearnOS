@@ -32,8 +32,9 @@ test.describe("学习路线", () => {
       await expect(pathCard.locator("[data-step]")).toHaveCount(5);
       await expect(pathCard.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-step="networking-basics"]')).toHaveAttribute("data-state", "available");
-      await expect(pathCard.locator('[data-step="command-line"]')).toHaveAttribute("data-state", "upcoming");
-      await expect(pathCard.locator('[data-step="command-line"] a')).toHaveCount(0);
+      await expect(pathCard.locator('[data-step="command-line"]')).toHaveAttribute("data-state", "available");
+      await expect(pathCard.locator('[data-step="git-basics"]')).toHaveAttribute("data-state", "upcoming");
+      await expect(pathCard.locator('[data-step="git-basics"] a')).toHaveCount(0);
       await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 0 / 5 门");
       await expect(pathCard.getByRole("link", { name: /开始：0 和 1 的世界/ })).toBeVisible();
 

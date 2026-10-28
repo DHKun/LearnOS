@@ -1,0 +1,490 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "ls -la /tmp 里的 -la 是什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "命令"
+        },
+        {
+          "id": "b",
+          "label": "选项"
+        },
+        {
+          "id": "c",
+          "label": "参数"
+        },
+        {
+          "id": "d",
+          "label": "路径"
+        }
+      ],
+      "answer": "b",
+      "explanation": "以 - 开头的是选项，/tmp 是参数。"
+    },
+    {
+      "id": "f2",
+      "prompt": "当前目录是 /home/ops，cat ../deploy/logs/deploy.log 读的是哪个文件？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "/home/ops/deploy/logs/deploy.log"
+        },
+        {
+          "id": "b",
+          "label": "/home/deploy/logs/deploy.log"
+        },
+        {
+          "id": "c",
+          "label": "/deploy/logs/deploy.log"
+        },
+        {
+          "id": "d",
+          "label": "/home/ops/logs/deploy.log"
+        }
+      ],
+      "answer": "b",
+      "explanation": ".. 回到 /home，再进入 deploy/logs。"
+    },
+    {
+      "id": "f3",
+      "prompt": "定时任务调用的脚本里，静态文件目录应该写成？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "static"
+        },
+        {
+          "id": "b",
+          "label": "./static"
+        },
+        {
+          "id": "c",
+          "label": "~/static"
+        },
+        {
+          "id": "d",
+          "label": "/srv/library/static"
+        }
+      ],
+      "answer": "d",
+      "explanation": "定时任务从哪个目录、以哪个用户运行都可能变，绝对路径最稳妥。"
+    },
+    {
+      "id": "f4",
+      "prompt": "目录里有 a.log、b.log、.old.log。运行 rm *.log 之后还剩哪个？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "都删了"
+        },
+        {
+          "id": "b",
+          "label": "a.log"
+        },
+        {
+          "id": "c",
+          "label": "b.log"
+        },
+        {
+          "id": "d",
+          "label": ".old.log"
+        }
+      ],
+      "answer": "d",
+      "explanation": "* 不匹配以 . 开头的隐藏文件。"
+    },
+    {
+      "id": "f5",
+      "prompt": "docs/ 里已经有 a.pdf，运行 mv new/a.pdf docs/ 会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "报错并停下"
+        },
+        {
+          "id": "b",
+          "label": "docs/ 里多出一个 a(1).pdf"
+        },
+        {
+          "id": "c",
+          "label": "原来的 docs/a.pdf 被覆盖"
+        },
+        {
+          "id": "d",
+          "label": "先问你要不要覆盖"
+        }
+      ],
+      "answer": "c",
+      "explanation": "mv 遇到同名文件直接覆盖，不提示。需要保护时加 -n。"
+    },
+    {
+      "id": "f6",
+      "prompt": "要删除一个里面还有文件的目录 old/，用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "rmdir old"
+        },
+        {
+          "id": "b",
+          "label": "rm old"
+        },
+        {
+          "id": "c",
+          "label": "rm -r old"
+        },
+        {
+          "id": "d",
+          "label": "del old"
+        }
+      ],
+      "answer": "c",
+      "explanation": "rmdir 只删空目录，rm 删目录要加 -r。"
+    },
+    {
+      "id": "f7",
+      "prompt": "想看一个大日志的最后 50 行，用哪个命令？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "head -n 50 app.log"
+        },
+        {
+          "id": "b",
+          "label": "tail -n 50 app.log"
+        },
+        {
+          "id": "c",
+          "label": "cat app.log"
+        },
+        {
+          "id": "d",
+          "label": "grep 50 app.log"
+        }
+      ],
+      "answer": "b",
+      "explanation": "tail 取末尾若干行。"
+    },
+    {
+      "id": "f8",
+      "prompt": "下面哪些命令能数出 app.log 里有多少行包含 timeout？（多选）",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "grep -c timeout app.log"
+        },
+        {
+          "id": "b",
+          "label": "grep timeout app.log | wc -l"
+        },
+        {
+          "id": "c",
+          "label": "wc -l timeout app.log"
+        },
+        {
+          "id": "d",
+          "label": "grep -v timeout app.log"
+        }
+      ],
+      "answer": [
+        "a",
+        "b"
+      ],
+      "explanation": "grep -c 直接计数；也可以把 grep 的结果用管道交给 wc -l 数行。"
+    },
+    {
+      "id": "f9",
+      "prompt": "统计每个 IP 出现的次数时，为什么要在 uniq -c 前面先 sort？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "sort 能让命令跑得更快"
+        },
+        {
+          "id": "b",
+          "label": "uniq -c 只合并相邻的相同行"
+        },
+        {
+          "id": "c",
+          "label": "不 sort 会报错"
+        },
+        {
+          "id": "d",
+          "label": "为了按次数排序"
+        }
+      ],
+      "answer": "b",
+      "explanation": "不排序，同一个 IP 会被拆成很多段分别计数。"
+    },
+    {
+      "id": "f10",
+      "prompt": "往已有内容的 report.txt 末尾加一行，用哪个？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "echo 新的一行 > report.txt"
+        },
+        {
+          "id": "b",
+          "label": "echo 新的一行 >> report.txt"
+        },
+        {
+          "id": "c",
+          "label": "echo 新的一行 | report.txt"
+        },
+        {
+          "id": "d",
+          "label": "echo 新的一行 2> report.txt"
+        }
+      ],
+      "answer": "b",
+      "explanation": ">> 追加；> 会先把文件清空。"
+    },
+    {
+      "id": "f11",
+      "prompt": "find / -name x 2>/dev/null 里的 2>/dev/null 有什么用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "只搜两层目录"
+        },
+        {
+          "id": "b",
+          "label": "把报错（比如 Permission denied）扔掉"
+        },
+        {
+          "id": "c",
+          "label": "把结果保存到 /dev/null"
+        },
+        {
+          "id": "d",
+          "label": "以管理员身份运行"
+        }
+      ],
+      "answer": "b",
+      "explanation": "2> 重定向报错，/dev/null 吞掉写进去的一切。"
+    },
+    {
+      "id": "f12",
+      "prompt": "运行 sort data.txt > data.txt 之后，data.txt 里是什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "排好序的内容"
+        },
+        {
+          "id": "b",
+          "label": "原来的内容"
+        },
+        {
+          "id": "c",
+          "label": "空的"
+        },
+        {
+          "id": "d",
+          "label": "报错，文件不变"
+        }
+      ],
+      "answer": "c",
+      "explanation": "> 在 sort 运行之前就清空了文件，sort 读到的是空文件。"
+    },
+    {
+      "id": "f13",
+      "prompt": "目录 drwxr-x---，主人 ops，组 web。web 组的成员能做什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "进入目录、列出文件名，但不能在里面新建文件"
+        },
+        {
+          "id": "b",
+          "label": "什么都不能做"
+        },
+        {
+          "id": "c",
+          "label": "在里面新建和删除文件"
+        },
+        {
+          "id": "d",
+          "label": "只能列出文件名，不能进入"
+        }
+      ],
+      "answer": "a",
+      "explanation": "组那一组是 r-x：能列出（r）、能进入（x），没有 w。"
+    },
+    {
+      "id": "f14",
+      "prompt": "数据库密码文件：主人 ops 要能修改，网站进程所在的 web 组要能读，其他人什么都不能做。最合适的权限是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "600"
+        },
+        {
+          "id": "b",
+          "label": "640"
+        },
+        {
+          "id": "c",
+          "label": "644"
+        },
+        {
+          "id": "d",
+          "label": "777"
+        }
+      ],
+      "answer": "b",
+      "explanation": "640 = rw- r-- ---。"
+    },
+    {
+      "id": "f15",
+      "prompt": "遇到 Permission denied，把相关文件和目录都 chmod 777 是稳妥的解决办法。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "777 让任何用户都能改，等于敞开大门。想清楚谁需要什么，只开那些。"
+    },
+    {
+      "id": "f16",
+      "prompt": "重启网站时报 address already in use。第一步该做什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "ss -ltnp 查谁在监听这个端口"
+        },
+        {
+          "id": "b",
+          "label": "重装网站"
+        },
+        {
+          "id": "c",
+          "label": "kill -9 所有进程"
+        },
+        {
+          "id": "d",
+          "label": "把端口改成 81"
+        }
+      ],
+      "answer": "a",
+      "explanation": "先查清楚是谁占着，再决定怎么处理。"
+    },
+    {
+      "id": "f17",
+      "prompt": "kill 812 不加任何选项时，发送的是哪个信号？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "KILL"
+        },
+        {
+          "id": "b",
+          "label": "TERM"
+        },
+        {
+          "id": "c",
+          "label": "HUP"
+        },
+        {
+          "id": "d",
+          "label": "STOP"
+        }
+      ],
+      "answer": "b",
+      "explanation": "默认是 TERM，进程可以收尾后退出；-9 才是 KILL。"
+    },
+    {
+      "id": "f18",
+      "prompt": "kill 402 返回 Operation not permitted。这说明什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "402 号进程不存在"
+        },
+        {
+          "id": "b",
+          "label": "402 号进程不属于你，你没有权限结束它"
+        },
+        {
+          "id": "c",
+          "label": "kill 命令坏了"
+        },
+        {
+          "id": "d",
+          "label": "进程已经结束了"
+        }
+      ],
+      "answer": "b",
+      "explanation": "不存在会说 No such process。普通用户只能结束自己的进程。"
+    },
+    {
+      "id": "f19",
+      "prompt": "PATH 是 /a:/b，两个目录里都有 tool。运行 tool 时用的是哪个？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "/a/tool"
+        },
+        {
+          "id": "b",
+          "label": "/b/tool"
+        },
+        {
+          "id": "c",
+          "label": "两个都运行"
+        },
+        {
+          "id": "d",
+          "label": "报错，名字冲突"
+        }
+      ],
+      "answer": "a",
+      "explanation": "从左往右找，先找到的赢。"
+    },
+    {
+      "id": "f20",
+      "prompt": "rm 掉一个 10 GB 的日志后，df 显示磁盘使用率没有变化。最可能的原因？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "df 要过一小时才更新"
+        },
+        {
+          "id": "b",
+          "label": "还有进程开着这个文件，空间要等它关掉才释放"
+        },
+        {
+          "id": "c",
+          "label": "rm 只是把文件移到了回收站"
+        },
+        {
+          "id": "d",
+          "label": "日志会自己恢复"
+        }
+      ],
+      "answer": "b",
+      "explanation": "rm 删的是名字。重启那个进程，或者改用清空内容的办法。"
+    }
+  ]
+}

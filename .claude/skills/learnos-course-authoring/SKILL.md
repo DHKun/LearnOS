@@ -77,6 +77,7 @@ description: 在 LearnOS 仓库里设计、编写、重做或评审一门课程�
 - **把线索喂给学生**：诊断类实验里，不要在出错的记录里直接附上答案线索；线索应放在另一条记录里，让学生自己去对照。
 - **高亮暴露答案**：给界面加“帮助理解”的高亮时，确认它没有直接指出答案。比如奇偶校验方阵里，只能标出对不上的校验位，不能圈出出错的那一位，找交叉点正是学生要做的事。
 - **prose 样式**：课程组件渲染在 MDX 的 prose 容器里，`<ul>` 会自动带圆点，需要加 `m-0 list-none p-0`；`<table>` 会被加上边框和表头底色，深色面板里的十六进制转储、比特方阵要改用 CSS grid。
+- **嵌套的 `<pre>`**：平台的 `.prose-learn pre` 会给课程组件里的每个 `<pre>` 加内边距、背景和边框，Tailwind 的 `not-prose` 对它无效。终端里每条输出都是 `<pre>` 时会变成一个个小框，要显式加 `p-0 border-0 bg-transparent rounded-none`。
 - **窄屏下的三栏动画**：“节点—通道—节点”在 390px 下要改为纵向堆叠（`grid-cols-1 sm:grid-cols-[…]`）。
 - **硬编码颜色**：旧课的 SVG 写死了浅色值，暗色模式下非常刺眼。一律使用主题 token（`bg-primary/10`、`text-success`、`border-border` 等）。
 - **E2E 定位**：给 select 和 input 加 `aria-label`；用 `getByText` 时注意折叠表格里的隐藏文本，必要时限定在实验的 `data-testid` 范围内，或加 `exact: true`。

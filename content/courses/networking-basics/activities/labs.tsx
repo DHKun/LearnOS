@@ -743,7 +743,7 @@ export function LaptopLab({ readOnly }: ActivityComponentProps) {
               state.history.map((entry, index) => (
                 <div key={index} className="mb-2">
                   <p className="m-0 text-sky-300">C:\&gt; {entry.command}</p>
-                  <pre className="m-0 whitespace-pre-wrap">{entry.output}</pre>
+                  <pre className="m-0 whitespace-pre-wrap rounded-none border-0 bg-transparent p-0 text-xs">{entry.output}</pre>
                 </div>
               ))
             )}
