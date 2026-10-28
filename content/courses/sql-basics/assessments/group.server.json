@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "g1",
+      "prompt": "SELECT reader_id, COUNT(*) FROM loans GROUP BY reader_id 返回几行？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "和 loans 的行数一样"
+        },
+        {
+          "id": "b",
+          "label": "每个出现过的 reader_id 一行"
+        },
+        {
+          "id": "c",
+          "label": "一行"
+        },
+        {
+          "id": "d",
+          "label": "报错"
+        }
+      ],
+      "answer": "b",
+      "explanation": "GROUP BY 把相同的值归成一组，每组一行。"
+    },
+    {
+      "id": "g2",
+      "prompt": "要找“当前借着超过 5 本”的读者，条件该怎么放？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "WHERE returned IS NULL AND COUNT(*) > 5"
+        },
+        {
+          "id": "b",
+          "label": "WHERE returned IS NULL … HAVING COUNT(*) > 5"
+        },
+        {
+          "id": "c",
+          "label": "HAVING returned IS NULL AND COUNT(*) > 5"
+        },
+        {
+          "id": "d",
+          "label": "WHERE COUNT(*) > 5"
+        }
+      ],
+      "answer": "b",
+      "explanation": "筛选行用 WHERE，筛选分组后的结果用 HAVING。"
+    },
+    {
+      "id": "g3",
+      "prompt": "readers 有 14 行，其中一行 email 为 NULL。SELECT COUNT(email) FROM readers 是多少？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "14"
+        },
+        {
+          "id": "b",
+          "label": "13"
+        },
+        {
+          "id": "c",
+          "label": "1"
+        },
+        {
+          "id": "d",
+          "label": "NULL"
+        }
+      ],
+      "answer": "b",
+      "explanation": "COUNT(列) 不数 NULL。"
+    },
+    {
+      "id": "g4",
+      "prompt": "SELECT reader_id, borrowed, COUNT(*) FROM loans GROUP BY reader_id 会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "正常运行"
+        },
+        {
+          "id": "b",
+          "label": "报错：borrowed 必须出现在 GROUP BY 中或放在聚合函数里"
+        },
+        {
+          "id": "c",
+          "label": "返回每笔借阅一行"
+        },
+        {
+          "id": "d",
+          "label": "borrowed 显示为 NULL"
+        }
+      ],
+      "answer": "b",
+      "explanation": "一组里有好几个 borrowed，数据库不知道该显示哪一个。"
+    }
+  ]
+}

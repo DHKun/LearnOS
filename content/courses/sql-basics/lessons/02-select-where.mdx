@@ -1,0 +1,59 @@
+## 逾期未还的书
+
+馆长要给逾期没还书的读者发提醒。哪些借阅算逾期？已经过了应还日期，而且到今天还没还。这一章学会把这些行挑出来。
+
+## SELECT：要哪些列
+
+```sql
+SELECT title, author FROM books;     -- 只要书名和作者
+SELECT * FROM loans;                 -- 所有列
+SELECT * FROM loans LIMIT 10;        -- 先看前 10 行，摸清长什么样
+```
+
+## WHERE：要哪些行
+
+```sql
+SELECT * FROM books WHERE author = '刘慈欣';
+SELECT * FROM books WHERE copies >= 2 AND category = '文学';
+SELECT * FROM books WHERE title LIKE '三体%';   -- % 匹配任意多个字
+SELECT * FROM loans WHERE borrowed BETWEEN '2026-10-01' AND '2026-10-31';
+```
+
+- 文字和日期用**单引号**括起来；数字不用。
+- 比较：`=`、`<>`（不等于）、`<`、`>`、`<=`、`>=`。
+- 组合条件：`AND`、`OR`、`NOT`。`AND` 比 `OR` 先算，拿不准就加括号。
+- `CURRENT_DATE` 是今天的日期。
+
+## NULL：不是 0，也不是空白
+
+NULL 表示“没有值”或“不知道”。拿任何值和 NULL 比较，结果都是“不知道”，连 `NULL = NULL` 也是。WHERE 只留下结果为“真”的行，“不知道”的行会被丢掉。
+
+所以判断空值要用专门的写法：
+
+```sql
+SELECT * FROM loans WHERE returned IS NULL;       -- 还没还的
+SELECT * FROM readers WHERE email IS NOT NULL;    -- 填了邮箱的
+```
+
+<ConceptPlayer conceptId="sql-basics/where" blockId="where" />
+
+<MiniCheck
+  id="eq-null"
+  question="SELECT * FROM loans WHERE returned = NULL 会返回什么？"
+  options={["所有还没还的借阅", "一行都没有", "报错"]}
+  answer={1}
+  explanation="returned = NULL 的结果永远是“不知道”，WHERE 不会留下任何一行。要写 IS NULL。"
+/>
+
+## 动手：逾期未还的书
+
+<SimulationBlock blockId="overdue-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+先 `SELECT * FROM loans` 看看每一列长什么样。“逾期未还”是两个条件同时成立。今天是 2026-10-28，`due` 正好等于今天的还没有逾期。
+
+</details>
+
+<KnowledgeCheck blockId="where-check" />

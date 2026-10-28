@@ -1,0 +1,22 @@
+## 回顾：十个关键判断
+
+1. 表由行和列组成；主键唯一标识一行，外键引用另一张表里真实存在的行。
+2. SELECT 选列，WHERE 选行；文字和日期用单引号。
+3. NULL 表示未知：判断空值用 `IS NULL`，`= NULL` 什么也查不到。
+4. 需要顺序就写 `ORDER BY`，默认升序；LIMIT 在排序之后截取。
+5. 聚合函数把多行算成一个值；`COUNT(*)` 数行，`COUNT(列)` 跳过 NULL。
+6. 分组之前的条件写 WHERE，分组之后的写 HAVING。
+7. JOIN 只留两边对得上的行；要保留左边全部，用 LEFT JOIN。
+8. UPDATE、DELETE 不写 WHERE 就作用于整张表；动手前先用同样的 WHERE 跑一次 SELECT。
+9. 几步必须一起成功的修改，放进事务：BEGIN、COMMIT，出错 ROLLBACK；不 COMMIT 别人看不到。
+10. 备份只能回到备份那一刻；恢复时要把备份之后真实发生的事从日志里找回来。
+
+## 结业测验
+
+共 20 题，80 分及格，由服务端评分。
+
+<KnowledgeCheck blockId="final-check" />
+
+<Callout type="tip" title="学完之后">
+可以在自己的电脑上装一个 SQLite 或 PostgreSQL 试试这些语句。《Web 安全入门》路线的下一站是《密码学入门》。学完路线后你会再回到这门课的内容：SQL 注入，就是让数据库把攻击者写的文字当成 SQL 去执行。
+</Callout>

@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 3,
+  "slug": "sql-basics",
+  "title": "数据库与 SQL：读懂网站背后的数据",
+  "description": "零基础的数据库课。整门课都在 library.test 背后的数据库里：书、读者和借阅记录。你会查出逾期未还的书、修好首页的“最新上架”、找出借书超过上限的读者、改对年度报表，再学会安全地增删改、用事务办完一次借书，最后把一条忘了写 WHERE 的 UPDATE 造成的事故恢复回来。数据库是浏览器里的模拟环境，不连接任何真实数据库。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "table",
+        "component": "concepts/concepts.tsx",
+        "export": "TableConcept",
+        "title": "表、行、列与键",
+        "analogy": "登记簿"
+      },
+      {
+        "id": "where",
+        "component": "concepts/concepts.tsx",
+        "export": "WhereConcept",
+        "title": "WHERE 与 NULL",
+        "analogy": "按条件抄清单"
+      },
+      {
+        "id": "order",
+        "component": "concepts/concepts.tsx",
+        "export": "OrderConcept",
+        "title": "先排序再截取",
+        "analogy": "新书展示架"
+      },
+      {
+        "id": "group",
+        "component": "concepts/concepts.tsx",
+        "export": "GroupConcept",
+        "title": "分组与聚合",
+        "analogy": "分筐数一数"
+      },
+      {
+        "id": "join",
+        "component": "concepts/concepts.tsx",
+        "export": "JoinConcept",
+        "title": "连接两张表",
+        "analogy": "按编号去另一本里找"
+      },
+      {
+        "id": "write",
+        "component": "concepts/concepts.tsx",
+        "export": "WriteConcept",
+        "title": "UPDATE 与 WHERE",
+        "analogy": "修正液"
+      },
+      {
+        "id": "transaction",
+        "component": "concepts/concepts.tsx",
+        "export": "TransactionConcept",
+        "title": "事务",
+        "analogy": "一整套手续"
+      },
+      {
+        "id": "restore",
+        "component": "concepts/concepts.tsx",
+        "export": "RestoreConcept",
+        "title": "备份与日志",
+        "analogy": "复印件与还书登记本"
+      }
+    ],
+    "activities": [
+      {
+        "id": "overdue-lab",
+        "component": "activities/labs.tsx",
+        "export": "OverdueLab",
+        "title": "逾期未还的书",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateOverdueLab"
+        }
+      },
+      {
+        "id": "latest-lab",
+        "component": "activities/labs.tsx",
+        "export": "LatestLab",
+        "title": "首页的最新上架",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateLatestLab"
+        }
+      },
+      {
+        "id": "limit-lab",
+        "component": "activities/labs.tsx",
+        "export": "LimitLab",
+        "title": "借书超过上限的读者",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateLimitLab"
+        }
+      },
+      {
+        "id": "report-lab",
+        "component": "activities/labs.tsx",
+        "export": "ReportLab",
+        "title": "对不上的读者报表",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateReportLab"
+        }
+      },
+      {
+        "id": "modify-lab",
+        "component": "activities/labs.tsx",
+        "export": "ModifyLab",
+        "title": "上新书、改邮箱、删测试账号",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateModifyLab"
+        }
+      },
+      {
+        "id": "transaction-lab",
+        "component": "activities/labs.tsx",
+        "export": "TransactionLab",
+        "title": "只成功了一半的借书",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateTransactionLab"
+        }
+      },
+      {
+        "id": "incident-lab",
+        "component": "activities/labs.tsx",
+        "export": "IncidentLab",
+        "title": "忘了写 WHERE 的那条 UPDATE",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateIncidentLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "tables",
+      "title": "表、行、列与键",
+      "source": "lessons/01-tables.mdx",
+      "required": true,
+      "unit": "查询"
+    },
+    {
+      "slug": "select-where",
+      "title": "查询与筛选",
+      "source": "lessons/02-select-where.mdx",
+      "required": true,
+      "unit": "查询",
+      "blocks": [
+        {
+          "id": "overdue-lab",
+          "kind": "simulation",
+          "activityId": "sql-basics/overdue-lab",
+          "title": "逾期未还的书"
+        },
+        {
+          "id": "where-check",
+          "kind": "question",
+          "source": "assessments/where.server.json",
+          "title": "筛选检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "overdue-lab",
+          "where-check"
+        ]
+      }
+    },
+    {
+      "slug": "order-limit",
+      "title": "排序与分页",
+      "source": "lessons/03-order-limit.mdx",
+      "required": true,
+      "unit": "查询",
+      "blocks": [
+        {
+          "id": "latest-lab",
+          "kind": "simulation",
+          "activityId": "sql-basics/latest-lab",
+          "title": "首页的最新上架"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "latest-lab"
+        ]
+      }
+    },
+    {
+      "slug": "group-by",
+      "title": "聚合与分组",
+      "source": "lessons/04-group-by.mdx",
+      "required": true,
+      "unit": "查询",
+      "blocks": [
+        {
+          "id": "limit-lab",
+          "kind": "simulation",
+          "activityId": "sql-basics/limit-lab",
+          "title": "借书超过上限的读者"
+        },
+        {
+          "id": "group-check",
+          "kind": "question",
+          "source": "assessments/group.server.json",
+          "title": "分组检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "limit-lab",
+          "group-check"
+        ]
+      }
+    },
+    {
+      "slug": "join",
+      "title": "多表连接",
+      "source": "lessons/05-join.mdx",
+      "required": true,
+      "unit": "查询",
+      "blocks": [
+        {
+          "id": "report-lab",
+          "kind": "simulation",
+          "activityId": "sql-basics/report-lab",
+          "title": "对不上的读者报表"
+        },
+        {
+          "id": "join-check",
+          "kind": "question",
+          "source": "assessments/join.server.json",
+          "title": "连接检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "report-lab",
+          "join-check"
+        ]
+      }
+    },
+    {
+      "slug": "modify",
+      "title": "增删改",
+      "source": "lessons/06-modify.mdx",
+      "required": true,
+      "unit": "修改",
+      "blocks": [
+        {
+          "id": "modify-lab",
+          "kind": "simulation",
+          "activityId": "sql-basics/modify-lab",
+          "title": "上新书、改邮箱、删测试账号"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "modify-lab"
+        ]
+      }
+    },
+    {
+      "slug": "transactions",
+      "title": "事务",
+      "source": "lessons/07-transactions.mdx",
+      "required": true,
+      "unit": "修改",
+      "blocks": [
+        {
+          "id": "transaction-lab",
+          "kind": "simulation",
+          "activityId": "sql-basics/transaction-lab",
+          "title": "只成功了一半的借书"
+        },
+        {
+          "id": "transaction-check",
+          "kind": "question",
+          "source": "assessments/transaction.server.json",
+          "title": "事务检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "transaction-lab",
+          "transaction-check"
+        ]
+      }
+    },
+    {
+      "slug": "incident",
+      "title": "综合：一次数据事故",
+      "source": "lessons/08-incident.mdx",
+      "required": true,
+      "unit": "综合",
+      "blocks": [
+        {
+          "id": "incident-lab",
+          "kind": "simulation",
+          "activityId": "sql-basics/incident-lab",
+          "title": "忘了写 WHERE 的那条 UPDATE"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "incident-lab"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/09-final.mdx",
+      "required": true,
+      "unit": "综合",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}

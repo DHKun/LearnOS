@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "slug": "web-security",
+  "title": "Web 安全入门",
+  "description": "学会像攻击者一样看一个网站，再学会把它守住。先弄懂数据库和密码学这两块地基，再逐个拆解登录与会话、注入、越权这些最常见的漏洞，最后对 library.test 做一次完整的授权测试。所有攻击都只针对浏览器里模拟的网站。建议先学完《计算机基础入门》。",
+  "level": "进阶",
+  "courses": [
+    {
+      "course": "sql-basics",
+      "summary": "网站的数据存在哪里、怎么查：SQL 注入的前置知识。"
+    },
+    {
+      "course": "crypto-basics",
+      "title": "密码学入门",
+      "summary": "哈希、加密和签名：密码该怎么存，HTTPS 凭什么可信。"
+    },
+    {
+      "course": "auth-security",
+      "title": "登录与会话安全",
+      "summary": "弱密码、撞库、会话劫持：登录这道门是怎么被打开的。"
+    },
+    {
+      "course": "injection",
+      "title": "注入：SQL 注入与 XSS",
+      "summary": "把数据当成代码执行：两类最经典的漏洞。"
+    },
+    {
+      "course": "access-control",
+      "title": "越权与业务逻辑漏洞",
+      "summary": "改个编号就能看别人的数据：服务端为什么不能相信客户端。"
+    },
+    {
+      "course": "web-pentest",
+      "title": "综合：一次授权测试",
+      "summary": "按流程对 library.test 做一次完整的授权测试并写出报告。"
+    }
+  ]
+}

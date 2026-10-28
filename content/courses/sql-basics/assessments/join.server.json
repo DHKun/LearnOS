@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "j1",
+      "prompt": "readers JOIN loans 之后，一位从没借过书的读者会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "出现一次，借阅列为 NULL"
+        },
+        {
+          "id": "b",
+          "label": "不会出现"
+        },
+        {
+          "id": "c",
+          "label": "出现多次"
+        },
+        {
+          "id": "d",
+          "label": "报错"
+        }
+      ],
+      "answer": "b",
+      "explanation": "普通 JOIN 只保留两边都对得上的行。"
+    },
+    {
+      "id": "j2",
+      "prompt": "要列出每位读者（包括没借过书的），用哪种连接？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "readers r JOIN loans l"
+        },
+        {
+          "id": "b",
+          "label": "readers r LEFT JOIN loans l"
+        },
+        {
+          "id": "c",
+          "label": "loans l LEFT JOIN readers r"
+        },
+        {
+          "id": "d",
+          "label": "readers r, loans l"
+        }
+      ],
+      "answer": "b",
+      "explanation": "LEFT JOIN 保留左边每一行，左边要放 readers。"
+    },
+    {
+      "id": "j3",
+      "prompt": "SELECT id FROM loans l JOIN books b ON b.id = l.book_id 报 column reference \"id\" is ambiguous，怎么改？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把 id 改成 ID"
+        },
+        {
+          "id": "b",
+          "label": "写成 l.id 或 b.id"
+        },
+        {
+          "id": "c",
+          "label": "去掉 ON"
+        },
+        {
+          "id": "d",
+          "label": "加上 DISTINCT"
+        }
+      ],
+      "answer": "b",
+      "explanation": "两张表都有 id，要说清楚是哪一张的。"
+    },
+    {
+      "id": "j4",
+      "prompt": "两位读者都叫王芳。按读者统计借阅次数时应该按什么分组？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "r.name"
+        },
+        {
+          "id": "b",
+          "label": "r.id"
+        },
+        {
+          "id": "c",
+          "label": "l.book_id"
+        },
+        {
+          "id": "d",
+          "label": "不用分组"
+        }
+      ],
+      "answer": "b",
+      "explanation": "按姓名分组会把两个人合成一行；主键才唯一。"
+    }
+  ]
+}

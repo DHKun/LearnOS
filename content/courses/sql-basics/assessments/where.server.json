@@ -1,0 +1,101 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "w1",
+      "prompt": "找出还没填邮箱的读者，哪条查询是对的？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "SELECT * FROM readers WHERE email = NULL"
+        },
+        {
+          "id": "b",
+          "label": "SELECT * FROM readers WHERE email IS NULL"
+        },
+        {
+          "id": "c",
+          "label": "SELECT * FROM readers WHERE email = ''"
+        },
+        {
+          "id": "d",
+          "label": "SELECT * FROM readers WHERE NOT email"
+        }
+      ],
+      "answer": "b",
+      "explanation": "判断 NULL 只能用 IS NULL；空字符串和 NULL 不是一回事。"
+    },
+    {
+      "id": "w2",
+      "prompt": "WHERE category = '文学' OR category = '科幻' AND copies > 1 实际上是什么意思？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "（文学或科幻）而且册数大于 1"
+        },
+        {
+          "id": "b",
+          "label": "文学的全部，加上册数大于 1 的科幻"
+        },
+        {
+          "id": "c",
+          "label": "册数大于 1 的文学"
+        },
+        {
+          "id": "d",
+          "label": "语法错误"
+        }
+      ],
+      "answer": "b",
+      "explanation": "AND 比 OR 先算。想要前一种意思，要给 OR 加括号。"
+    },
+    {
+      "id": "w3",
+      "prompt": "今天是 2026-10-28。一笔借阅 due = '2026-10-28'、returned 为 NULL，它算逾期吗？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "算，due <= 今天"
+        },
+        {
+          "id": "b",
+          "label": "不算，今天到期，过了今天才算逾期"
+        },
+        {
+          "id": "c",
+          "label": "看情况"
+        }
+      ],
+      "answer": "b",
+      "explanation": "逾期是 due < 今天。"
+    },
+    {
+      "id": "w4",
+      "prompt": "找出书名以“三体”开头的书，用哪个条件？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "title = '三体'"
+        },
+        {
+          "id": "b",
+          "label": "title LIKE '三体%'"
+        },
+        {
+          "id": "c",
+          "label": "title LIKE '%三体'"
+        },
+        {
+          "id": "d",
+          "label": "title IN ('三体')"
+        }
+      ],
+      "answer": "b",
+      "explanation": "% 匹配任意多个字，放在后面表示“以……开头”。"
+    }
+  ]
+}

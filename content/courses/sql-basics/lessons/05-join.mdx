@@ -1,0 +1,41 @@
+## 对不上的读者报表
+
+年度报表里有一页“每位读者借过几本书”。核对时发现两个问题：没借过书的读者根本不在名单上；两位都叫王芳的读者合成了一行。
+
+## JOIN：按编号对应起来
+
+```sql
+SELECT r.name, b.title, l.borrowed
+FROM loans l
+JOIN readers r ON r.id = l.reader_id
+JOIN books b   ON b.id = l.book_id;
+```
+
+- `loans l` 给表起个短名（别名），后面写 `l.borrowed`；
+- `ON` 写清楚两张表怎么对应：借阅的 `reader_id` 等于读者的 `id`；
+- 两张表都有的列（比如 `id`）必须加上表名，否则会报 `ambiguous`。
+
+## JOIN 和 LEFT JOIN
+
+| 写法 | 结果 |
+| --- | --- |
+| `JOIN`（也写作 `INNER JOIN`） | 只留下两边都对得上的行：没借过书的读者不会出现 |
+| `LEFT JOIN` | 左边的每一行都留下；右边对不上的，右边的列全是 NULL |
+
+想要“每位读者都在，没借过的算 0”，用 `LEFT JOIN`，并且数右边的某一列：`COUNT(l.id)`。`COUNT(*)` 会把补出来的那一行也算成 1。
+
+<ConceptPlayer conceptId="sql-basics/join" blockId="join" />
+
+<MiniCheck
+  id="left-count"
+  question="readers r LEFT JOIN loans l 之后按读者分组。一位没借过书的读者，COUNT(*) 和 COUNT(l.id) 分别是多少？"
+  options={["0 和 0", "1 和 0", "1 和 1"]}
+  answer={1}
+  explanation="LEFT JOIN 给他补了一行，COUNT(*) 数到 1；那一行的 l.id 是 NULL，COUNT(l.id) 不算它。"
+/>
+
+## 动手：对不上的读者报表
+
+<SimulationBlock blockId="report-lab" />
+
+<KnowledgeCheck blockId="join-check" />

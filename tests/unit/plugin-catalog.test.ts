@@ -55,6 +55,14 @@ describe("课程插件自动注册", () => {
       "networking-basics/subnet",
       "networking-basics/tcp",
       "networking-basics/traceroute",
+      "sql-basics/group",
+      "sql-basics/join",
+      "sql-basics/order",
+      "sql-basics/restore",
+      "sql-basics/table",
+      "sql-basics/transaction",
+      "sql-basics/where",
+      "sql-basics/write",
     ]);
     expect([...ACTIVITY_IDS].sort()).toEqual([
       "bits-and-bytes/color-lab",
@@ -101,6 +109,13 @@ describe("课程插件自动注册", () => {
       "networking-basics/subnet-lab",
       "networking-basics/tcp-lab",
       "networking-basics/trace-lab",
+      "sql-basics/incident-lab",
+      "sql-basics/latest-lab",
+      "sql-basics/limit-lab",
+      "sql-basics/modify-lab",
+      "sql-basics/overdue-lab",
+      "sql-basics/report-lab",
+      "sql-basics/transaction-lab",
     ]);
   });
 
@@ -114,6 +129,7 @@ describe("课程插件自动注册", () => {
     expect(generated).toContain("content/courses/networking-basics/");
     expect(generated).toContain("content/courses/command-line/");
     expect(generated).toContain("content/courses/git-basics/");
+    expect(generated).toContain("content/courses/sql-basics/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

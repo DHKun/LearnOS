@@ -609,3 +609,21 @@
 
 **影响**：`components/learning/path-card.tsx` 由 `path-map.tsx`（`PathSummaryCard`、`PathMap`）取代；`learning-paths.spec.ts` 覆盖导航入口、路线图节点状态、学完一门后的变化和 404。
 
+## D59 — 第二条路线《Web 安全入门》与第一门课 `sql-basics`
+
+**日期**：2026-10-29
+
+**背景**：《计算机基础入门》五门课已全部上线。FloatCTF 的主线是安全，第一条路线里的 HTTP、网络、命令行、Git 正好是 Web 安全的前置知识；但讲 SQL 注入之前，学生需要先真正懂数据库。
+
+**决定**：
+
+1. 新增路线 `web-security`《Web 安全入门》（进阶）：数据库与 SQL → 密码学入门 → 登录与会话安全 → 注入（SQL 注入与 XSS）→ 越权与业务逻辑漏洞 → 综合：一次授权测试。首门上线，其余为“即将上线”。描述里写明所有攻击只针对模拟网站、建议先学完第一条路线。
+2. 新课程 `sql-basics`（1.0.0），9 章 3 个单元，按 `learnos-course-authoring` skill 制作。整门课在 library.test 的数据库（books、readers、loans）里进行，比喻统一为“图书馆的登记簿”。
+3. 课程自带一个确定性的 SQL 子集引擎（`simulation/sql.ts`）：带主键、外键、非空、唯一、检查约束的类型化表；SELECT 支持 JOIN / LEFT JOIN、WHERE、GROUP BY / HAVING、ORDER BY、LIMIT / OFFSET、DISTINCT、标量与 IN / EXISTS 子查询；INSERT（含 INSERT … SELECT）、UPDATE、DELETE；BEGIN / COMMIT / ROLLBACK，出错后事务中止。三值逻辑与 PostgreSQL 一致，报错沿用 PostgreSQL 的原文。不连接任何真实数据库；语句长度、词法单元数、嵌套深度和连接产生的行数都有上限，LIKE 用线性动态规划匹配，避免服务端重放时被构造的输入拖垮。不支持 DDL、UNION、RIGHT / FULL JOIN。
+4. 两类实验：查询类（第 2～5 章）提交一条 SELECT，服务端在一份全新数据上运行并按结果判分；控制台类（第 6～8 章）提交语句记录，服务端重放后按**已提交**的数据判分，没有 COMMIT 的事务视同回滚。
+5. 每个实验对应一个真实的数据事故或误区：`= NULL`、今天到期不算逾期、默认升序、混入已下架、WHERE 里用聚合、历史借阅算进“手上借着”、内连接漏人、`COUNT(*)` 把 0 算成 1、同名读者被合并、UPDATE 漏 WHERE、外键挡住删除、事务中止与忘记 COMMIT、用备份覆盖时丢掉备份之后的真实还书。
+
+**理由**：数据库是所有网站的底座，也是 SQL 注入、越权等后续课程的共同前置；用“修数据事故”的方式学 SQL，比背语法更接近真实工作。
+
+**影响**：`/paths` 现在有两条路线；`learning-paths.spec.ts` 增加对第二条路线的断言。截图检查中把事务实验里两个初始即为绿色的目标改为借书完成后才判断。
+

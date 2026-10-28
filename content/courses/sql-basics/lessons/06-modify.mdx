@@ -1,0 +1,55 @@
+## 上新书、改邮箱、删测试账号
+
+前几章都只是查。这一章开始改数据：加一本新书、改一位读者的邮箱、删掉一个测试账号。改数据和查数据最大的区别是：**改错了不会自己恢复**。
+
+## INSERT：加一行
+
+```sql
+INSERT INTO books (title, author, category, added, copies)
+VALUES ('雪国', '川端康成', '文学', CURRENT_DATE, 2);
+```
+
+列名和值一一对应。没写的列用默认值：`id` 自动编号，`status` 默认是 `available`。
+
+## UPDATE：改已有的行
+
+```sql
+UPDATE readers SET email = 'new@mail.test' WHERE id = 9;
+UPDATE books SET copies = copies - 1 WHERE id = 3;
+```
+
+**WHERE 决定改哪几行。不写 WHERE，就是整张表的每一行都改。** 数据库会回报改了几行（`UPDATE 1`），这个数字值得看一眼。
+
+## DELETE：删掉行
+
+```sql
+DELETE FROM loans WHERE reader_id = 14;
+DELETE FROM readers WHERE id = 14;
+```
+
+同样，不写 WHERE 就是清空整张表。还被别的表引用着的行删不掉：读者名下还有借阅记录时，删读者会被外键拦住，要先删（或改）引用它的行。
+
+<ConceptPlayer conceptId="sql-basics/write" blockId="write" />
+
+<Callout type="warning" title="先 SELECT，再 UPDATE / DELETE">
+写好 WHERE 之后，先把 `UPDATE … SET …` 换成 `SELECT *`，用同样的 WHERE 跑一次，确认查出来的正好是要改的那几行，再执行修改。
+</Callout>
+
+<MiniCheck
+  id="no-where"
+  question="UPDATE readers SET blocked = true 会怎样？"
+  options={["只改第一个读者", "所有读者都被封禁", "报错：缺少 WHERE"]}
+  answer={1}
+  explanation="SQL 不会提醒你漏了 WHERE，它会照做：每一行都改。"
+/>
+
+## 动手：上新书、改邮箱、删测试账号
+
+<SimulationBlock blockId="modify-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+改错了就点“重置数据库”。删测试用户时如果报 `violates foreign key constraint`，看看报错里说他还被哪张表引用着。
+
+</details>
