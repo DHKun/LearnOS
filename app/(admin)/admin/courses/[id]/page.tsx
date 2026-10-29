@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileText } from "lucide-react";
+import { BarChart3, FileText } from "lucide-react";
 
 import { CourseStudentsTable } from "@/components/admin/course-students-table";
 import { PageHeader } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth/session";
 import { listCourseStudents } from "@/lib/services/admin";
@@ -57,6 +58,11 @@ export default async function AdminCourseDetailPage({
               {statusLabel}
             </Badge>
             <Badge variant="secondary">版本 {detail.course.contentVersion}</Badge>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/admin/courses/${id}/analytics`}>
+                <BarChart3 /> 卡点分析
+              </Link>
+            </Button>
           </div>
         }
       />

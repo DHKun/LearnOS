@@ -305,6 +305,58 @@ export type AdminCourseDetail = {
   counts: { active: number; completed: number; abandoned: number };
 };
 
+export type CourseAnalyticsLesson = {
+  id: string;
+  title: string;
+  position: number;
+  required: boolean;
+  /** Enrollments that opened the chapter at least once. */
+  reached: number;
+  completed: number;
+  /** Active enrollments whose first unfinished required chapter is this one. */
+  waiting: number;
+  /** Subset of `waiting` without a learning interaction for `idleDays`. */
+  idle: number;
+};
+
+export type CourseAnalyticsBlock = {
+  lessonId: string;
+  lessonTitle: string;
+  blockId: string;
+  title: string;
+  kind: ChapterBlockKind;
+  /** Enrollments with at least one attempt. */
+  learners: number;
+  passed: number;
+  /** Tried but have not passed yet. */
+  stuck: number;
+  attempts: number;
+  avgAttemptsToPass: number | null;
+  firstTryRate: number | null;
+};
+
+export type CourseAnalyticsQuestion = {
+  lessonTitle: string;
+  blockTitle: string;
+  questionId: string;
+  prompt: string;
+  answered: number;
+  wrong: number;
+  wrongRate: number;
+  wrongChoices: { label: string; count: number }[];
+  /** Wrong answers recorded before choices were stored, or left blank. */
+  unrecordedWrong: number;
+};
+
+export type CourseAnalytics = {
+  course: { id: string; slug: string; title: string };
+  learners: { total: number; active: number; completed: number; abandoned: number };
+  idleDays: number;
+  lessons: CourseAnalyticsLesson[];
+  blocks: CourseAnalyticsBlock[];
+  questions: CourseAnalyticsQuestion[];
+};
+
 export type AdminCourseStudentRow = {
   studentId: string;
   name: string;

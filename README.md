@@ -282,7 +282,7 @@ pnpm exec playwright install chromium
 # 无 root 的 Linux 沙箱可参考“故障排查”
 ```
 
-E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、`bits-and-bytes`、`how-programs-run`、`data-structures`、`networking-basics`、`http-hands-on`、`command-line`、`git-basics`、`sql-basics`、`crypto-basics` 等课程的完整闭环（图文/动画/模拟/知识检查/结业测验/刷新恢复，全部实验经服务端验证，结课并核对积分）、学习路线的导航入口、路线图与推荐、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
+E2E 覆盖：管理员建号/停用、越权拒绝、CSRF、并发报名、同课幂等、退出恢复、120 秒离线语义、`bits-and-bytes`、`how-programs-run`、`data-structures`、`networking-basics`、`http-hands-on`、`command-line`、`git-basics`、`sql-basics`、`crypto-basics` 等课程的完整闭环（图文/动画/模拟/知识检查/结业测验/刷新恢复，全部实验经服务端验证，结课并核对积分）、学习路线的导航入口、路线图与推荐、管理端课程卡点分析（聚合数字与错误选项记录）、新课程部署控制台扫描与权限隔离、原生互动刷新恢复、多标签状态冲突、服务端验证实验、测验答案保密、积分去重、笔记隔离、归档课程禁止新报名、生产页面无 iframe、确认操作使用模态对话框。测试用户由 `tests/e2e/helpers.ts` 动态创建并清理。
 
 ## 目录结构
 

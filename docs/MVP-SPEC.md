@@ -83,6 +83,7 @@ Activity Registry (same-origin React)
 | `/admin/students` | 搜索、过滤学生；抽屉显示当前课程/章节、总进度、最近活跃、章节完成明细、最近事件、积分。 |
 | `/admin/courses` | 查看课程、发布/下架、编辑标题/简介；内容由 Git/同步脚本管理。 |
 | `/admin/courses/[id]` | 课程详情；`active/completed/abandoned` 学员筛选，显示学生、进度、当前章节、最后活跃。 |
+| `/admin/courses/[id]/analytics` | 课程卡点分析（D63）：章节进入/完成与停留人数、实验与知识检查的通过情况、错得最多的题目及常选错误选项；只显示聚合数字。 |
 
 ## 4. 数据库表与约束
 
