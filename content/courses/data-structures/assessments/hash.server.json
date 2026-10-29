@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "h1",
+      "prompt": "哈希表查找平均需要多少步？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n²)"
+        }
+      ],
+      "answer": "a",
+      "explanation": "前提是数据分散得好。"
+    },
+    {
+      "id": "h2",
+      "prompt": "200 个号码最后一位都是 0，用“最后一位”当哈希规则，会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "分得很均匀"
+        },
+        {
+          "id": "b",
+          "label": "全部挤进同一格，查找退化成挨个找"
+        },
+        {
+          "id": "c",
+          "label": "查不到"
+        },
+        {
+          "id": "d",
+          "label": "自动换规则"
+        }
+      ],
+      "answer": "b",
+      "explanation": "规则只看了一部分，正好撞上数据的规律。"
+    },
+    {
+      "id": "h3",
+      "prompt": "桶的个数常取质数，主要是为了？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "好记"
+        },
+        {
+          "id": "b",
+          "label": "让有规律的数据也不容易扎堆"
+        },
+        {
+          "id": "c",
+          "label": "省内存"
+        },
+        {
+          "id": "d",
+          "label": "查找时不用计算"
+        }
+      ],
+      "answer": "b",
+      "explanation": "合数的因子容易和数据的规律对上。"
+    },
+    {
+      "id": "h4",
+      "prompt": "两个不同的键算出了同一个格子，这叫？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "溢出"
+        },
+        {
+          "id": "b",
+          "label": "冲突"
+        },
+        {
+          "id": "c",
+          "label": "排序"
+        },
+        {
+          "id": "d",
+          "label": "哈希失败"
+        }
+      ],
+      "answer": "b",
+      "explanation": "冲突多了就变慢。"
+    }
+  ]
+}

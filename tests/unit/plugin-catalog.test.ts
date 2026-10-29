@@ -28,6 +28,13 @@ describe("课程插件自动注册", () => {
       "command-line/shell",
       "command-line/signal",
       "command-line/unlink",
+      "data-structures/array-list",
+      "data-structures/bfs",
+      "data-structures/binary",
+      "data-structures/growth",
+      "data-structures/hash",
+      "data-structures/sort",
+      "data-structures/stack-queue",
       "git-basics/areas",
       "git-basics/branch",
       "git-basics/log",
@@ -83,6 +90,12 @@ describe("课程插件自动注册", () => {
       "command-line/perms-lab",
       "command-line/pipes-lab",
       "command-line/process-lab",
+      "data-structures/hash-lab",
+      "data-structures/queue-lab",
+      "data-structures/route-lab",
+      "data-structures/search-lab",
+      "data-structures/sort-lab",
+      "data-structures/structure-lab",
       "git-basics/branch-lab",
       "git-basics/commit-lab",
       "git-basics/history-lab",
@@ -128,6 +141,7 @@ describe("课程插件自动注册", () => {
     expect(generated).toContain("content/courses/command-line/");
     expect(generated).toContain("content/courses/git-basics/");
     expect(generated).toContain("content/courses/how-programs-run/");
+    expect(generated).toContain("content/courses/data-structures/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

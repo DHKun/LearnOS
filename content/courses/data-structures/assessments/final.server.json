@@ -1,0 +1,490 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "一个 O(n) 的方法处理 1000 条要 1 秒，处理 2000 条大约？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "1 秒"
+        },
+        {
+          "id": "b",
+          "label": "2 秒"
+        },
+        {
+          "id": "c",
+          "label": "4 秒"
+        },
+        {
+          "id": "d",
+          "label": "1000 秒"
+        }
+      ],
+      "answer": "b",
+      "explanation": "线性增长。"
+    },
+    {
+      "id": "f2",
+      "prompt": "下面哪种增长最慢？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(n²)"
+        },
+        {
+          "id": "b",
+          "label": "O(n)"
+        },
+        {
+          "id": "c",
+          "label": "O(log n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n log n)"
+        }
+      ],
+      "answer": "c",
+      "explanation": "数据翻倍只多一步。"
+    },
+    {
+      "id": "f3",
+      "prompt": "在没排序的 1000 本书里找一本，最坏要看几次？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "10"
+        },
+        {
+          "id": "b",
+          "label": "500"
+        },
+        {
+          "id": "c",
+          "label": "1000"
+        },
+        {
+          "id": "d",
+          "label": "1"
+        }
+      ],
+      "answer": "c",
+      "explanation": "只能挨个找。"
+    },
+    {
+      "id": "f4",
+      "prompt": "在排好序的 100 万本书里二分查找，最多大约看几次？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "20"
+        },
+        {
+          "id": "b",
+          "label": "1000"
+        },
+        {
+          "id": "c",
+          "label": "50 万"
+        },
+        {
+          "id": "d",
+          "label": "100 万"
+        }
+      ],
+      "answer": "a",
+      "explanation": "2 的 20 次方约 100 万。"
+    },
+    {
+      "id": "f5",
+      "prompt": "要确认某个数不在排好序的数组里，二分查找最后会？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "找到两个夹住它的相邻元素"
+        },
+        {
+          "id": "b",
+          "label": "看遍所有元素"
+        },
+        {
+          "id": "c",
+          "label": "报错"
+        },
+        {
+          "id": "d",
+          "label": "随便返回一个"
+        }
+      ],
+      "answer": "a",
+      "explanation": "它们之间没有位置了。"
+    },
+    {
+      "id": "f6",
+      "prompt": "数组在最前面插入一个元素，为什么慢？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "要重新排序"
+        },
+        {
+          "id": "b",
+          "label": "后面的元素都要往后挪一格"
+        },
+        {
+          "id": "c",
+          "label": "要扩大内存"
+        },
+        {
+          "id": "d",
+          "label": "要计算哈希"
+        }
+      ],
+      "answer": "b",
+      "explanation": "挪动 n 个元素。"
+    },
+    {
+      "id": "f7",
+      "prompt": "链表按位置读第 500 个元素，为什么慢？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "要从头顺着指针数过去"
+        },
+        {
+          "id": "b",
+          "label": "要重新排序"
+        },
+        {
+          "id": "c",
+          "label": "要挪动元素"
+        },
+        {
+          "id": "d",
+          "label": "要计算哈希"
+        }
+      ],
+      "answer": "a",
+      "explanation": "没法直接算出位置。"
+    },
+    {
+      "id": "f8",
+      "prompt": "每天按位置随机读取几十万次、很少插入，用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "数组"
+        },
+        {
+          "id": "b",
+          "label": "链表"
+        },
+        {
+          "id": "c",
+          "label": "栈"
+        },
+        {
+          "id": "d",
+          "label": "队列"
+        }
+      ],
+      "answer": "a",
+      "explanation": "按位置读一步到位。"
+    },
+    {
+      "id": "f9",
+      "prompt": "在开头频繁插入、删除，用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "数组"
+        },
+        {
+          "id": "b",
+          "label": "链表"
+        },
+        {
+          "id": "c",
+          "label": "排好序的数组"
+        },
+        {
+          "id": "d",
+          "label": "哈希表"
+        }
+      ],
+      "answer": "b",
+      "explanation": "改指针就行。"
+    },
+    {
+      "id": "f10",
+      "prompt": "借书窗口叫号用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "栈"
+        },
+        {
+          "id": "b",
+          "label": "队列"
+        },
+        {
+          "id": "c",
+          "label": "哈希表"
+        },
+        {
+          "id": "d",
+          "label": "数组排序"
+        }
+      ],
+      "answer": "b",
+      "explanation": "先来先办。"
+    },
+    {
+      "id": "f11",
+      "prompt": "“撤销”功能用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "队列"
+        },
+        {
+          "id": "b",
+          "label": "栈"
+        },
+        {
+          "id": "c",
+          "label": "二分查找"
+        },
+        {
+          "id": "d",
+          "label": "哈希表"
+        }
+      ],
+      "answer": "b",
+      "explanation": "最近一步先撤销。"
+    },
+    {
+      "id": "f12",
+      "prompt": "哈希表要快，最关键的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "桶越多越好"
+        },
+        {
+          "id": "b",
+          "label": "哈希函数能把数据分散开"
+        },
+        {
+          "id": "c",
+          "label": "数据要排好序"
+        },
+        {
+          "id": "d",
+          "label": "数据要少"
+        }
+      ],
+      "answer": "b",
+      "explanation": "挤在一格就退化成挨个找。"
+    },
+    {
+      "id": "f13",
+      "prompt": "借书证号都是 10 的倍数，哪个哈希规则最好？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "看最后一位"
+        },
+        {
+          "id": "b",
+          "label": "看前两位"
+        },
+        {
+          "id": "c",
+          "label": "号码 ÷ 97 取余"
+        },
+        {
+          "id": "d",
+          "label": "号码 ÷ 100 取余"
+        }
+      ],
+      "answer": "c",
+      "explanation": "用上整个号码，对质数取余。"
+    },
+    {
+      "id": "f14",
+      "prompt": "下面哪些排序是稳定的？（多选）",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "插入排序"
+        },
+        {
+          "id": "b",
+          "label": "归并排序"
+        },
+        {
+          "id": "c",
+          "label": "选择排序（交换实现）"
+        },
+        {
+          "id": "d",
+          "label": "快速排序（交换实现）"
+        }
+      ],
+      "answer": [
+        "a",
+        "b"
+      ],
+      "explanation": "交换实现的选择排序和快速排序会打乱相同键的顺序。"
+    },
+    {
+      "id": "f15",
+      "prompt": "书已按书名排好，要按年份排且同年保持书名顺序，应该选？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "稳定的排序"
+        },
+        {
+          "id": "b",
+          "label": "最快的不稳定排序"
+        },
+        {
+          "id": "c",
+          "label": "随机打乱再排"
+        },
+        {
+          "id": "d",
+          "label": "不用排"
+        }
+      ],
+      "answer": "a",
+      "explanation": "稳定排序保持同年的原有顺序。"
+    },
+    {
+      "id": "f16",
+      "prompt": "几乎有序的 1000 条数据，用“第一个元素当基准”的快速排序会？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "很快"
+        },
+        {
+          "id": "b",
+          "label": "退化，比较几十万次"
+        },
+        {
+          "id": "c",
+          "label": "报错"
+        },
+        {
+          "id": "d",
+          "label": "和归并一样"
+        }
+      ],
+      "answer": "b",
+      "explanation": "每次只分出一个元素。"
+    },
+    {
+      "id": "f17",
+      "prompt": "下面哪个问题适合看成“图”？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "给一列数排序"
+        },
+        {
+          "id": "b",
+          "label": "找地铁上两站之间换乘最少的路线"
+        },
+        {
+          "id": "c",
+          "label": "统计一个班的平均分"
+        },
+        {
+          "id": "d",
+          "label": "把文本转成大写"
+        }
+      ],
+      "answer": "b",
+      "explanation": "站是点，线路是边。"
+    },
+    {
+      "id": "f18",
+      "prompt": "广度优先搜索（BFS）用哪种结构保存“下一圈要看的格子”？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "栈"
+        },
+        {
+          "id": "b",
+          "label": "队列"
+        },
+        {
+          "id": "c",
+          "label": "哈希表"
+        },
+        {
+          "id": "d",
+          "label": "排好序的数组"
+        }
+      ],
+      "answer": "b",
+      "explanation": "一圈圈往外扩，先进先出。"
+    },
+    {
+      "id": "f19",
+      "prompt": "BFS 第一次到达终点时，走的步数是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "最多的"
+        },
+        {
+          "id": "b",
+          "label": "最少的"
+        },
+        {
+          "id": "c",
+          "label": "随机的"
+        },
+        {
+          "id": "d",
+          "label": "不一定能到"
+        }
+      ],
+      "answer": "b",
+      "explanation": "每一步代价相同时，这就是最短路径。"
+    },
+    {
+      "id": "f20",
+      "prompt": "只要电脑足够快，算法选得好不好就无所谓了。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "数据一多，O(n²) 和 O(n log n) 的差别是任何硬件都补不回来的。"
+    }
+  ]
+}

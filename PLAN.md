@@ -680,3 +680,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `tests/unit/how-programs-run.test.ts`（格子机与 6 个校验器，10 项）；`tests/e2e/how-programs-run.spec.ts`（8 章真实界面闭环，结课 130 分）；路线、网络基础、命令行、Git 的 E2E 更新路线位置。
 - [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正第 3 章示例与实验答案过于接近、内存格子相邻区域同色两处问题。
 
+## 35. 通识课 `data-structures`（2026-10-29）
+
+- [x] 8 章、7 个概念动画、6 个服务端验证实验、36 道服务端题；插入《计算机基础入门》第 3 站（路线 7 门）；`pnpm courses:validate` 通过。
+- [x] `tests/unit/data-structures.test.ts`（算法与 6 个校验器，9 项）；`tests/e2e/data-structures.spec.ts`（8 章真实界面闭环，结课 130 分）；路线及各课 E2E 更新路线位置。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；地图缩小到最短 16 步，排序动画改为实时计算比较次数并按相对比例显示。
+

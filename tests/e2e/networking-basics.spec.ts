@@ -43,7 +43,7 @@ test.describe("网络基础（networking-basics）", () => {
     try {
       await login(page, student.email, student.password);
       await page.goto(`/courses/${course.slug}`);
-      await expect(page.getByTestId("course-path-context")).toContainText("第 3 / 6 门");
+      await expect(page.getByTestId("course-path-context")).toContainText("第 4 / 7 门");
       await page.getByRole("button", { name: "参加课程" }).click();
       await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`), { timeout: 20_000 });
 

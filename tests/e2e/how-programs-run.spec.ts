@@ -50,7 +50,7 @@ test.describe("程序是怎么跑起来的（how-programs-run）", () => {
     try {
       await login(page, student.email, student.password);
       await page.goto(`/courses/${course.slug}`);
-      await expect(page.getByTestId("course-path-context")).toContainText("第 2 / 6 门");
+      await expect(page.getByTestId("course-path-context")).toContainText("第 2 / 7 门");
       await page.getByRole("button", { name: "参加课程" }).click();
       await expect(page).toHaveURL(new RegExp(`/learn/${course.id}`), { timeout: 20_000 });
 

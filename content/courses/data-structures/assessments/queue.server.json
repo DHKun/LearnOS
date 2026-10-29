@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "u1",
+      "prompt": "打印机按提交顺序打印任务，用哪种结构？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "栈"
+        },
+        {
+          "id": "b",
+          "label": "队列"
+        },
+        {
+          "id": "c",
+          "label": "哈希表"
+        },
+        {
+          "id": "d",
+          "label": "都行"
+        }
+      ],
+      "answer": "b",
+      "explanation": "先提交的先打印。"
+    },
+    {
+      "id": "u2",
+      "prompt": "依次把 1、2、3 放进栈，再全部取出，取出的顺序是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "1、2、3"
+        },
+        {
+          "id": "b",
+          "label": "3、2、1"
+        },
+        {
+          "id": "c",
+          "label": "2、1、3"
+        },
+        {
+          "id": "d",
+          "label": "随机"
+        }
+      ],
+      "answer": "b",
+      "explanation": "后进先出。"
+    },
+    {
+      "id": "u3",
+      "prompt": "浏览器的“后退”按钮最适合用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "队列"
+        },
+        {
+          "id": "b",
+          "label": "栈"
+        },
+        {
+          "id": "c",
+          "label": "数组排序"
+        },
+        {
+          "id": "d",
+          "label": "哈希表"
+        }
+      ],
+      "answer": "b",
+      "explanation": "最近看过的页面最先退回。"
+    },
+    {
+      "id": "u4",
+      "prompt": "上一门课里函数的 CALL 和 RET 靠什么记住返回地址？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "队列"
+        },
+        {
+          "id": "b",
+          "label": "栈"
+        },
+        {
+          "id": "c",
+          "label": "哈希表"
+        },
+        {
+          "id": "d",
+          "label": "链表"
+        }
+      ],
+      "answer": "b",
+      "explanation": "调用栈。"
+    }
+  ]
+}

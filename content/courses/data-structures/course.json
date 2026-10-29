@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 3,
+  "slug": "data-structures",
+  "title": "数据结构与算法入门：让程序又对又快",
+  "description": "零基础的数据结构与算法课。整门课都在 library.test 的后台：在书脊朝里的书架上找书，为书目系统选数组还是链表，给叫号和撤销选栈还是队列，为借书证号设计哈希，给三批书挑排序方法，最后在馆内地图上找最短路线。所有步数都是真的把算法跑一遍数出来的。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "growth",
+        "component": "concepts/concepts.tsx",
+        "export": "GrowthConcept",
+        "title": "同样的结果，不同的步数",
+        "analogy": "找书的三种办法"
+      },
+      {
+        "id": "binary",
+        "component": "concepts/concepts.tsx",
+        "export": "BinaryConcept",
+        "title": "二分查找",
+        "analogy": "翻字典"
+      },
+      {
+        "id": "array-list",
+        "component": "concepts/concepts.tsx",
+        "export": "ArrayListConcept",
+        "title": "数组与链表",
+        "analogy": "书架格子与寻宝纸条"
+      },
+      {
+        "id": "stack-queue",
+        "component": "concepts/concepts.tsx",
+        "export": "StackQueueConcept",
+        "title": "栈与队列",
+        "analogy": "还书车与排队"
+      },
+      {
+        "id": "hash",
+        "component": "concepts/concepts.tsx",
+        "export": "HashConcept",
+        "title": "哈希表",
+        "analogy": "卡片柜"
+      },
+      {
+        "id": "sort",
+        "component": "concepts/concepts.tsx",
+        "export": "SortConcept",
+        "title": "排序",
+        "analogy": "理书"
+      },
+      {
+        "id": "bfs",
+        "component": "concepts/concepts.tsx",
+        "export": "BfsConcept",
+        "title": "广度优先搜索",
+        "analogy": "水波"
+      }
+    ],
+    "activities": [
+      {
+        "id": "search-lab",
+        "component": "activities/labs.tsx",
+        "export": "SearchLab",
+        "title": "书脊朝里的书架",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateSearchLab"
+        }
+      },
+      {
+        "id": "structure-lab",
+        "component": "activities/labs.tsx",
+        "export": "StructureLab",
+        "title": "书目系统的三项日常工作",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateStructureLab"
+        }
+      },
+      {
+        "id": "queue-lab",
+        "component": "activities/labs.tsx",
+        "export": "QueueLab",
+        "title": "四个功能，栈还是队列",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateQueueLab"
+        }
+      },
+      {
+        "id": "hash-lab",
+        "component": "activities/labs.tsx",
+        "export": "HashLab",
+        "title": "借书证卡片柜",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateHashLab"
+        }
+      },
+      {
+        "id": "sort-lab",
+        "component": "activities/labs.tsx",
+        "export": "SortLab",
+        "title": "三批要排序的书",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateSortLab"
+        }
+      },
+      {
+        "id": "route-lab",
+        "component": "activities/labs.tsx",
+        "export": "RouteLab",
+        "title": "去科幻区的最短路线",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateRouteLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "growth",
+      "title": "同样的结果，不同的步数",
+      "source": "lessons/01-growth.mdx",
+      "required": true,
+      "unit": "基础"
+    },
+    {
+      "slug": "search",
+      "title": "查找",
+      "source": "lessons/02-search.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "search-lab",
+          "kind": "simulation",
+          "activityId": "data-structures/search-lab",
+          "title": "书脊朝里的书架"
+        },
+        {
+          "id": "search-check",
+          "kind": "question",
+          "source": "assessments/search.server.json",
+          "title": "查找检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "search-lab",
+          "search-check"
+        ]
+      }
+    },
+    {
+      "slug": "arrays-lists",
+      "title": "数组与链表",
+      "source": "lessons/03-arrays-lists.mdx",
+      "required": true,
+      "unit": "结构",
+      "blocks": [
+        {
+          "id": "structure-lab",
+          "kind": "simulation",
+          "activityId": "data-structures/structure-lab",
+          "title": "书目系统的三项日常工作"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "structure-lab"
+        ]
+      }
+    },
+    {
+      "slug": "stacks-queues",
+      "title": "栈与队列",
+      "source": "lessons/04-stacks-queues.mdx",
+      "required": true,
+      "unit": "结构",
+      "blocks": [
+        {
+          "id": "queue-lab",
+          "kind": "simulation",
+          "activityId": "data-structures/queue-lab",
+          "title": "四个功能，栈还是队列"
+        },
+        {
+          "id": "queue-check",
+          "kind": "question",
+          "source": "assessments/queue.server.json",
+          "title": "栈与队列检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "queue-lab",
+          "queue-check"
+        ]
+      }
+    },
+    {
+      "slug": "hashing",
+      "title": "哈希表",
+      "source": "lessons/05-hashing.mdx",
+      "required": true,
+      "unit": "结构",
+      "blocks": [
+        {
+          "id": "hash-lab",
+          "kind": "simulation",
+          "activityId": "data-structures/hash-lab",
+          "title": "借书证卡片柜"
+        },
+        {
+          "id": "hash-check",
+          "kind": "question",
+          "source": "assessments/hash.server.json",
+          "title": "哈希检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "hash-lab",
+          "hash-check"
+        ]
+      }
+    },
+    {
+      "slug": "sorting",
+      "title": "排序",
+      "source": "lessons/06-sorting.mdx",
+      "required": true,
+      "unit": "算法",
+      "blocks": [
+        {
+          "id": "sort-lab",
+          "kind": "simulation",
+          "activityId": "data-structures/sort-lab",
+          "title": "三批要排序的书"
+        },
+        {
+          "id": "sort-check",
+          "kind": "question",
+          "source": "assessments/sort.server.json",
+          "title": "排序检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "sort-lab",
+          "sort-check"
+        ]
+      }
+    },
+    {
+      "slug": "graphs",
+      "title": "图与最短路线",
+      "source": "lessons/07-graphs.mdx",
+      "required": true,
+      "unit": "算法",
+      "blocks": [
+        {
+          "id": "route-lab",
+          "kind": "simulation",
+          "activityId": "data-structures/route-lab",
+          "title": "去科幻区的最短路线"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "route-lab"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/08-final.mdx",
+      "required": true,
+      "unit": "算法",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}

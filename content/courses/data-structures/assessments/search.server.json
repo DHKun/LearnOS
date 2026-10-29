@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "q1",
+      "prompt": "在 1024 本排好序的书里二分查找，最多要看几次？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "10"
+        },
+        {
+          "id": "b",
+          "label": "32"
+        },
+        {
+          "id": "c",
+          "label": "512"
+        },
+        {
+          "id": "d",
+          "label": "1024"
+        }
+      ],
+      "answer": "a",
+      "explanation": "每次排除一半，2 的 10 次方是 1024。"
+    },
+    {
+      "id": "q2",
+      "prompt": "二分查找的前提是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "数据存在链表里"
+        },
+        {
+          "id": "b",
+          "label": "数据已经排好序"
+        },
+        {
+          "id": "c",
+          "label": "数据量小于 100"
+        },
+        {
+          "id": "d",
+          "label": "数据没有重复"
+        }
+      ],
+      "answer": "b",
+      "explanation": "只有排好序，才能根据中间元素决定往哪边找。"
+    },
+    {
+      "id": "q3",
+      "prompt": "二分查找时，中间那本比要找的大，下一步？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "只在左半边找"
+        },
+        {
+          "id": "b",
+          "label": "只在右半边找"
+        },
+        {
+          "id": "c",
+          "label": "从头开始"
+        },
+        {
+          "id": "d",
+          "label": "两边都找"
+        }
+      ],
+      "answer": "a",
+      "explanation": "要找的更小，一定在左边。"
+    },
+    {
+      "id": "q4",
+      "prompt": "数据没有排序时，也可以直接用二分查找。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "没排序只能挨个找，或者先排序。"
+    }
+  ]
+}
