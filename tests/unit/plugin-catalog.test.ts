@@ -28,6 +28,13 @@ describe("课程插件自动注册", () => {
       "command-line/shell",
       "command-line/signal",
       "command-line/unlink",
+      "crypto-basics/chain",
+      "crypto-basics/goals",
+      "crypto-basics/hash",
+      "crypto-basics/mode",
+      "crypto-basics/padlock",
+      "crypto-basics/salt",
+      "crypto-basics/seal",
       "git-basics/areas",
       "git-basics/branch",
       "git-basics/log",
@@ -84,6 +91,12 @@ describe("课程插件自动注册", () => {
       "command-line/perms-lab",
       "command-line/pipes-lab",
       "command-line/process-lab",
+      "crypto-basics/certificate-lab",
+      "crypto-basics/mirror-lab",
+      "crypto-basics/password-lab",
+      "crypto-basics/public-lab",
+      "crypto-basics/signature-lab",
+      "crypto-basics/symmetric-lab",
       "git-basics/branch-lab",
       "git-basics/commit-lab",
       "git-basics/history-lab",
@@ -130,6 +143,7 @@ describe("课程插件自动注册", () => {
     expect(generated).toContain("content/courses/command-line/");
     expect(generated).toContain("content/courses/git-basics/");
     expect(generated).toContain("content/courses/sql-basics/");
+    expect(generated).toContain("content/courses/crypto-basics/");
     expect(generated).not.toContain("components/activities/sql-injection");
     expect(generated).not.toContain("components/concepts/sql");
   });

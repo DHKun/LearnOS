@@ -11,7 +11,6 @@
     },
     {
       "course": "crypto-basics",
-      "title": "密码学入门",
       "summary": "哈希、加密和签名：密码该怎么存，HTTPS 凭什么可信。"
     },
     {
