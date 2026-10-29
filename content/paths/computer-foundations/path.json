@@ -14,6 +14,10 @@
       "summary": "程序在计算机里怎么跑：CPU、内存、栈、缓存和操作系统。"
     },
     {
+      "course": "data-structures",
+      "summary": "同样的结果，怎么用更少的步数：查找、数组与链表、栈与队列、哈希、排序和图。"
+    },
+    {
       "course": "networking-basics",
       "summary": "两台电脑怎么找到对方：IP、子网、路由、DNS、TCP 与端口。"
     },

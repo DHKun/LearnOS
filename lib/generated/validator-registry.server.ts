@@ -24,44 +24,50 @@ import { validatePasswordLab as validator21 } from "../../content/courses/crypto
 import { validatePublicLab as validator22 } from "../../content/courses/crypto-basics/validators";
 import { validateSignatureLab as validator23 } from "../../content/courses/crypto-basics/validators";
 import { validateSymmetricLab as validator24 } from "../../content/courses/crypto-basics/validators";
-import { validateBranchLab as validator25 } from "../../content/courses/git-basics/validators";
-import { validateCommitLab as validator26 } from "../../content/courses/git-basics/validators";
-import { validateHistoryLab as validator27 } from "../../content/courses/git-basics/validators";
-import { validateIncidentLab as validator28 } from "../../content/courses/git-basics/validators";
-import { validateMergeLab as validator29 } from "../../content/courses/git-basics/validators";
-import { validateRemoteLab as validator30 } from "../../content/courses/git-basics/validators";
-import { validateUndoLab as validator31 } from "../../content/courses/git-basics/validators";
-import { validateArrayLab as validator32 } from "../../content/courses/how-programs-run/validators";
-import { validateCacheLab as validator33 } from "../../content/courses/how-programs-run/validators";
-import { validateLoopLab as validator34 } from "../../content/courses/how-programs-run/validators";
-import { validateScheduleLab as validator35 } from "../../content/courses/how-programs-run/validators";
-import { validateStackLab as validator36 } from "../../content/courses/how-programs-run/validators";
-import { validateTraceLab as validator37 } from "../../content/courses/how-programs-run/validators";
-import { validateCacheLab as validator38 } from "../../content/courses/http-hands-on/validators";
-import { validateCookieLab as validator39 } from "../../content/courses/http-hands-on/validators";
-import { validateDiagnosisLab as validator40 } from "../../content/courses/http-hands-on/validators";
-import { validateFinalMission as validator41 } from "../../content/courses/http-hands-on/validators";
-import { validateJsonLab as validator42 } from "../../content/courses/http-hands-on/validators";
-import { validateMethodLab as validator43 } from "../../content/courses/http-hands-on/validators";
-import { validateRequestLab as validator44 } from "../../content/courses/http-hands-on/validators";
-import { validateResponseLab as validator45 } from "../../content/courses/http-hands-on/validators";
-import { validateUrlLab as validator46 } from "../../content/courses/http-hands-on/validators";
-import { validateArpLab as validator47 } from "../../content/courses/networking-basics/validators";
-import { validateDnsLab as validator48 } from "../../content/courses/networking-basics/validators";
-import { validateFirewallLab as validator49 } from "../../content/courses/networking-basics/validators";
-import { validateLaptopLab as validator50 } from "../../content/courses/networking-basics/validators";
-import { validateNatLab as validator51 } from "../../content/courses/networking-basics/validators";
-import { validateRouteLab as validator52 } from "../../content/courses/networking-basics/validators";
-import { validateSubnetLab as validator53 } from "../../content/courses/networking-basics/validators";
-import { validateTcpLab as validator54 } from "../../content/courses/networking-basics/validators";
-import { validateTraceLab as validator55 } from "../../content/courses/networking-basics/validators";
-import { validateIncidentLab as validator56 } from "../../content/courses/sql-basics/validators";
-import { validateLatestLab as validator57 } from "../../content/courses/sql-basics/validators";
-import { validateLimitLab as validator58 } from "../../content/courses/sql-basics/validators";
-import { validateModifyLab as validator59 } from "../../content/courses/sql-basics/validators";
-import { validateOverdueLab as validator60 } from "../../content/courses/sql-basics/validators";
-import { validateReportLab as validator61 } from "../../content/courses/sql-basics/validators";
-import { validateTransactionLab as validator62 } from "../../content/courses/sql-basics/validators";
+import { validateHashLab as validator25 } from "../../content/courses/data-structures/validators";
+import { validateQueueLab as validator26 } from "../../content/courses/data-structures/validators";
+import { validateRouteLab as validator27 } from "../../content/courses/data-structures/validators";
+import { validateSearchLab as validator28 } from "../../content/courses/data-structures/validators";
+import { validateSortLab as validator29 } from "../../content/courses/data-structures/validators";
+import { validateStructureLab as validator30 } from "../../content/courses/data-structures/validators";
+import { validateBranchLab as validator31 } from "../../content/courses/git-basics/validators";
+import { validateCommitLab as validator32 } from "../../content/courses/git-basics/validators";
+import { validateHistoryLab as validator33 } from "../../content/courses/git-basics/validators";
+import { validateIncidentLab as validator34 } from "../../content/courses/git-basics/validators";
+import { validateMergeLab as validator35 } from "../../content/courses/git-basics/validators";
+import { validateRemoteLab as validator36 } from "../../content/courses/git-basics/validators";
+import { validateUndoLab as validator37 } from "../../content/courses/git-basics/validators";
+import { validateArrayLab as validator38 } from "../../content/courses/how-programs-run/validators";
+import { validateCacheLab as validator39 } from "../../content/courses/how-programs-run/validators";
+import { validateLoopLab as validator40 } from "../../content/courses/how-programs-run/validators";
+import { validateScheduleLab as validator41 } from "../../content/courses/how-programs-run/validators";
+import { validateStackLab as validator42 } from "../../content/courses/how-programs-run/validators";
+import { validateTraceLab as validator43 } from "../../content/courses/how-programs-run/validators";
+import { validateCacheLab as validator44 } from "../../content/courses/http-hands-on/validators";
+import { validateCookieLab as validator45 } from "../../content/courses/http-hands-on/validators";
+import { validateDiagnosisLab as validator46 } from "../../content/courses/http-hands-on/validators";
+import { validateFinalMission as validator47 } from "../../content/courses/http-hands-on/validators";
+import { validateJsonLab as validator48 } from "../../content/courses/http-hands-on/validators";
+import { validateMethodLab as validator49 } from "../../content/courses/http-hands-on/validators";
+import { validateRequestLab as validator50 } from "../../content/courses/http-hands-on/validators";
+import { validateResponseLab as validator51 } from "../../content/courses/http-hands-on/validators";
+import { validateUrlLab as validator52 } from "../../content/courses/http-hands-on/validators";
+import { validateArpLab as validator53 } from "../../content/courses/networking-basics/validators";
+import { validateDnsLab as validator54 } from "../../content/courses/networking-basics/validators";
+import { validateFirewallLab as validator55 } from "../../content/courses/networking-basics/validators";
+import { validateLaptopLab as validator56 } from "../../content/courses/networking-basics/validators";
+import { validateNatLab as validator57 } from "../../content/courses/networking-basics/validators";
+import { validateRouteLab as validator58 } from "../../content/courses/networking-basics/validators";
+import { validateSubnetLab as validator59 } from "../../content/courses/networking-basics/validators";
+import { validateTcpLab as validator60 } from "../../content/courses/networking-basics/validators";
+import { validateTraceLab as validator61 } from "../../content/courses/networking-basics/validators";
+import { validateIncidentLab as validator62 } from "../../content/courses/sql-basics/validators";
+import { validateLatestLab as validator63 } from "../../content/courses/sql-basics/validators";
+import { validateLimitLab as validator64 } from "../../content/courses/sql-basics/validators";
+import { validateModifyLab as validator65 } from "../../content/courses/sql-basics/validators";
+import { validateOverdueLab as validator66 } from "../../content/courses/sql-basics/validators";
+import { validateReportLab as validator67 } from "../../content/courses/sql-basics/validators";
+import { validateTransactionLab as validator68 } from "../../content/courses/sql-basics/validators";
 
 export type ValidatorResult = { passed: boolean; feedback: Record<string, unknown> };
 export type LabValidator = (submission: unknown) => ValidatorResult;
@@ -92,44 +98,50 @@ const VALIDATORS: Record<string, LabValidator> = {
   "crypto-basics/public-lab": (submission) => validator22(submission),
   "crypto-basics/signature-lab": (submission) => validator23(submission),
   "crypto-basics/symmetric-lab": (submission) => validator24(submission),
-  "git-basics/branch-lab": (submission) => validator25(submission),
-  "git-basics/commit-lab": (submission) => validator26(submission),
-  "git-basics/history-lab": (submission) => validator27(submission),
-  "git-basics/incident-lab": (submission) => validator28(submission),
-  "git-basics/merge-lab": (submission) => validator29(submission),
-  "git-basics/remote-lab": (submission) => validator30(submission),
-  "git-basics/undo-lab": (submission) => validator31(submission),
-  "how-programs-run/array-lab": (submission) => validator32(submission),
-  "how-programs-run/cache-lab": (submission) => validator33(submission),
-  "how-programs-run/loop-lab": (submission) => validator34(submission),
-  "how-programs-run/schedule-lab": (submission) => validator35(submission),
-  "how-programs-run/stack-lab": (submission) => validator36(submission),
-  "how-programs-run/trace-lab": (submission) => validator37(submission),
-  "http-hands-on/cache-lab": (submission) => validator38(submission),
-  "http-hands-on/cookie-lab": (submission) => validator39(submission),
-  "http-hands-on/diagnosis-lab": (submission) => validator40(submission),
-  "http-hands-on/final-mission": (submission) => validator41(submission),
-  "http-hands-on/json-lab": (submission) => validator42(submission),
-  "http-hands-on/method-lab": (submission) => validator43(submission),
-  "http-hands-on/request-lab": (submission) => validator44(submission),
-  "http-hands-on/response-lab": (submission) => validator45(submission),
-  "http-hands-on/url-lab": (submission) => validator46(submission),
-  "networking-basics/arp-lab": (submission) => validator47(submission),
-  "networking-basics/dns-lab": (submission) => validator48(submission),
-  "networking-basics/firewall-lab": (submission) => validator49(submission),
-  "networking-basics/laptop-lab": (submission) => validator50(submission),
-  "networking-basics/nat-lab": (submission) => validator51(submission),
-  "networking-basics/route-lab": (submission) => validator52(submission),
-  "networking-basics/subnet-lab": (submission) => validator53(submission),
-  "networking-basics/tcp-lab": (submission) => validator54(submission),
-  "networking-basics/trace-lab": (submission) => validator55(submission),
-  "sql-basics/incident-lab": (submission) => validator56(submission),
-  "sql-basics/latest-lab": (submission) => validator57(submission),
-  "sql-basics/limit-lab": (submission) => validator58(submission),
-  "sql-basics/modify-lab": (submission) => validator59(submission),
-  "sql-basics/overdue-lab": (submission) => validator60(submission),
-  "sql-basics/report-lab": (submission) => validator61(submission),
-  "sql-basics/transaction-lab": (submission) => validator62(submission),
+  "data-structures/hash-lab": (submission) => validator25(submission),
+  "data-structures/queue-lab": (submission) => validator26(submission),
+  "data-structures/route-lab": (submission) => validator27(submission),
+  "data-structures/search-lab": (submission) => validator28(submission),
+  "data-structures/sort-lab": (submission) => validator29(submission),
+  "data-structures/structure-lab": (submission) => validator30(submission),
+  "git-basics/branch-lab": (submission) => validator31(submission),
+  "git-basics/commit-lab": (submission) => validator32(submission),
+  "git-basics/history-lab": (submission) => validator33(submission),
+  "git-basics/incident-lab": (submission) => validator34(submission),
+  "git-basics/merge-lab": (submission) => validator35(submission),
+  "git-basics/remote-lab": (submission) => validator36(submission),
+  "git-basics/undo-lab": (submission) => validator37(submission),
+  "how-programs-run/array-lab": (submission) => validator38(submission),
+  "how-programs-run/cache-lab": (submission) => validator39(submission),
+  "how-programs-run/loop-lab": (submission) => validator40(submission),
+  "how-programs-run/schedule-lab": (submission) => validator41(submission),
+  "how-programs-run/stack-lab": (submission) => validator42(submission),
+  "how-programs-run/trace-lab": (submission) => validator43(submission),
+  "http-hands-on/cache-lab": (submission) => validator44(submission),
+  "http-hands-on/cookie-lab": (submission) => validator45(submission),
+  "http-hands-on/diagnosis-lab": (submission) => validator46(submission),
+  "http-hands-on/final-mission": (submission) => validator47(submission),
+  "http-hands-on/json-lab": (submission) => validator48(submission),
+  "http-hands-on/method-lab": (submission) => validator49(submission),
+  "http-hands-on/request-lab": (submission) => validator50(submission),
+  "http-hands-on/response-lab": (submission) => validator51(submission),
+  "http-hands-on/url-lab": (submission) => validator52(submission),
+  "networking-basics/arp-lab": (submission) => validator53(submission),
+  "networking-basics/dns-lab": (submission) => validator54(submission),
+  "networking-basics/firewall-lab": (submission) => validator55(submission),
+  "networking-basics/laptop-lab": (submission) => validator56(submission),
+  "networking-basics/nat-lab": (submission) => validator57(submission),
+  "networking-basics/route-lab": (submission) => validator58(submission),
+  "networking-basics/subnet-lab": (submission) => validator59(submission),
+  "networking-basics/tcp-lab": (submission) => validator60(submission),
+  "networking-basics/trace-lab": (submission) => validator61(submission),
+  "sql-basics/incident-lab": (submission) => validator62(submission),
+  "sql-basics/latest-lab": (submission) => validator63(submission),
+  "sql-basics/limit-lab": (submission) => validator64(submission),
+  "sql-basics/modify-lab": (submission) => validator65(submission),
+  "sql-basics/overdue-lab": (submission) => validator66(submission),
+  "sql-basics/report-lab": (submission) => validator67(submission),
+  "sql-basics/transaction-lab": (submission) => validator68(submission),
 };
 
 export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
@@ -158,6 +170,12 @@ export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
   "crypto-basics/public-lab": "3d1dd4a0dbc0237b9c7be9273458c30bea9d1e99832fd9b8c6839ee04c759fe4",
   "crypto-basics/signature-lab": "3d1dd4a0dbc0237b9c7be9273458c30bea9d1e99832fd9b8c6839ee04c759fe4",
   "crypto-basics/symmetric-lab": "3d1dd4a0dbc0237b9c7be9273458c30bea9d1e99832fd9b8c6839ee04c759fe4",
+  "data-structures/hash-lab": "b3532369edfb5b4f19ba4cc3c230b35a1741fffbe32281f7bb7559718a04bf20",
+  "data-structures/queue-lab": "b3532369edfb5b4f19ba4cc3c230b35a1741fffbe32281f7bb7559718a04bf20",
+  "data-structures/route-lab": "b3532369edfb5b4f19ba4cc3c230b35a1741fffbe32281f7bb7559718a04bf20",
+  "data-structures/search-lab": "b3532369edfb5b4f19ba4cc3c230b35a1741fffbe32281f7bb7559718a04bf20",
+  "data-structures/sort-lab": "b3532369edfb5b4f19ba4cc3c230b35a1741fffbe32281f7bb7559718a04bf20",
+  "data-structures/structure-lab": "b3532369edfb5b4f19ba4cc3c230b35a1741fffbe32281f7bb7559718a04bf20",
   "git-basics/branch-lab": "ca4db77506f235fcf0c93347977963f38b0eb2281764eb8f742bef710af90bfb",
   "git-basics/commit-lab": "ca4db77506f235fcf0c93347977963f38b0eb2281764eb8f742bef710af90bfb",
   "git-basics/history-lab": "ca4db77506f235fcf0c93347977963f38b0eb2281764eb8f742bef710af90bfb",

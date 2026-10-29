@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "o1",
+      "prompt": "1000 条几乎有序的数据，哪种排序最快？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "插入排序"
+        },
+        {
+          "id": "b",
+          "label": "选择排序"
+        },
+        {
+          "id": "c",
+          "label": "用第一个元素当基准的快速排序"
+        },
+        {
+          "id": "d",
+          "label": "都一样"
+        }
+      ],
+      "answer": "a",
+      "explanation": "几乎有序时插入排序接近 n 次比较。"
+    },
+    {
+      "id": "o2",
+      "prompt": "什么是“稳定”的排序？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "排序速度稳定"
+        },
+        {
+          "id": "b",
+          "label": "相同的键排序后保持原来的先后顺序"
+        },
+        {
+          "id": "c",
+          "label": "不会出错"
+        },
+        {
+          "id": "d",
+          "label": "只能排数字"
+        }
+      ],
+      "answer": "b",
+      "explanation": "多次按不同条件排序时很重要。"
+    },
+    {
+      "id": "o3",
+      "prompt": "用第一个元素当基准的快速排序，在什么数据上最慢？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "完全打乱"
+        },
+        {
+          "id": "b",
+          "label": "已经有序"
+        },
+        {
+          "id": "c",
+          "label": "全是不同的数"
+        },
+        {
+          "id": "d",
+          "label": "很小的数据"
+        }
+      ],
+      "answer": "b",
+      "explanation": "每次只能分出一个元素，退化到 n²。"
+    },
+    {
+      "id": "o4",
+      "prompt": "归并排序的比较次数大约是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "n"
+        },
+        {
+          "id": "b",
+          "label": "n log n"
+        },
+        {
+          "id": "c",
+          "label": "n²"
+        },
+        {
+          "id": "d",
+          "label": "2ⁿ"
+        }
+      ],
+      "answer": "b",
+      "explanation": "对半拆开再合并。"
+    }
+  ]
+}

@@ -29,14 +29,15 @@ test.describe("学习路线", () => {
       // The path shows all five stops, every one of them live.
       const pathCard = page.locator('[data-path="computer-foundations"]');
       await expect(pathCard.getByRole("heading", { name: "计算机基础入门" })).toBeVisible();
-      await expect(pathCard.locator("[data-step]")).toHaveCount(6);
+      await expect(pathCard.locator("[data-step]")).toHaveCount(7);
       await expect(pathCard.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-step="how-programs-run"]')).toHaveAttribute("data-state", "available");
+      await expect(pathCard.locator('[data-step="data-structures"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-step="networking-basics"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-step="command-line"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-step="git-basics"]')).toHaveAttribute("data-state", "available");
       await expect(pathCard.locator('[data-state="upcoming"]')).toHaveCount(0);
-      await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 0 / 6 门");
+      await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 0 / 7 门");
       await expect(pathCard.getByRole("link", { name: /开始：0 和 1 的世界/ })).toBeVisible();
 
       // The nav leads to the path list and then to the path's flow chart.
@@ -51,7 +52,7 @@ test.describe("学习路线", () => {
       await expect(page).toHaveURL(/\/paths\/computer-foundations$/);
       const map = page.getByTestId("path-map");
       await expect(page.getByRole("heading", { level: 1, name: "计算机基础入门" })).toBeVisible();
-      await expect(map.locator("[data-step]")).toHaveCount(6);
+      await expect(map.locator("[data-step]")).toHaveCount(7);
       await expect(map.locator('[data-step="bits-and-bytes"]')).toContainText("推荐下一门");
       await expect(map.locator('[data-step="git-basics"]')).toHaveAttribute("data-state", "available");
       await expect(page.getByTestId("path-finish")).toHaveAttribute("data-done", "false");
@@ -59,7 +60,7 @@ test.describe("学习路线", () => {
       // The course page knows where it sits on the path, and links back to the map.
       await map.locator('[data-step="bits-and-bytes"]').getByRole("link", { name: /查看课程/ }).click();
       await expect(page).toHaveURL(/\/courses\/bits-and-bytes$/);
-      await expect(page.getByTestId("course-path-context")).toContainText("第 1 / 6 门");
+      await expect(page.getByTestId("course-path-context")).toContainText("第 1 / 7 门");
       await expect(page.getByTestId("course-path-context")).toContainText("下一门：程序是怎么跑起来的");
       await expect(page.getByTestId("course-path-context").getByRole("link", { name: /计算机基础入门/ })).toHaveAttribute("href", "/paths/computer-foundations");
 
@@ -87,12 +88,12 @@ test.describe("学习路线", () => {
       await page.goto(`/learn/${first.id}?lesson=${finalLesson.id}`);
       await page.getByRole("link", { name: /路线下一门：程序是怎么跑起来的/ }).click();
       await expect(page).toHaveURL(/\/courses\/how-programs-run/);
-      await expect(page.getByTestId("course-path-context")).toContainText("第 2 / 6 门");
+      await expect(page.getByTestId("course-path-context")).toContainText("第 2 / 7 门");
 
       // The catalog reflects the progress and recommends the next stop.
       await page.goto("/courses");
       await expect(pathCard.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "completed");
-      await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 1 / 6 门");
+      await expect(pathCard.getByTestId("path-progress")).toContainText("已完成 1 / 7 门");
       await expect(pathCard.getByRole("link", { name: /开始：程序是怎么跑起来的/ })).toBeVisible();
 
       // So does the flow chart: the first stop is done, the second is next.
@@ -100,7 +101,7 @@ test.describe("学习路线", () => {
       await expect(map.locator('[data-step="bits-and-bytes"]')).toHaveAttribute("data-state", "completed");
       await expect(map.locator('[data-step="bits-and-bytes"]')).toContainText("复习课程");
       await expect(map.locator('[data-step="how-programs-run"]')).toContainText("推荐下一门");
-      await expect(page.getByTestId("path-progress")).toContainText("已完成 1 / 6 门");
+      await expect(page.getByTestId("path-progress")).toContainText("已完成 1 / 7 门");
 
       // Unknown paths are a 404, not an empty page.
       const missing = await page.goto("/paths/no-such-path");
