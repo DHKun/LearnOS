@@ -1,0 +1,61 @@
+## 借书超过上限的读者
+
+规定每人同时最多借 5 本，可上个月系统的检查出过问题。现在要找出手上借着超过 5 本的读者。这需要先按读者分组，再数一数每组有几行。
+
+## 聚合函数
+
+```sql
+SELECT COUNT(*) FROM loans;                         -- 一共多少次借阅
+SELECT COUNT(*) FROM loans WHERE returned IS NULL;  -- 现在有多少本借在外面
+SELECT SUM(copies), MAX(added) FROM books;          -- 馆藏总册数、最近一次上架的日期
+```
+
+`COUNT(*)` 数行数；`COUNT(列)` 只数这一列**不为 NULL** 的行；`SUM`、`AVG`、`MIN`、`MAX` 都会跳过 NULL。
+
+## GROUP BY：分组再算
+
+```sql
+SELECT reader_id, COUNT(*) AS n
+FROM loans
+GROUP BY reader_id;
+```
+
+每个 `reader_id` 一组，每组算出一行。`AS n` 给这一列起个名字。
+
+用了 GROUP BY 之后，SELECT 里每一列要么出现在 GROUP BY 里，要么放在聚合函数里。否则数据库不知道一组里那么多行该显示哪一行的值，会报 `must appear in the GROUP BY clause`。按主键分组时，同一张表的其他列可以直接写。
+
+## WHERE 和 HAVING
+
+- `WHERE` 在**分组之前**筛选行，不能用聚合函数；
+- `HAVING` 在**分组之后**筛选组，可以用聚合函数。
+
+```sql
+SELECT reader_id, COUNT(*)
+FROM loans
+WHERE returned IS NULL       -- 只算还没还的
+GROUP BY reader_id
+HAVING COUNT(*) >= 3;        -- 只要借着 3 本及以上的
+```
+
+<ConceptPlayer conceptId="sql-basics/group" blockId="group" />
+
+<MiniCheck
+  id="where-having"
+  question="WHERE COUNT(*) > 5 会怎样？"
+  options={["正常运行", "报错：WHERE 里不能用聚合函数", "返回所有行"]}
+  answer={1}
+  explanation="WHERE 在分组之前执行，这时还没有“每组的 COUNT”。分组之后的条件写在 HAVING 里。"
+/>
+
+## 动手：借书超过上限的读者
+
+<SimulationBlock blockId="limit-lab" />
+
+<details>
+<summary>卡住了？展开看提示</summary>
+
+姓名在 readers 表里，借阅在 loans 表里，需要把两张表连起来：`FROM loans l JOIN readers r ON r.id = l.reader_id`，下一章会细讲。按读者编号分组更稳妥，因为有同名的读者。
+
+</details>
+
+<KnowledgeCheck blockId="group-check" />

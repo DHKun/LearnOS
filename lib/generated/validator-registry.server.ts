@@ -43,6 +43,13 @@ import { validateRouteLab as validator40 } from "../../content/courses/networkin
 import { validateSubnetLab as validator41 } from "../../content/courses/networking-basics/validators";
 import { validateTcpLab as validator42 } from "../../content/courses/networking-basics/validators";
 import { validateTraceLab as validator43 } from "../../content/courses/networking-basics/validators";
+import { validateIncidentLab as validator44 } from "../../content/courses/sql-basics/validators";
+import { validateLatestLab as validator45 } from "../../content/courses/sql-basics/validators";
+import { validateLimitLab as validator46 } from "../../content/courses/sql-basics/validators";
+import { validateModifyLab as validator47 } from "../../content/courses/sql-basics/validators";
+import { validateOverdueLab as validator48 } from "../../content/courses/sql-basics/validators";
+import { validateReportLab as validator49 } from "../../content/courses/sql-basics/validators";
+import { validateTransactionLab as validator50 } from "../../content/courses/sql-basics/validators";
 
 export type ValidatorResult = { passed: boolean; feedback: Record<string, unknown> };
 export type LabValidator = (submission: unknown) => ValidatorResult;
@@ -92,6 +99,13 @@ const VALIDATORS: Record<string, LabValidator> = {
   "networking-basics/subnet-lab": (submission) => validator41(submission),
   "networking-basics/tcp-lab": (submission) => validator42(submission),
   "networking-basics/trace-lab": (submission) => validator43(submission),
+  "sql-basics/incident-lab": (submission) => validator44(submission),
+  "sql-basics/latest-lab": (submission) => validator45(submission),
+  "sql-basics/limit-lab": (submission) => validator46(submission),
+  "sql-basics/modify-lab": (submission) => validator47(submission),
+  "sql-basics/overdue-lab": (submission) => validator48(submission),
+  "sql-basics/report-lab": (submission) => validator49(submission),
+  "sql-basics/transaction-lab": (submission) => validator50(submission),
 };
 
 export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
@@ -139,6 +153,13 @@ export const VALIDATOR_FINGERPRINTS: Record<string, string> = {
   "networking-basics/subnet-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
   "networking-basics/tcp-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
   "networking-basics/trace-lab": "7b765a6f581bada1a1cd56647d71752726a88451b456c8363fdebf390e568069",
+  "sql-basics/incident-lab": "87e55ade111279d8102a96b24d421ea4deff147d6ad1ca347a9877ef878e95fd",
+  "sql-basics/latest-lab": "87e55ade111279d8102a96b24d421ea4deff147d6ad1ca347a9877ef878e95fd",
+  "sql-basics/limit-lab": "87e55ade111279d8102a96b24d421ea4deff147d6ad1ca347a9877ef878e95fd",
+  "sql-basics/modify-lab": "87e55ade111279d8102a96b24d421ea4deff147d6ad1ca347a9877ef878e95fd",
+  "sql-basics/overdue-lab": "87e55ade111279d8102a96b24d421ea4deff147d6ad1ca347a9877ef878e95fd",
+  "sql-basics/report-lab": "87e55ade111279d8102a96b24d421ea4deff147d6ad1ca347a9877ef878e95fd",
+  "sql-basics/transaction-lab": "87e55ade111279d8102a96b24d421ea4deff147d6ad1ca347a9877ef878e95fd",
 };
 
 export function getValidator(id: string): LabValidator | undefined {

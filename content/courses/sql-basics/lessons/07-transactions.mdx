@@ -1,0 +1,37 @@
+## 只成功了一半的借书
+
+借书要做两件事：库存减一册，再插入一条借阅记录。刚才程序做完第一件，第二件因为读者编号写错失败了：库存少了，借阅却没有。这一章学会让几步操作“要么都成功、要么都不做”。
+
+## 事务
+
+```sql
+BEGIN;
+UPDATE books SET copies = copies - 1 WHERE id = 1;
+INSERT INTO loans (book_id, reader_id, borrowed, due)
+VALUES (1, 4, CURRENT_DATE, CURRENT_DATE + 14);
+COMMIT;
+```
+
+- `BEGIN` 开始一个事务。之后的修改只有你自己这个连接看得到。
+- `COMMIT` 提交：所有修改一起生效，别人也看得到了。
+- `ROLLBACK` 回滚：所有修改一起撤销，就像什么都没发生过。
+
+事务里任何一条语句出错，事务就进入**中止**状态：之后的语句都会被拒绝（`current transaction is aborted`），只能 `ROLLBACK` 重来。这正是想要的：不会留下一半。
+
+不写 `BEGIN` 时，每条语句各自是一个小事务，执行完立刻生效，这叫**自动提交**。
+
+<ConceptPlayer conceptId="sql-basics/transaction" blockId="transaction" />
+
+<MiniCheck
+  id="forget-commit"
+  question="你 BEGIN 之后改了数据，没有 COMMIT 就关掉了连接。别人看到的数据是？"
+  options={["改过的", "没改过的：没提交的事务在断开时会被回滚", "一半改过，一半没改"]}
+  answer={1}
+  explanation="提交之前，修改只存在于你的事务里。连接断开，事务就被回滚了。"
+/>
+
+## 动手：只成功了一半的借书
+
+<SimulationBlock blockId="transaction-lab" />
+
+<KnowledgeCheck blockId="transaction-check" />

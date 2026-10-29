@@ -1,0 +1,41 @@
+## 一条忘了写 WHERE 的 UPDATE
+
+昨天下午有人想把一条借阅标成“已归还”，在生产库上执行了 `UPDATE loans SET returned = '2026-10-27';`，忘了写 WHERE。所有借阅，包括从来没还过的，都变成了“昨天已归还”。逾期提醒停了，库存也全乱了。这一章把前面学的全部用上，而且没有实时提示。
+
+## 手里有什么
+
+- **`loans_backup`**：每天 03:00 自动备份的一份 `loans`，列完全一样。
+- **`returns_log`**：借还系统每登记一次还书，就往这里写一行：哪一笔、哪天还的、几点登记的。
+
+## 先想清楚，再动手
+
+备份只能把数据带回**备份那一刻**。备份之后到现在，库里还发生过真实的事：有新的借阅，有人真的来还了书。直接把备份整个抄回去，这些事就被抹掉了。
+
+<ConceptPlayer conceptId="sql-basics/restore" blockId="restore" />
+
+## 有用的写法
+
+子查询可以把另一张表的值拿过来用：
+
+```sql
+-- 每一行都去备份里找同一个 id 的 returned
+SELECT l.id, l.returned,
+       (SELECT b.returned FROM loans_backup b WHERE b.id = l.id) AS backup_returned
+FROM loans l;
+
+-- 不在日志里的那些借阅
+SELECT * FROM loans WHERE id NOT IN (SELECT loan_id FROM returns_log);
+```
+
+UPDATE 的 SET 里也可以写子查询，用外面那张表的列和它对应。
+
+## 处理事故的顺序
+
+1. **先查不改**：用 SELECT 把事故的范围、备份和日志各自的内容看清楚。
+2. **想清每一行的正确值从哪来**：备份？日志？还是哪儿都没有？
+3. **放进事务里改**：`BEGIN`，执行，再 SELECT 检查，没问题才 `COMMIT`，有问题就 `ROLLBACK`。
+4. **证据别动**：备份和日志是排查用的，不要改它们。
+
+## 动手：忘了写 WHERE 的那条 UPDATE
+
+<SimulationBlock blockId="incident-lab" />

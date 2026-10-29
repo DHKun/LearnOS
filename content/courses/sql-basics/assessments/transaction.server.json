@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "t1",
+      "prompt": "借书要做两步：减库存、插入借阅。怎样保证不会只做了一半？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "两条语句写在同一行"
+        },
+        {
+          "id": "b",
+          "label": "放进一个事务：BEGIN … COMMIT，出错就 ROLLBACK"
+        },
+        {
+          "id": "c",
+          "label": "先插入再减库存"
+        },
+        {
+          "id": "d",
+          "label": "每条语句后面都加分号"
+        }
+      ],
+      "answer": "b",
+      "explanation": "事务里的修改要么一起提交，要么一起撤销。"
+    },
+    {
+      "id": "t2",
+      "prompt": "事务中一条语句报错后，再执行别的语句会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "正常执行"
+        },
+        {
+          "id": "b",
+          "label": "被拒绝：current transaction is aborted，只能 ROLLBACK"
+        },
+        {
+          "id": "c",
+          "label": "自动重试"
+        },
+        {
+          "id": "d",
+          "label": "自动提交前面的修改"
+        }
+      ],
+      "answer": "b",
+      "explanation": "出错的事务进入中止状态，防止在错误的基础上继续改。"
+    },
+    {
+      "id": "t3",
+      "prompt": "BEGIN 之后修改了数据，还没 COMMIT。另一个连接查这张表，看到的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "修改后的数据"
+        },
+        {
+          "id": "b",
+          "label": "修改前的数据"
+        },
+        {
+          "id": "c",
+          "label": "报错"
+        },
+        {
+          "id": "d",
+          "label": "一半修改后的"
+        }
+      ],
+      "answer": "b",
+      "explanation": "提交之前，修改只对自己的事务可见。"
+    },
+    {
+      "id": "t4",
+      "prompt": "不写 BEGIN 时，每条 UPDATE 执行完就立刻生效。",
+      "type": "boolean",
+      "answer": true,
+      "explanation": "这叫自动提交：每条语句各自是一个小事务。"
+    }
+  ]
+}

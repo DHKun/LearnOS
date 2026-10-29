@@ -55,6 +55,14 @@ const Concept43 = dynamic(() => import("../../content/courses/networking-basics/
 const Concept44 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.SubnetConcept), { ssr: false, loading });
 const Concept45 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TcpConcept), { ssr: false, loading });
 const Concept46 = dynamic(() => import("../../content/courses/networking-basics/concepts/concepts").then((m) => m.TracerouteConcept), { ssr: false, loading });
+const Concept47 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.GroupConcept), { ssr: false, loading });
+const Concept48 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.JoinConcept), { ssr: false, loading });
+const Concept49 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.OrderConcept), { ssr: false, loading });
+const Concept50 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.RestoreConcept), { ssr: false, loading });
+const Concept51 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.TableConcept), { ssr: false, loading });
+const Concept52 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.TransactionConcept), { ssr: false, loading });
+const Concept53 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.WhereConcept), { ssr: false, loading });
+const Concept54 = dynamic(() => import("../../content/courses/sql-basics/concepts/concepts").then((m) => m.WriteConcept), { ssr: false, loading });
 const Activity0 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.ColorLab), { ssr: false, loading });
 const Activity1 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.HeaderLab), { ssr: false, loading });
 const Activity2 = dynamic<ActivityComponentProps>(() => import("../../content/courses/bits-and-bytes/activities/labs").then((m) => m.ImageLab), { ssr: false, loading });
@@ -99,6 +107,13 @@ const Activity40 = dynamic<ActivityComponentProps>(() => import("../../content/c
 const Activity41 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.SubnetLab), { ssr: false, loading });
 const Activity42 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TcpLab), { ssr: false, loading });
 const Activity43 = dynamic<ActivityComponentProps>(() => import("../../content/courses/networking-basics/activities/labs").then((m) => m.TraceLab), { ssr: false, loading });
+const Activity44 = dynamic<ActivityComponentProps>(() => import("../../content/courses/sql-basics/activities/labs").then((m) => m.IncidentLab), { ssr: false, loading });
+const Activity45 = dynamic<ActivityComponentProps>(() => import("../../content/courses/sql-basics/activities/labs").then((m) => m.LatestLab), { ssr: false, loading });
+const Activity46 = dynamic<ActivityComponentProps>(() => import("../../content/courses/sql-basics/activities/labs").then((m) => m.LimitLab), { ssr: false, loading });
+const Activity47 = dynamic<ActivityComponentProps>(() => import("../../content/courses/sql-basics/activities/labs").then((m) => m.ModifyLab), { ssr: false, loading });
+const Activity48 = dynamic<ActivityComponentProps>(() => import("../../content/courses/sql-basics/activities/labs").then((m) => m.OverdueLab), { ssr: false, loading });
+const Activity49 = dynamic<ActivityComponentProps>(() => import("../../content/courses/sql-basics/activities/labs").then((m) => m.ReportLab), { ssr: false, loading });
+const Activity50 = dynamic<ActivityComponentProps>(() => import("../../content/courses/sql-basics/activities/labs").then((m) => m.TransactionLab), { ssr: false, loading });
 
 export const CONCEPT_COMPONENTS: Record<ConceptId, ComponentType> = {
   "bits-and-bytes/codebook": Concept0,
@@ -148,6 +163,14 @@ export const CONCEPT_COMPONENTS: Record<ConceptId, ComponentType> = {
   "networking-basics/subnet": Concept44,
   "networking-basics/tcp": Concept45,
   "networking-basics/traceroute": Concept46,
+  "sql-basics/group": Concept47,
+  "sql-basics/join": Concept48,
+  "sql-basics/order": Concept49,
+  "sql-basics/restore": Concept50,
+  "sql-basics/table": Concept51,
+  "sql-basics/transaction": Concept52,
+  "sql-basics/where": Concept53,
+  "sql-basics/write": Concept54,
 };
 
 export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityComponentProps>> = {
@@ -195,4 +218,11 @@ export const ACTIVITY_COMPONENTS: Record<ActivityId, ComponentType<ActivityCompo
   "networking-basics/subnet-lab": Activity41,
   "networking-basics/tcp-lab": Activity42,
   "networking-basics/trace-lab": Activity43,
+  "sql-basics/incident-lab": Activity44,
+  "sql-basics/latest-lab": Activity45,
+  "sql-basics/limit-lab": Activity46,
+  "sql-basics/modify-lab": Activity47,
+  "sql-basics/overdue-lab": Activity48,
+  "sql-basics/report-lab": Activity49,
+  "sql-basics/transaction-lab": Activity50,
 };

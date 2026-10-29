@@ -1,0 +1,509 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "表里唯一标识一行、不能为空的列叫什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "外键"
+        },
+        {
+          "id": "b",
+          "label": "主键"
+        },
+        {
+          "id": "c",
+          "label": "索引"
+        },
+        {
+          "id": "d",
+          "label": "默认值"
+        }
+      ],
+      "answer": "b",
+      "explanation": "主键唯一且不为空。"
+    },
+    {
+      "id": "f2",
+      "prompt": "loans.reader_id 引用 readers.id，这种约束叫什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "主键"
+        },
+        {
+          "id": "b",
+          "label": "外键"
+        },
+        {
+          "id": "c",
+          "label": "检查约束"
+        },
+        {
+          "id": "d",
+          "label": "唯一约束"
+        }
+      ],
+      "answer": "b",
+      "explanation": "外键保证引用的行真实存在。"
+    },
+    {
+      "id": "f3",
+      "prompt": "想看 books 表里有什么，最稳妥的第一条查询是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "DELETE FROM books"
+        },
+        {
+          "id": "b",
+          "label": "SELECT * FROM books LIMIT 10"
+        },
+        {
+          "id": "c",
+          "label": "UPDATE books SET title = title"
+        },
+        {
+          "id": "d",
+          "label": "DROP TABLE books"
+        }
+      ],
+      "answer": "b",
+      "explanation": "先看少量数据摸清结构，查询不会改动数据。"
+    },
+    {
+      "id": "f4",
+      "prompt": "找出还没还的借阅，条件是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "returned = NULL"
+        },
+        {
+          "id": "b",
+          "label": "returned IS NULL"
+        },
+        {
+          "id": "c",
+          "label": "returned = 0"
+        },
+        {
+          "id": "d",
+          "label": "returned = ''"
+        }
+      ],
+      "answer": "b",
+      "explanation": "NULL 只能用 IS NULL 判断。"
+    },
+    {
+      "id": "f5",
+      "prompt": "WHERE a = 1 OR b = 2 AND c = 3 等价于？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "(a = 1 OR b = 2) AND c = 3"
+        },
+        {
+          "id": "b",
+          "label": "a = 1 OR (b = 2 AND c = 3)"
+        },
+        {
+          "id": "c",
+          "label": "a = 1 AND b = 2 AND c = 3"
+        },
+        {
+          "id": "d",
+          "label": "语法错误"
+        }
+      ],
+      "answer": "b",
+      "explanation": "AND 先算。"
+    },
+    {
+      "id": "f6",
+      "prompt": "不写 ORDER BY 时，查询结果的顺序是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "按主键从小到大"
+        },
+        {
+          "id": "b",
+          "label": "按插入顺序"
+        },
+        {
+          "id": "c",
+          "label": "不保证，可能每次都不同"
+        },
+        {
+          "id": "d",
+          "label": "按第一列排序"
+        }
+      ],
+      "answer": "c",
+      "explanation": "需要顺序就写 ORDER BY。"
+    },
+    {
+      "id": "f7",
+      "prompt": "要最新上架的 5 本书，用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "ORDER BY added LIMIT 5"
+        },
+        {
+          "id": "b",
+          "label": "ORDER BY added DESC LIMIT 5"
+        },
+        {
+          "id": "c",
+          "label": "LIMIT 5 ORDER BY added DESC"
+        },
+        {
+          "id": "d",
+          "label": "WHERE added = MAX(added)"
+        }
+      ],
+      "answer": "b",
+      "explanation": "DESC 从新到旧，LIMIT 在排序之后截取。"
+    },
+    {
+      "id": "f8",
+      "prompt": "SELECT DISTINCT author FROM books 的作用是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "只显示第一位作者"
+        },
+        {
+          "id": "b",
+          "label": "每位作者只出现一次"
+        },
+        {
+          "id": "c",
+          "label": "统计作者人数"
+        },
+        {
+          "id": "d",
+          "label": "删除重复的书"
+        }
+      ],
+      "answer": "b",
+      "explanation": "DISTINCT 去掉完全相同的行。"
+    },
+    {
+      "id": "f9",
+      "prompt": "COUNT(*) 和 COUNT(email) 的区别是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "没有区别"
+        },
+        {
+          "id": "b",
+          "label": "COUNT(*) 数所有行，COUNT(email) 只数 email 不为 NULL 的行"
+        },
+        {
+          "id": "c",
+          "label": "COUNT(email) 数不同邮箱的个数"
+        },
+        {
+          "id": "d",
+          "label": "COUNT(*) 跳过 NULL"
+        }
+      ],
+      "answer": "b",
+      "explanation": "COUNT(列) 跳过 NULL。"
+    },
+    {
+      "id": "f10",
+      "prompt": "“当前借着超过 5 本”的条件中，COUNT(*) > 5 应该写在？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "WHERE"
+        },
+        {
+          "id": "b",
+          "label": "HAVING"
+        },
+        {
+          "id": "c",
+          "label": "ORDER BY"
+        },
+        {
+          "id": "d",
+          "label": "SELECT"
+        }
+      ],
+      "answer": "b",
+      "explanation": "分组之后的条件写 HAVING。"
+    },
+    {
+      "id": "f11",
+      "prompt": "用了 GROUP BY reader_id，下面哪个能放在 SELECT 里？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "borrowed"
+        },
+        {
+          "id": "b",
+          "label": "reader_id 和 COUNT(*)"
+        },
+        {
+          "id": "c",
+          "label": "book_id"
+        },
+        {
+          "id": "d",
+          "label": "*"
+        }
+      ],
+      "answer": "b",
+      "explanation": "非分组列要放进聚合函数。"
+    },
+    {
+      "id": "f12",
+      "prompt": "要列出每位读者和借阅次数，没借过的显示 0，最合适的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "readers JOIN loans … COUNT(*)"
+        },
+        {
+          "id": "b",
+          "label": "readers LEFT JOIN loans … COUNT(*)"
+        },
+        {
+          "id": "c",
+          "label": "readers LEFT JOIN loans … COUNT(l.id)"
+        },
+        {
+          "id": "d",
+          "label": "loans JOIN readers … COUNT(*)"
+        }
+      ],
+      "answer": "c",
+      "explanation": "LEFT JOIN 保留没借过书的人，COUNT(l.id) 不数补出来的 NULL 行。"
+    },
+    {
+      "id": "f13",
+      "prompt": "两张表都有 id 列时，SELECT id … JOIN … 会？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "自动选第一张表的"
+        },
+        {
+          "id": "b",
+          "label": "报错：column reference \"id\" is ambiguous"
+        },
+        {
+          "id": "c",
+          "label": "两列都显示"
+        },
+        {
+          "id": "d",
+          "label": "选第二张表的"
+        }
+      ],
+      "answer": "b",
+      "explanation": "要写成 表名.id 或 别名.id。"
+    },
+    {
+      "id": "f14",
+      "prompt": "UPDATE readers SET email = 'x@mail.test' 没写 WHERE，会？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "只改第一行"
+        },
+        {
+          "id": "b",
+          "label": "改掉所有读者的邮箱"
+        },
+        {
+          "id": "c",
+          "label": "报错"
+        },
+        {
+          "id": "d",
+          "label": "什么都不改"
+        }
+      ],
+      "answer": "b",
+      "explanation": "不写 WHERE 就是整张表。"
+    },
+    {
+      "id": "f15",
+      "prompt": "执行 UPDATE 或 DELETE 之前，最好先做什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "用同样的 WHERE 跑一次 SELECT，确认会影响哪几行"
+        },
+        {
+          "id": "b",
+          "label": "先 COMMIT"
+        },
+        {
+          "id": "c",
+          "label": "先删掉备份"
+        },
+        {
+          "id": "d",
+          "label": "什么都不用"
+        }
+      ],
+      "answer": "a",
+      "explanation": "确认范围再动手。"
+    },
+    {
+      "id": "f16",
+      "prompt": "删除一位读者时报 violates foreign key constraint，最可能的原因是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "读者不存在"
+        },
+        {
+          "id": "b",
+          "label": "还有借阅记录引用着这位读者"
+        },
+        {
+          "id": "c",
+          "label": "数据库坏了"
+        },
+        {
+          "id": "d",
+          "label": "缺少 WHERE"
+        }
+      ],
+      "answer": "b",
+      "explanation": "外键不允许留下指向不存在读者的借阅。"
+    },
+    {
+      "id": "f17",
+      "prompt": "INSERT 时没写 id 列，id 会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "为 NULL"
+        },
+        {
+          "id": "b",
+          "label": "自动生成下一个编号"
+        },
+        {
+          "id": "c",
+          "label": "报错"
+        },
+        {
+          "id": "d",
+          "label": "等于 0"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这里的 id 是自动编号的。"
+    },
+    {
+      "id": "f18",
+      "prompt": "事务中出错后，正确的做法是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "继续执行后面的语句"
+        },
+        {
+          "id": "b",
+          "label": "ROLLBACK，修正后重来"
+        },
+        {
+          "id": "c",
+          "label": "直接关掉"
+        },
+        {
+          "id": "d",
+          "label": "COMMIT 保存已经成功的部分"
+        }
+      ],
+      "answer": "b",
+      "explanation": "中止的事务只能回滚。"
+    },
+    {
+      "id": "f19",
+      "prompt": "下面哪些说法是对的？（多选）",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "COMMIT 之后，修改对其他连接可见"
+        },
+        {
+          "id": "b",
+          "label": "ROLLBACK 会撤销事务里的所有修改"
+        },
+        {
+          "id": "c",
+          "label": "忘了 COMMIT 就断开连接，修改会保留"
+        },
+        {
+          "id": "d",
+          "label": "不写 BEGIN 时每条语句自动提交"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": "没提交的事务在断开时会被回滚。"
+    },
+    {
+      "id": "f20",
+      "prompt": "一条错误的 UPDATE 改坏了数据，你有昨晚的备份和之后的操作日志。恢复时要注意什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "直接用备份覆盖就行"
+        },
+        {
+          "id": "b",
+          "label": "备份之后真实发生的修改要从日志里找回来，不能被备份覆盖"
+        },
+        {
+          "id": "c",
+          "label": "先删掉日志"
+        },
+        {
+          "id": "d",
+          "label": "把备份也改成现在的样子"
+        }
+      ],
+      "answer": "b",
+      "explanation": "备份只能回到备份那一刻。"
+    }
+  ]
+}

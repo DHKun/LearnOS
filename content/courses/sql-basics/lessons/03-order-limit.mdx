@@ -1,0 +1,44 @@
+## 首页的“最新上架”
+
+首页右侧有个“最新上架”栏目，只放 5 本书。读者说上面摆的全是年初的老书，还有一本是已经下架、根本借不到的。问题出在这条查询的排序和筛选上。
+
+## 表里的行没有顺序
+
+不写 `ORDER BY`，数据库按它方便的顺序给你，换一天、换一台机器都可能不一样。需要顺序的地方，一定要明确写出来。
+
+```sql
+SELECT title, added FROM books ORDER BY added;          -- 从旧到新（默认 ASC）
+SELECT title, added FROM books ORDER BY added DESC;     -- 从新到旧
+SELECT * FROM books ORDER BY category, added DESC;      -- 先按分类，同一类里再按日期
+```
+
+NULL 在升序里排在最后，在降序里排在最前。
+
+## LIMIT 和 OFFSET
+
+```sql
+SELECT title FROM books ORDER BY added DESC LIMIT 5;            -- 前 5 行
+SELECT title FROM books ORDER BY added DESC LIMIT 5 OFFSET 5;   -- 第 6～10 行：翻到第二页
+```
+
+LIMIT 是在**排好序之后**截取的。顺序错了，取出来的就是另外几行。
+
+## DISTINCT
+
+```sql
+SELECT DISTINCT author FROM books;      -- 每位作者只出现一次
+```
+
+<ConceptPlayer conceptId="sql-basics/order" blockId="order" />
+
+<MiniCheck
+  id="limit-order"
+  question="SELECT title FROM books ORDER BY added LIMIT 5 取出来的是哪 5 本？"
+  options={["最新上架的 5 本", "最早上架的 5 本", "随便哪 5 本"]}
+  answer={1}
+  explanation="ORDER BY 默认升序，日期小的在前，LIMIT 5 就取到了最旧的 5 本。"
+/>
+
+## 动手：首页的最新上架
+
+<SimulationBlock blockId="latest-lab" />

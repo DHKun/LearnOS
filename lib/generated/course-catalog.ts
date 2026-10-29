@@ -47,6 +47,14 @@ export const CONCEPT_META = {
   "networking-basics/subnet": { title: "子网掩码与网段", analogy: "同一个小区直接送" },
   "networking-basics/tcp": { title: "TCP 的可靠传输", analogy: "“下一本请寄第几号”" },
   "networking-basics/traceroute": { title: "traceroute 探路", analogy: "限定最多经过几站" },
+  "sql-basics/group": { title: "分组与聚合", analogy: "分筐数一数" },
+  "sql-basics/join": { title: "连接两张表", analogy: "按编号去另一本里找" },
+  "sql-basics/order": { title: "先排序再截取", analogy: "新书展示架" },
+  "sql-basics/restore": { title: "备份与日志", analogy: "复印件与还书登记本" },
+  "sql-basics/table": { title: "表、行、列与键", analogy: "登记簿" },
+  "sql-basics/transaction": { title: "事务", analogy: "一整套手续" },
+  "sql-basics/where": { title: "WHERE 与 NULL", analogy: "按条件抄清单" },
+  "sql-basics/write": { title: "UPDATE 与 WHERE", analogy: "修正液" },
 } as const;
 
 export type ConceptId = keyof typeof CONCEPT_META;
@@ -97,6 +105,13 @@ export const ACTIVITY_DEFINITIONS = {
   "networking-basics/subnet-lab": { title: "找不到的打印机", validatorId: "networking-basics/subnet-lab" },
   "networking-basics/tcp-lab": { title: "丢了一个包的上传", validatorId: "networking-basics/tcp-lab" },
   "networking-basics/trace-lab": { title: "断在哪一跳", validatorId: "networking-basics/trace-lab" },
+  "sql-basics/incident-lab": { title: "忘了写 WHERE 的那条 UPDATE", validatorId: "sql-basics/incident-lab" },
+  "sql-basics/latest-lab": { title: "首页的最新上架", validatorId: "sql-basics/latest-lab" },
+  "sql-basics/limit-lab": { title: "借书超过上限的读者", validatorId: "sql-basics/limit-lab" },
+  "sql-basics/modify-lab": { title: "上新书、改邮箱、删测试账号", validatorId: "sql-basics/modify-lab" },
+  "sql-basics/overdue-lab": { title: "逾期未还的书", validatorId: "sql-basics/overdue-lab" },
+  "sql-basics/report-lab": { title: "对不上的读者报表", validatorId: "sql-basics/report-lab" },
+  "sql-basics/transaction-lab": { title: "只成功了一半的借书", validatorId: "sql-basics/transaction-lab" },
 } as const;
 
 export type ActivityId = keyof typeof ACTIVITY_DEFINITIONS;
