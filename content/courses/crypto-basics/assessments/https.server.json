@@ -1,0 +1,105 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "t1",
+      "prompt": "*.library.test 这张证书能用在哪个网址上？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "library.test"
+        },
+        {
+          "id": "b",
+          "label": "api.library.test"
+        },
+        {
+          "id": "c",
+          "label": "a.b.library.test"
+        },
+        {
+          "id": "d",
+          "label": "library.test.example"
+        }
+      ],
+      "answer": "b",
+      "explanation": "通配符只覆盖再多一层的子域名。"
+    },
+    {
+      "id": "t2",
+      "prompt": "在咖啡馆连上免费 Wi-Fi，打开银行网站时浏览器提示“证书不受信任”。应该？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "点“继续访问”"
+        },
+        {
+          "id": "b",
+          "label": "不要继续，换个可信的网络再访问"
+        },
+        {
+          "id": "c",
+          "label": "把证书加入信任列表"
+        },
+        {
+          "id": "d",
+          "label": "刷新几次"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这正是有人在中间冒充网站时的表现。"
+    },
+    {
+      "id": "t3",
+      "prompt": "地址栏有小锁，说明？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "网站正规可信"
+        },
+        {
+          "id": "b",
+          "label": "连接已加密，并且对方确实是证书上写的域名"
+        },
+        {
+          "id": "c",
+          "label": "网站没有漏洞"
+        },
+        {
+          "id": "d",
+          "label": "网站是政府的"
+        }
+      ],
+      "answer": "b",
+      "explanation": "仿冒的域名也能有合法证书。"
+    },
+    {
+      "id": "t4",
+      "prompt": "证书链的信任起点是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "网站自己"
+        },
+        {
+          "id": "b",
+          "label": "预装在系统和浏览器里的根证书"
+        },
+        {
+          "id": "c",
+          "label": "用户的密码"
+        },
+        {
+          "id": "d",
+          "label": "DNS 服务器"
+        }
+      ],
+      "answer": "b",
+      "explanation": "一级一级往上，最后落到根证书。"
+    }
+  ]
+}

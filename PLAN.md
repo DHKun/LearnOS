@@ -680,3 +680,9 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `tests/unit/sql-basics.test.ts`（SQL 引擎与 7 个校验器，13 项）；`tests/e2e/sql-basics.spec.ts`（9 章真实界面闭环，结课 140 分）；`learning-paths.spec.ts` 覆盖第二条路线。
 - [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正事务实验初始即为绿色的两个目标，综合任务默认显示 loans 表。
 
+## 34. 《Web 安全入门》第 2 门 `crypto-basics`（2026-10-29）
+
+- [x] 8 章、7 个概念动画、6 个服务端验证实验、36 道服务端题；路线中的条目改为正式课程；`pnpm courses:validate` 通过（7 门课程、2 条路线）。
+- [x] `tests/unit/crypto-basics.test.ts`（玩具算法与 6 个校验器，10 项）；`tests/e2e/crypto-basics.spec.ts`（8 章真实界面闭环，结课 130 分）。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正逐块加密的密文图轮廓不明显、时间显示“0 分钟”两处问题，以及仿冒站点证书主体与题意不符。
+

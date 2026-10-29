@@ -44,7 +44,8 @@ test.describe("学习路线", () => {
       const security = page.locator('[data-path="web-security"]');
       await expect(security.getByRole("heading", { name: "Web 安全入门" })).toBeVisible();
       await expect(security.locator('[data-step="sql-basics"]')).toHaveAttribute("data-state", "available");
-      await expect(security.locator('[data-step="crypto-basics"]')).toHaveAttribute("data-state", "upcoming");
+      await expect(security.locator('[data-step="crypto-basics"]')).toHaveAttribute("data-state", "available");
+      await expect(security.locator('[data-step="auth-security"]')).toHaveAttribute("data-state", "upcoming");
       await page.locator('[data-path="computer-foundations"]').getByRole("link", { name: /查看路线图/ }).click();
       await expect(page).toHaveURL(/\/paths\/computer-foundations$/);
       const map = page.getByTestId("path-map");

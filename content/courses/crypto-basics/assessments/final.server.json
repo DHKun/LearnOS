@@ -1,0 +1,490 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "“别人截获了也看不懂”说的是哪个目标？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "机密性"
+        },
+        {
+          "id": "b",
+          "label": "完整性"
+        },
+        {
+          "id": "c",
+          "label": "真实性"
+        },
+        {
+          "id": "d",
+          "label": "可用性"
+        }
+      ],
+      "answer": "a",
+      "explanation": "用加密来保证。"
+    },
+    {
+      "id": "f2",
+      "prompt": "“能发现内容被改过”说的是哪个目标？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "机密性"
+        },
+        {
+          "id": "b",
+          "label": "完整性"
+        },
+        {
+          "id": "c",
+          "label": "真实性"
+        },
+        {
+          "id": "d",
+          "label": "匿名性"
+        }
+      ],
+      "answer": "b",
+      "explanation": "哈希、签名。"
+    },
+    {
+      "id": "f3",
+      "prompt": "把密码 Base64 编码后存起来，算加密吗？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "算"
+        },
+        {
+          "id": "b",
+          "label": "不算，编码规则公开，没有钥匙"
+        },
+        {
+          "id": "c",
+          "label": "看长度"
+        },
+        {
+          "id": "d",
+          "label": "算，只要加了等号"
+        }
+      ],
+      "answer": "b",
+      "explanation": "编码不是加密。"
+    },
+    {
+      "id": "f4",
+      "prompt": "哈希函数最重要的特性是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "能还原原文"
+        },
+        {
+          "id": "b",
+          "label": "相同输入相同输出、改一点结果全变、不能倒推"
+        },
+        {
+          "id": "c",
+          "label": "输出越长越好"
+        },
+        {
+          "id": "d",
+          "label": "速度越慢越好"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这些特性让它适合当指纹。"
+    },
+    {
+      "id": "f5",
+      "prompt": "核对下载的安装包，指纹应该从哪来？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "和安装包同一个下载页"
+        },
+        {
+          "id": "b",
+          "label": "官网或其他可信的独立渠道"
+        },
+        {
+          "id": "c",
+          "label": "搜索引擎"
+        },
+        {
+          "id": "d",
+          "label": "自己算一个就行"
+        }
+      ],
+      "answer": "b",
+      "explanation": "指纹和文件同源就失去了意义。"
+    },
+    {
+      "id": "f6",
+      "prompt": "两位读者用了同一个密码，只存快速哈希时，泄露的库里会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "看起来不一样"
+        },
+        {
+          "id": "b",
+          "label": "两人的指纹完全相同"
+        },
+        {
+          "id": "c",
+          "label": "看不到他们的记录"
+        },
+        {
+          "id": "d",
+          "label": "密码自动变复杂"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这就是要加盐的原因之一。"
+    },
+    {
+      "id": "f7",
+      "prompt": "盐的作用是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "让密码更好记"
+        },
+        {
+          "id": "b",
+          "label": "让每人的指纹都不同，预先算好的表失效"
+        },
+        {
+          "id": "c",
+          "label": "加快登录"
+        },
+        {
+          "id": "d",
+          "label": "代替密码"
+        }
+      ],
+      "answer": "b",
+      "explanation": "盐可以公开存放，但每人要不同。"
+    },
+    {
+      "id": "f8",
+      "prompt": "为什么存密码要用“慢”的哈希？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "慢的更准确"
+        },
+        {
+          "id": "b",
+          "label": "让攻击者每猜一次都很贵"
+        },
+        {
+          "id": "c",
+          "label": "省电"
+        },
+        {
+          "id": "d",
+          "label": "让读者多想一会儿"
+        }
+      ],
+      "answer": "b",
+      "explanation": "登录时多几十毫秒感觉不到，对要试几百万次的人就是天文数字。"
+    },
+    {
+      "id": "f9",
+      "prompt": "慢哈希的强度设到验证一次要 5 秒，会有什么问题？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "没有问题"
+        },
+        {
+          "id": "b",
+          "label": "读者登录要等很久，服务器也扛不住"
+        },
+        {
+          "id": "c",
+          "label": "攻击者更容易破解"
+        },
+        {
+          "id": "d",
+          "label": "密码会泄露"
+        }
+      ],
+      "answer": "b",
+      "explanation": "要在安全和可用之间取舍。"
+    },
+    {
+      "id": "f10",
+      "prompt": "对称加密里，密钥和密文放在同一封邮件里寄出，会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "更安全"
+        },
+        {
+          "id": "b",
+          "label": "截获邮件的人可以直接解密"
+        },
+        {
+          "id": "c",
+          "label": "加密失败"
+        },
+        {
+          "id": "d",
+          "label": "收件人无法解密"
+        }
+      ],
+      "answer": "b",
+      "explanation": "等于没锁。"
+    },
+    {
+      "id": "f11",
+      "prompt": "加密时随机数（nonce）应该怎么用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "所有消息共用一个"
+        },
+        {
+          "id": "b",
+          "label": "每条消息都用新的"
+        },
+        {
+          "id": "c",
+          "label": "不需要"
+        },
+        {
+          "id": "d",
+          "label": "和密钥一样保密且固定"
+        }
+      ],
+      "answer": "b",
+      "explanation": "重复使用会泄露信息。"
+    },
+    {
+      "id": "f12",
+      "prompt": "要给从没见过面的人寄一封只有他能读的信，用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "他的公钥加密"
+        },
+        {
+          "id": "b",
+          "label": "你的公钥加密"
+        },
+        {
+          "id": "c",
+          "label": "他的私钥加密"
+        },
+        {
+          "id": "d",
+          "label": "不用加密"
+        }
+      ],
+      "answer": "a",
+      "explanation": "他的私钥只有他有。"
+    },
+    {
+      "id": "f13",
+      "prompt": "你的私钥应该给谁？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "给信得过的同事"
+        },
+        {
+          "id": "b",
+          "label": "谁都不给"
+        },
+        {
+          "id": "c",
+          "label": "给证书机构"
+        },
+        {
+          "id": "d",
+          "label": "发在网站上"
+        }
+      ],
+      "answer": "b",
+      "explanation": "私钥只属于你自己。"
+    },
+    {
+      "id": "f14",
+      "prompt": "公钥加密在实际中常怎么用？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "直接加密所有大文件"
+        },
+        {
+          "id": "b",
+          "label": "用来安全地交换一把对称密钥，大量数据用对称加密"
+        },
+        {
+          "id": "c",
+          "label": "只用来存密码"
+        },
+        {
+          "id": "d",
+          "label": "只用来压缩数据"
+        }
+      ],
+      "answer": "b",
+      "explanation": "公钥加密慢，对称加密快。"
+    },
+    {
+      "id": "f15",
+      "prompt": "签名验证通过之后，可以确定哪些？（多选）",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "内容在签名之后没被改过"
+        },
+        {
+          "id": "b",
+          "label": "签名的人持有那把公钥对应的私钥"
+        },
+        {
+          "id": "c",
+          "label": "内容说的都是真话"
+        },
+        {
+          "id": "d",
+          "label": "内容是保密传输的"
+        }
+      ],
+      "answer": [
+        "a",
+        "b"
+      ],
+      "explanation": "签名不保证真假，也不提供保密。"
+    },
+    {
+      "id": "f16",
+      "prompt": "冒充者用自己的钥匙签了一条假公告，并附上自己的公钥。怎样识破？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "看签名长短"
+        },
+        {
+          "id": "b",
+          "label": "确认验证用的公钥确实是图书馆的（比如核对公开渠道的指纹）"
+        },
+        {
+          "id": "c",
+          "label": "看公告的字体"
+        },
+        {
+          "id": "d",
+          "label": "无法识破"
+        }
+      ],
+      "answer": "b",
+      "explanation": "关键在公钥的来源。"
+    },
+    {
+      "id": "f17",
+      "prompt": "证书把什么和什么绑在一起？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "用户和密码"
+        },
+        {
+          "id": "b",
+          "label": "公钥和域名"
+        },
+        {
+          "id": "c",
+          "label": "IP 和端口"
+        },
+        {
+          "id": "d",
+          "label": "文件和指纹"
+        }
+      ],
+      "answer": "b",
+      "explanation": "由证书机构签名担保。"
+    },
+    {
+      "id": "f18",
+      "prompt": "浏览器检查证书时，不检查下面哪一项？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "证书链能否到达受信任的根"
+        },
+        {
+          "id": "b",
+          "label": "是否在有效期内"
+        },
+        {
+          "id": "c",
+          "label": "域名是否匹配"
+        },
+        {
+          "id": "d",
+          "label": "网站内容是否真实可靠"
+        }
+      ],
+      "answer": "d",
+      "explanation": "证书不判断网站背后的人好不好。"
+    },
+    {
+      "id": "f19",
+      "prompt": "*.library.test 的证书用在 https://library.test 上，浏览器会？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "正常显示"
+        },
+        {
+          "id": "b",
+          "label": "提示域名不匹配"
+        },
+        {
+          "id": "c",
+          "label": "自动改用 http"
+        },
+        {
+          "id": "d",
+          "label": "显示证书过期"
+        }
+      ],
+      "answer": "b",
+      "explanation": "通配符不覆盖主域名本身。"
+    },
+    {
+      "id": "f20",
+      "prompt": "网址 https://library.test.login-check.example 有合法证书、显示小锁，所以它就是 library.test 的官方网站。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "看域名最后几段：它属于 login-check.example。"
+    }
+  ]
+}

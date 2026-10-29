@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 3,
+  "slug": "crypto-basics",
+  "title": "密码学入门：指纹、锁与印章",
+  "description": "零基础的密码学原理课，全部从保护的角度讲。整门课围绕 library.test 的一次安全改造：校验下载的安装包、重新设计密码的存法、选对加密设置、给馆长寄一封只有她能读的信、分辨真假公告、看懂 HTTPS 证书。实验里用的是缩小的教学版算法，在浏览器里真实计算。",
+  "version": "1.0.0",
+  "plugins": {
+    "concepts": [
+      {
+        "id": "goals",
+        "component": "concepts/concepts.tsx",
+        "export": "GoalsConcept",
+        "title": "密码学要解决的三件事",
+        "analogy": "锁、封条与印章"
+      },
+      {
+        "id": "hash",
+        "component": "concepts/concepts.tsx",
+        "export": "HashConcept",
+        "title": "哈希：数据的指纹",
+        "analogy": "手印"
+      },
+      {
+        "id": "salt",
+        "component": "concepts/concepts.tsx",
+        "export": "SaltConcept",
+        "title": "为什么存密码要加盐",
+        "analogy": "随机的花纹"
+      },
+      {
+        "id": "mode",
+        "component": "concepts/concepts.tsx",
+        "export": "ModeConcept",
+        "title": "对称加密与加密模式",
+        "analogy": "同一套暗号本"
+      },
+      {
+        "id": "padlock",
+        "component": "concepts/concepts.tsx",
+        "export": "PadlockConcept",
+        "title": "公钥加密",
+        "analogy": "开着口的挂锁"
+      },
+      {
+        "id": "seal",
+        "component": "concepts/concepts.tsx",
+        "export": "SealConcept",
+        "title": "数字签名",
+        "analogy": "公章"
+      },
+      {
+        "id": "chain",
+        "component": "concepts/concepts.tsx",
+        "export": "ChainConcept",
+        "title": "HTTPS 证书链",
+        "analogy": "公证处担保"
+      }
+    ],
+    "activities": [
+      {
+        "id": "mirror-lab",
+        "component": "activities/labs.tsx",
+        "export": "MirrorLab",
+        "title": "哪个镜像站能放心下载",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateMirrorLab"
+        }
+      },
+      {
+        "id": "password-lab",
+        "component": "activities/labs.tsx",
+        "export": "PasswordLab",
+        "title": "密码该怎么存",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validatePasswordLab"
+        }
+      },
+      {
+        "id": "symmetric-lab",
+        "component": "activities/labs.tsx",
+        "export": "SymmetricLab",
+        "title": "同事随手配的加密设置",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateSymmetricLab"
+        }
+      },
+      {
+        "id": "public-lab",
+        "component": "activities/labs.tsx",
+        "export": "PublicLab",
+        "title": "寄给馆长的挂失申请",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validatePublicLab"
+        }
+      },
+      {
+        "id": "signature-lab",
+        "component": "activities/labs.tsx",
+        "export": "SignatureLab",
+        "title": "读者群里的四条公告",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateSignatureLab"
+        }
+      },
+      {
+        "id": "certificate-lab",
+        "component": "activities/labs.tsx",
+        "export": "CertificateLab",
+        "title": "六个网站的证书",
+        "validator": {
+          "path": "validators.ts",
+          "export": "validateCertificateLab"
+        }
+      }
+    ]
+  },
+  "lessons": [
+    {
+      "slug": "goals",
+      "title": "密码学要解决什么",
+      "source": "lessons/01-goals.mdx",
+      "required": true,
+      "unit": "基础"
+    },
+    {
+      "slug": "hashing",
+      "title": "哈希：数据的指纹",
+      "source": "lessons/02-hashing.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "mirror-lab",
+          "kind": "simulation",
+          "activityId": "crypto-basics/mirror-lab",
+          "title": "哪个镜像站能放心下载"
+        },
+        {
+          "id": "hash-check",
+          "kind": "question",
+          "source": "assessments/hash.server.json",
+          "title": "哈希检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "mirror-lab",
+          "hash-check"
+        ]
+      }
+    },
+    {
+      "slug": "passwords",
+      "title": "密码该怎么存",
+      "source": "lessons/03-passwords.mdx",
+      "required": true,
+      "unit": "基础",
+      "blocks": [
+        {
+          "id": "password-lab",
+          "kind": "simulation",
+          "activityId": "crypto-basics/password-lab",
+          "title": "密码该怎么存"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "password-lab"
+        ]
+      }
+    },
+    {
+      "slug": "symmetric",
+      "title": "对称加密",
+      "source": "lessons/04-symmetric.mdx",
+      "required": true,
+      "unit": "加密",
+      "blocks": [
+        {
+          "id": "symmetric-lab",
+          "kind": "simulation",
+          "activityId": "crypto-basics/symmetric-lab",
+          "title": "同事随手配的加密设置"
+        },
+        {
+          "id": "symmetric-check",
+          "kind": "question",
+          "source": "assessments/symmetric.server.json",
+          "title": "加密检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "symmetric-lab",
+          "symmetric-check"
+        ]
+      }
+    },
+    {
+      "slug": "public-key",
+      "title": "公钥加密",
+      "source": "lessons/05-public-key.mdx",
+      "required": true,
+      "unit": "加密",
+      "blocks": [
+        {
+          "id": "public-lab",
+          "kind": "simulation",
+          "activityId": "crypto-basics/public-lab",
+          "title": "寄给馆长的挂失申请"
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "public-lab"
+        ]
+      }
+    },
+    {
+      "slug": "signatures",
+      "title": "数字签名",
+      "source": "lessons/06-signatures.mdx",
+      "required": true,
+      "unit": "信任",
+      "blocks": [
+        {
+          "id": "signature-lab",
+          "kind": "simulation",
+          "activityId": "crypto-basics/signature-lab",
+          "title": "读者群里的四条公告"
+        },
+        {
+          "id": "signature-check",
+          "kind": "question",
+          "source": "assessments/signature.server.json",
+          "title": "签名检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "signature-lab",
+          "signature-check"
+        ]
+      }
+    },
+    {
+      "slug": "https",
+      "title": "HTTPS 与证书",
+      "source": "lessons/07-https.mdx",
+      "required": true,
+      "unit": "信任",
+      "blocks": [
+        {
+          "id": "certificate-lab",
+          "kind": "simulation",
+          "activityId": "crypto-basics/certificate-lab",
+          "title": "六个网站的证书"
+        },
+        {
+          "id": "https-check",
+          "kind": "question",
+          "source": "assessments/https.server.json",
+          "title": "证书检查",
+          "passScore": 75
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "certificate-lab",
+          "https-check"
+        ]
+      }
+    },
+    {
+      "slug": "final",
+      "title": "结业测验",
+      "source": "lessons/08-final.mdx",
+      "required": true,
+      "unit": "信任",
+      "blocks": [
+        {
+          "id": "final-check",
+          "kind": "question",
+          "source": "assessments/final.server.json",
+          "title": "结业测验",
+          "passScore": 80
+        }
+      ],
+      "completion": {
+        "mode": "all",
+        "requiredBlocks": [
+          "final-check"
+        ]
+      },
+      "finalExam": true
+    }
+  ]
+}

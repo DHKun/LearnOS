@@ -1,0 +1,87 @@
+{
+  "passScore": 75,
+  "questions": [
+    {
+      "id": "h1",
+      "prompt": "一个文件改了一个字节，它的 SHA-256 指纹会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "只变一位"
+        },
+        {
+          "id": "b",
+          "label": "几乎每一位都可能变"
+        },
+        {
+          "id": "c",
+          "label": "不变"
+        },
+        {
+          "id": "d",
+          "label": "变长"
+        }
+      ],
+      "answer": "b",
+      "explanation": "这正是哈希能用来发现篡改的原因。"
+    },
+    {
+      "id": "h2",
+      "prompt": "下载页面上同时放着安装包和它的指纹。下面哪种情况下这个指纹能用来核对？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "任何时候都能"
+        },
+        {
+          "id": "b",
+          "label": "只有这个页面本身可信、没被篡改时"
+        },
+        {
+          "id": "c",
+          "label": "指纹越长越可信"
+        },
+        {
+          "id": "d",
+          "label": "从来都不能"
+        }
+      ],
+      "answer": "b",
+      "explanation": "能改文件的人也能改同一页上的指纹。"
+    },
+    {
+      "id": "h3",
+      "prompt": "现在做文件校验，下面哪个算法最合适？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "MD5"
+        },
+        {
+          "id": "b",
+          "label": "SHA-1"
+        },
+        {
+          "id": "c",
+          "label": "SHA-256"
+        },
+        {
+          "id": "d",
+          "label": "Base64"
+        }
+      ],
+      "answer": "c",
+      "explanation": "MD5、SHA-1 已经能被人为制造碰撞；Base64 根本不是哈希。"
+    },
+    {
+      "id": "h4",
+      "prompt": "拿到一个文件的哈希值，就能把文件内容还原出来。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "哈希是单向的。"
+    }
+  ]
+}

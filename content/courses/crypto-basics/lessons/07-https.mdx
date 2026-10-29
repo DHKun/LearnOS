@@ -1,0 +1,37 @@
+## 六个网站的证书
+
+浏览器地址栏的小锁，背后是 HTTPS 和证书。《HTTP 实战》里讲过 HTTPS 能防窃听，这一章看它凭什么能确认“对面真的是 library.test”，以及什么时候不该相信它。
+
+## 证书：公钥 + 身份 + 担保
+
+上一章的问题是“这把公钥是谁的”。HTTPS 的答案是**证书**：一份写明“这把公钥属于 library.test，有效期到某天”的文件，由**证书机构**签名担保。
+
+证书机构的证书又由更上一级担保，一直到**根证书**。根证书预装在操作系统和浏览器里，是整个信任的起点。
+
+## 浏览器检查什么
+
+1. **证书链**能一路找到受信任的根证书；
+2. 当前日期在**有效期**内；
+3. 证书上的**域名**和地址栏一致。通配符 `*.library.test` 只覆盖再多一层的子域名，比如 `api.library.test`，不包括 `library.test` 本身，也不包括 `a.b.library.test`。
+
+任何一项不满足，浏览器都会弹出警告。遇到警告不要点“继续访问”，尤其是在公共 Wi-Fi 上：有人在中间冒充网站时，出示的就是一张浏览器不认识的证书。
+
+<ConceptPlayer conceptId="crypto-basics/chain" blockId="chain" />
+
+## 小锁不代表网站是好人
+
+证书只证明“你在和证书上写的那个域名通信”。仿冒网站 `library.test.login-check.example` 也能申请到完全合法的证书。判断网站是谁，要看地址栏里域名的最后几段。
+
+<MiniCheck
+  id="lock-meaning"
+  question="地址栏显示小锁，说明了什么？"
+  options={["这个网站是安全、正规的", "连接是加密的，而且对方确实是证书上写的那个域名", "网站上没有病毒"]}
+  answer={1}
+  explanation="小锁保证的是连接和身份，不保证这个域名背后的人可信。"
+/>
+
+## 动手：六个网站的证书
+
+<SimulationBlock blockId="certificate-lab" />
+
+<KnowledgeCheck blockId="https-check" />
