@@ -2,12 +2,16 @@
   "schemaVersion": 1,
   "slug": "computer-foundations",
   "title": "计算机基础入门",
-  "description": "从零开始，自下而上地理解一台联网的计算机：里面装的是什么，两台电脑怎么找到对方，网站之间怎么对话，以及怎样用命令行和 Git 动手干活。所有实验都在浏览器里完成，不需要安装任何软件。",
+  "description": "从零开始，自下而上地理解一台联网的计算机：里面装的是什么、程序怎么跑起来，两台电脑怎么找到对方，网站之间怎么对话，以及怎样用命令行和 Git 动手干活。所有实验都在浏览器里完成，不需要安装任何软件。",
   "level": "入门",
   "courses": [
     {
       "course": "bits-and-bytes",
       "summary": "计算机里装的是什么：字节、编码、颜色、图片和文件。"
+    },
+    {
+      "course": "how-programs-run",
+      "summary": "程序在计算机里怎么跑：CPU、内存、栈、缓存和操作系统。"
     },
     {
       "course": "networking-basics",

@@ -1,0 +1,491 @@
+{
+  "passScore": 80,
+  "questions": [
+    {
+      "id": "f1",
+      "prompt": "程序运行前，要先从哪里搬到哪里？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "从内存搬到硬盘"
+        },
+        {
+          "id": "b",
+          "label": "从硬盘搬到内存"
+        },
+        {
+          "id": "c",
+          "label": "从 CPU 搬到内存"
+        },
+        {
+          "id": "d",
+          "label": "不需要搬"
+        }
+      ],
+      "answer": "b",
+      "explanation": "CPU 只能执行内存里的指令。"
+    },
+    {
+      "id": "f2",
+      "prompt": "断电后，哪里的数据还在？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "寄存器"
+        },
+        {
+          "id": "b",
+          "label": "内存"
+        },
+        {
+          "id": "c",
+          "label": "缓存"
+        },
+        {
+          "id": "d",
+          "label": "硬盘"
+        }
+      ],
+      "answer": "d",
+      "explanation": "只有硬盘 / SSD 断电不丢。"
+    },
+    {
+      "id": "f3",
+      "prompt": "CPU 执行指令的基本循环是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "取指、译码、执行"
+        },
+        {
+          "id": "b",
+          "label": "编译、链接、运行"
+        },
+        {
+          "id": "c",
+          "label": "读取、保存、关闭"
+        },
+        {
+          "id": "d",
+          "label": "输入、输出"
+        }
+      ],
+      "answer": "a",
+      "explanation": "然后 PC 前进，周而复始。"
+    },
+    {
+      "id": "f4",
+      "prompt": "PC 的作用是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "记录下一条指令的位置"
+        },
+        {
+          "id": "b",
+          "label": "记录运算结果"
+        },
+        {
+          "id": "c",
+          "label": "记录内存大小"
+        },
+        {
+          "id": "d",
+          "label": "记录时间"
+        }
+      ],
+      "answer": "a",
+      "explanation": "程序计数器。"
+    },
+    {
+      "id": "f5",
+      "prompt": "ADD R0, 5 之后，内存里的值会跟着变吗？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "会"
+        },
+        {
+          "id": "b",
+          "label": "不会，只改了寄存器 R0"
+        },
+        {
+          "id": "c",
+          "label": "只有地址 0 会变"
+        },
+        {
+          "id": "d",
+          "label": "看情况"
+        }
+      ],
+      "answer": "b",
+      "explanation": "要 STORE 才会写回内存。"
+    },
+    {
+      "id": "f6",
+      "prompt": "CMP 指令的作用是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "比较两个数，把结果记在标志位里"
+        },
+        {
+          "id": "b",
+          "label": "把两个数相加"
+        },
+        {
+          "id": "c",
+          "label": "跳转"
+        },
+        {
+          "id": "d",
+          "label": "停机"
+        }
+      ],
+      "answer": "a",
+      "explanation": "之后的条件跳转看标志位。"
+    },
+    {
+      "id": "f7",
+      "prompt": "机器语言里，循环是怎么实现的？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "有专门的 LOOP 指令"
+        },
+        {
+          "id": "b",
+          "label": "比较 + 条件跳转回前面"
+        },
+        {
+          "id": "c",
+          "label": "重复写很多遍"
+        },
+        {
+          "id": "d",
+          "label": "操作系统帮忙"
+        }
+      ],
+      "answer": "b",
+      "explanation": "往回跳就成了循环。"
+    },
+    {
+      "id": "f8",
+      "prompt": "求 1 到 N 之和的循环，N = 10 时得到 45。最可能的原因？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "CPU 算错了"
+        },
+        {
+          "id": "b",
+          "label": "少加了最后一个数：循环条件差一"
+        },
+        {
+          "id": "c",
+          "label": "内存不够"
+        },
+        {
+          "id": "d",
+          "label": "N 太大"
+        }
+      ],
+      "answer": "b",
+      "explanation": "典型的差一错误。"
+    },
+    {
+      "id": "f9",
+      "prompt": "测试一个循环，下面哪些情况最值得专门试？（多选）",
+      "type": "multiple",
+      "options": [
+        {
+          "id": "a",
+          "label": "一圈都不该走（比如 N = 0）"
+        },
+        {
+          "id": "b",
+          "label": "只走一圈（N = 1）"
+        },
+        {
+          "id": "c",
+          "label": "一个普通的 N"
+        },
+        {
+          "id": "d",
+          "label": "N = 1000000"
+        }
+      ],
+      "answer": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": "边界最容易出错。"
+    },
+    {
+      "id": "f10",
+      "prompt": "数组 [30]～[34]，循环写到了 [35]，这种错误叫？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "死循环"
+        },
+        {
+          "id": "b",
+          "label": "越界写入（缓冲区溢出）"
+        },
+        {
+          "id": "c",
+          "label": "栈溢出"
+        },
+        {
+          "id": "d",
+          "label": "除零错误"
+        }
+      ],
+      "answer": "b",
+      "explanation": "写到了数组之外。"
+    },
+    {
+      "id": "f11",
+      "prompt": "指针存的是什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "一个地址"
+        },
+        {
+          "id": "b",
+          "label": "一条指令"
+        },
+        {
+          "id": "c",
+          "label": "一个文件名"
+        },
+        {
+          "id": "d",
+          "label": "一个标志位"
+        }
+      ],
+      "answer": "a",
+      "explanation": "通过地址去访问那一格。"
+    },
+    {
+      "id": "f12",
+      "prompt": "CALL 指令除了跳转，还做了什么？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "把返回地址压进栈"
+        },
+        {
+          "id": "b",
+          "label": "清空寄存器"
+        },
+        {
+          "id": "c",
+          "label": "保存文件"
+        },
+        {
+          "id": "d",
+          "label": "打印输出"
+        }
+      ],
+      "answer": "a",
+      "explanation": "RET 时才能回去。"
+    },
+    {
+      "id": "f13",
+      "prompt": "函数里 PUSH 了 R1 却没有 POP，RET 时会怎样？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "正常返回"
+        },
+        {
+          "id": "b",
+          "label": "把 R1 的旧值当成返回地址，跳到错误的位置"
+        },
+        {
+          "id": "c",
+          "label": "自动 POP"
+        },
+        {
+          "id": "d",
+          "label": "报语法错误"
+        }
+      ],
+      "answer": "b",
+      "explanation": "栈不平衡。"
+    },
+    {
+      "id": "f14",
+      "prompt": "程序崩溃时打印的“调用栈”记录的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "一层层的函数调用关系"
+        },
+        {
+          "id": "b",
+          "label": "所有变量的值"
+        },
+        {
+          "id": "c",
+          "label": "硬盘的内容"
+        },
+        {
+          "id": "d",
+          "label": "CPU 温度"
+        }
+      ],
+      "answer": "a",
+      "explanation": "来自栈里的返回地址。"
+    },
+    {
+      "id": "f15",
+      "prompt": "为什么缓存能让程序变快？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "它比内存快，而且程序往往会接着用附近的、刚用过的数据"
+        },
+        {
+          "id": "b",
+          "label": "它容量比内存大"
+        },
+        {
+          "id": "c",
+          "label": "它不会断电"
+        },
+        {
+          "id": "d",
+          "label": "它能自动修 bug"
+        }
+      ],
+      "answer": "a",
+      "explanation": "局部性。"
+    },
+    {
+      "id": "f16",
+      "prompt": "按行存放的二维表格，最快的遍历方式是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "按行"
+        },
+        {
+          "id": "b",
+          "label": "按列"
+        },
+        {
+          "id": "c",
+          "label": "随机"
+        },
+        {
+          "id": "d",
+          "label": "倒着按列"
+        }
+      ],
+      "answer": "a",
+      "explanation": "按行访问地址是挨着的。"
+    },
+    {
+      "id": "f17",
+      "prompt": "操作系统让多个程序“同时”运行，靠的是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "每个程序一个 CPU"
+        },
+        {
+          "id": "b",
+          "label": "飞快地轮流切换"
+        },
+        {
+          "id": "c",
+          "label": "把程序合成一个"
+        },
+        {
+          "id": "d",
+          "label": "让程序更短"
+        }
+      ],
+      "answer": "b",
+      "explanation": "单核上是轮流运行。"
+    },
+    {
+      "id": "f18",
+      "prompt": "轮转调度里，时间片太大的问题是？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "切换太频繁"
+        },
+        {
+          "id": "b",
+          "label": "交互程序要等很久才轮到，感觉卡"
+        },
+        {
+          "id": "c",
+          "label": "程序会出错"
+        },
+        {
+          "id": "d",
+          "label": "内存不够"
+        }
+      ],
+      "answer": "b",
+      "explanation": "像先来先服务一样了。"
+    },
+    {
+      "id": "f19",
+      "prompt": "上下文切换的开销来自？",
+      "type": "single",
+      "options": [
+        {
+          "id": "a",
+          "label": "保存和恢复进程的寄存器等状态"
+        },
+        {
+          "id": "b",
+          "label": "重新编译程序"
+        },
+        {
+          "id": "c",
+          "label": "重新启动电脑"
+        },
+        {
+          "id": "d",
+          "label": "读写硬盘上的所有文件"
+        }
+      ],
+      "answer": "a",
+      "explanation": "这段时间不做任何程序的活。"
+    },
+    {
+      "id": "f20",
+      "prompt": "两个进程各自访问自己的地址 100，读到的一定是同一个格子。",
+      "type": "boolean",
+      "answer": false,
+      "explanation": "操作系统给每个进程一块自己的内存，同一个地址在不同进程里可以对应不同的位置。"
+    }
+  ]
+}

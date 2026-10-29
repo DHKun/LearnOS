@@ -680,6 +680,12 @@ tests/e2e/admin-detail.spec.ts          1 test
 - [x] `tests/unit/sql-basics.test.ts`（SQL 引擎与 7 个校验器，13 项）；`tests/e2e/sql-basics.spec.ts`（9 章真实界面闭环，结课 140 分）；`learning-paths.spec.ts` 覆盖第二条路线。
 - [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正事务实验初始即为绿色的两个目标，综合任务默认显示 loans 表。
 
+## 33. 通识课 `how-programs-run`（2026-10-29）
+
+- [x] 8 章、7 个概念动画、6 个服务端验证实验、36 道服务端题；插入《计算机基础入门》第 2 站（路线 6 门）；`pnpm courses:validate` 通过。
+- [x] `tests/unit/how-programs-run.test.ts`（格子机与 6 个校验器，10 项）；`tests/e2e/how-programs-run.spec.ts`（8 章真实界面闭环，结课 130 分）；路线、网络基础、命令行、Git 的 E2E 更新路线位置。
+- [x] 截图检查：1440 / 390px × 亮 / 暗，无横向溢出；修正第 3 章示例与实验答案过于接近、内存格子相邻区域同色两处问题。
+
 ## 34. 《Web 安全入门》第 2 门 `crypto-basics`（2026-10-29）
 
 - [x] 8 章、7 个概念动画、6 个服务端验证实验、36 道服务端题；路线中的条目改为正式课程；`pnpm courses:validate` 通过（7 门课程、2 条路线）。
